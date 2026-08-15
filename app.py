@@ -5,11 +5,25 @@ from flask import Flask, render_template
 from dotenv import load_dotenv
 from flask import send_from_directory
 
+
 # =========================================================
 # LOAD .ENV
 # =========================================================
 
 load_dotenv()
+
+
+# =========================================================
+# TI DB CLOUD SSL CERTIFICATE
+# =========================================================
+# ca.pem is located in the same folder as app.py.
+# This certificate is used for secure TiDB Cloud connections.
+# =========================================================
+
+CA_CERT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "ca.pem"
+)
 
 
 # =========================================================
@@ -93,11 +107,40 @@ DATABASE_URL = (
 )
 
 
+# =========================================================
+# DATABASE CONFIGURATION
+# =========================================================
+
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 
 app.config[
     "SQLALCHEMY_TRACK_MODIFICATIONS"
 ] = False
+
+
+# =========================================================
+# TI DB CLOUD SSL CONFIGURATION
+# =========================================================
+# TiDB Cloud public endpoints require TLS.
+#
+# ca.pem is used to verify the TiDB Cloud server certificate.
+#
+# For local MySQL (localhost / 127.0.0.1), SSL is not forced.
+# This keeps your local development working normally.
+# =========================================================
+
+if (
+    MYSQL_HOST not in ["localhost", "127.0.0.1"]
+    and os.path.exists(CA_CERT)
+):
+
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "connect_args": {
+            "ssl": {
+                "ca": CA_CERT
+            }
+        }
+    }
 
 
 # =========================================================
@@ -206,13 +249,17 @@ def home():
         "meeting/home.html"
     )
 
+
 @app.route("/favicon.ico")
 def favicon():
+
     return send_from_directory(
         app.static_folder,
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon"
     )
+
+
 # =========================================================
 # TEST PAGE
 # =========================================================
