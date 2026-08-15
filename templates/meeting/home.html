@@ -1,0 +1,1896 @@
+{% extends "base.html" %}
+
+{% block title %}
+MeetSpace | Modern Online Meetings
+{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+
+/* =========================================================
+   HOME PAGE
+========================================================= */
+
+.home-page {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(37, 99, 235, 0.20),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 15%,
+            rgba(124, 58, 237, 0.20),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #020617,
+            #0f172a 50%,
+            #111827
+        );
+
+    color: white;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.home-hero {
+    position: relative;
+
+    max-width: 1250px;
+
+    margin: auto;
+
+    min-height: 720px;
+
+    padding: 100px 30px 80px;
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 70px;
+
+    align-items: center;
+}
+
+
+/* =========================================================
+   HERO LEFT
+========================================================= */
+
+.home-hero-content {
+    position: relative;
+
+    z-index: 5;
+
+    animation:
+        heroFade 0.9s ease forwards;
+}
+
+
+.home-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 9px 15px;
+
+    border-radius: 50px;
+
+    background:
+        rgba(59, 130, 246, 0.10);
+
+    border:
+        1px solid
+        rgba(96, 165, 250, 0.25);
+
+    color: #93c5fd;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+}
+
+
+.home-badge-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow:
+        0 0 15px
+        rgba(34, 197, 94, 0.9);
+
+    animation:
+        pulse 1.6s infinite;
+}
+
+
+.home-title {
+    margin: 28px 0 20px;
+
+    font-size:
+        clamp(48px, 6vw, 76px);
+
+    line-height: 1.02;
+
+    font-weight: 900;
+
+    letter-spacing: -3px;
+}
+
+
+.gradient-text {
+    background:
+        linear-gradient(
+            90deg,
+            #38bdf8,
+            #818cf8,
+            #c084fc
+        );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    background-clip: text;
+}
+
+
+.home-description {
+    max-width: 620px;
+
+    color: #cbd5e1;
+
+    font-size: 18px;
+
+    line-height: 1.8;
+
+    margin-bottom: 35px;
+}
+
+
+.home-actions {
+    display: flex;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+}
+
+
+.home-btn {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    padding: 15px 22px;
+
+    border-radius: 14px;
+
+    text-decoration: none;
+
+    font-weight: 800;
+
+    transition:
+        0.3s ease;
+
+    cursor: pointer;
+}
+
+
+.home-btn-primary {
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
+
+    box-shadow:
+        0 15px 35px
+        rgba(37, 99, 235, 0.30);
+}
+
+
+.home-btn-primary:hover {
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 20px 45px
+        rgba(124, 58, 237, 0.40);
+}
+
+
+.home-btn-secondary {
+    color: white;
+
+    background:
+        rgba(255,255,255,0.07);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.15);
+}
+
+
+.home-btn-secondary:hover {
+    transform:
+        translateY(-4px);
+
+    background:
+        rgba(255,255,255,0.12);
+}
+
+
+/* =========================================================
+   TRUST
+========================================================= */
+
+.home-trust {
+    margin-top: 35px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+
+.home-avatars {
+    display: flex;
+}
+
+
+.home-avatar {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-left: -7px;
+
+    border:
+        2px solid
+        #020617;
+
+    font-weight: 800;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #9333ea
+        );
+}
+
+
+.home-avatar:first-child {
+    margin-left: 0;
+}
+
+
+.home-trust-text {
+    color: #94a3b8;
+
+    font-size: 14px;
+}
+
+
+.home-stars {
+    color: #facc15;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 3px;
+}
+
+
+/* =========================================================
+   HERO VISUAL
+========================================================= */
+
+.home-visual {
+    position: relative;
+
+    min-height: 500px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+.visual-glow {
+    position: absolute;
+
+    width: 430px;
+    height: 430px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(99, 102, 241, 0.30),
+            transparent 65%
+        );
+
+    filter: blur(15px);
+
+    animation:
+        glowMove 5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   MEETING CARD
+========================================================= */
+
+.meeting-window {
+    position: relative;
+
+    width: 100%;
+
+    max-width: 570px;
+
+    border-radius: 25px;
+
+    overflow: hidden;
+
+    background:
+        rgba(15, 23, 42, 0.92);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.12);
+
+    box-shadow:
+        0 40px 100px
+        rgba(0,0,0,0.55);
+
+    backdrop-filter: blur(20px);
+
+    transform:
+        perspective(1000px)
+        rotateY(-5deg)
+        rotateX(3deg);
+
+    animation:
+        floatingCard 5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   MEETING HEADER
+========================================================= */
+
+.meeting-header {
+    height: 60px;
+
+    padding: 0 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    background:
+        rgba(255,255,255,0.04);
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,0.08);
+}
+
+
+.meeting-brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-weight: 800;
+}
+
+
+.mini-logo {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
+}
+
+
+.live-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(239,68,68,0.12);
+
+    color: #fca5a5;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+
+.live-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #ef4444;
+
+    box-shadow:
+        0 0 12px
+        rgba(239,68,68,0.9);
+
+    animation:
+        pulse 1.2s infinite;
+}
+
+
+/* =========================================================
+   VIDEO AREA
+========================================================= */
+
+.video-area {
+    min-height: 360px;
+
+    padding: 15px;
+
+    display: grid;
+
+    grid-template-columns:
+        1.7fr
+        1fr;
+
+    gap: 12px;
+
+    background:
+        #020617;
+}
+
+
+.main-video {
+    position: relative;
+
+    min-height: 330px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1e293b,
+            #0f172a
+        );
+
+    overflow: hidden;
+}
+
+
+.main-video::before {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(59,130,246,0.25),
+            transparent 70%
+        );
+}
+
+
+.big-avatar {
+    position: relative;
+
+    width: 105px;
+    height: 105px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #9333ea
+        );
+
+    font-size: 42px;
+
+    font-weight: 900;
+
+    box-shadow:
+        0 20px 50px
+        rgba(37,99,235,0.4);
+}
+
+
+.participant-name {
+    margin-top: 15px;
+
+    font-weight: 800;
+}
+
+
+.mic-status {
+    position: absolute;
+
+    bottom: 15px;
+    right: 15px;
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(0,0,0,0.55);
+}
+
+
+/* =========================================================
+   SMALL VIDEOS
+========================================================= */
+
+.small-videos {
+    display: grid;
+
+    grid-template-rows:
+        repeat(3, 1fr);
+
+    gap: 10px;
+}
+
+
+.small-video {
+    position: relative;
+
+    min-height: 90px;
+
+    border-radius: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1e293b,
+            #111827
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+}
+
+
+.small-avatar {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-weight: 900;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #db2777
+        );
+}
+
+
+.small-name {
+    position: absolute;
+
+    bottom: 7px;
+    left: 9px;
+
+    font-size: 10px;
+
+    color: #e2e8f0;
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.meeting-controls {
+    height: 70px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    background:
+        rgba(15,23,42,0.98);
+}
+
+
+.control {
+    width: 43px;
+    height: 43px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        rgba(255,255,255,0.08);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+
+    transition:
+        0.25s ease;
+}
+
+
+.control:hover {
+    transform:
+        translateY(-3px);
+
+    background:
+        rgba(255,255,255,0.15);
+}
+
+
+.control.leave {
+    background:
+        #ef4444;
+
+    transform:
+        rotate(135deg);
+}
+
+
+/* =========================================================
+   FLOATING CARDS
+========================================================= */
+
+.floating-card {
+    position: absolute;
+
+    z-index: 10;
+
+    padding: 13px 17px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(15,23,42,0.88);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.12);
+
+    backdrop-filter: blur(15px);
+
+    box-shadow:
+        0 20px 40px
+        rgba(0,0,0,0.3);
+
+    font-size: 12px;
+}
+
+
+.notification {
+    top: 15px;
+
+    right: -35px;
+
+    animation:
+        floatOne 4s ease-in-out infinite;
+}
+
+
+.connection {
+    bottom: 25px;
+
+    left: -40px;
+
+    animation:
+        floatTwo 4s ease-in-out infinite;
+}
+
+
+.secure {
+    bottom: 95px;
+
+    right: -45px;
+
+    animation:
+        floatTwo 5s ease-in-out infinite reverse;
+}
+
+
+.green {
+    color: #4ade80;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.home-stats {
+    max-width: 1100px;
+
+    margin: 0 auto 80px;
+
+    padding: 22px 30px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    background:
+        rgba(255,255,255,0.04);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    backdrop-filter: blur(15px);
+}
+
+
+.stat {
+    text-align: center;
+
+    padding: 10px;
+
+    border-right:
+        1px solid
+        rgba(255,255,255,0.08);
+}
+
+
+.stat:last-child {
+    border-right: none;
+}
+
+
+.stat-number {
+    font-size: 27px;
+
+    font-weight: 900;
+
+    color: #f8fafc;
+}
+
+
+.stat-label {
+    margin-top: 5px;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   FEATURES
+========================================================= */
+
+.features-section {
+    max-width: 1250px;
+
+    margin: auto;
+
+    padding: 80px 30px;
+}
+
+
+.section-heading {
+    text-align: center;
+
+    max-width: 700px;
+
+    margin: 0 auto 55px;
+}
+
+
+.section-badge {
+    display: inline-block;
+
+    color: #93c5fd;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 15px;
+}
+
+
+.section-heading h2 {
+    font-size:
+        clamp(35px, 5vw, 55px);
+
+    margin: 0 0 15px;
+
+    letter-spacing: -2px;
+}
+
+
+.section-heading p {
+    color: #94a3b8;
+
+    line-height: 1.7;
+}
+
+
+.feature-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 20px;
+}
+
+
+.feature-card {
+    padding: 30px;
+
+    border-radius: 22px;
+
+    background:
+        rgba(255,255,255,0.045);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+
+    transition:
+        0.35s ease;
+}
+
+
+.feature-card:hover {
+    transform:
+        translateY(-8px);
+
+    border-color:
+        rgba(96,165,250,0.3);
+
+    background:
+        rgba(255,255,255,0.07);
+
+    box-shadow:
+        0 25px 60px
+        rgba(0,0,0,0.25);
+}
+
+
+.feature-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 16px;
+
+    font-size: 26px;
+
+    margin-bottom: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(37,99,235,0.2),
+            rgba(124,58,237,0.2)
+        );
+}
+
+
+.feature-card h3 {
+    margin: 0 0 10px;
+
+    font-size: 20px;
+}
+
+
+.feature-card p {
+    margin: 0;
+
+    color: #94a3b8;
+
+    line-height: 1.7;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.home-cta {
+    max-width: 1100px;
+
+    margin: 70px auto 100px;
+
+    padding: 70px 30px;
+
+    text-align: center;
+
+    border-radius: 30px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(99,102,241,0.20),
+            transparent 65%
+        ),
+        rgba(255,255,255,0.04);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.10);
+}
+
+
+.home-cta h2 {
+    font-size:
+        clamp(35px, 5vw, 55px);
+
+    margin: 0 0 15px;
+
+    letter-spacing: -2px;
+}
+
+
+.home-cta p {
+    color: #94a3b8;
+
+    margin-bottom: 30px;
+}
+
+
+.cta-buttons {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes heroFade {
+
+    from {
+        opacity: 0;
+        transform:
+            translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translateY(0);
+    }
+
+}
+
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+
+}
+
+
+@keyframes floatingCard {
+
+    0%,
+    100% {
+        transform:
+            perspective(1000px)
+            rotateY(-5deg)
+            rotateX(3deg)
+            translateY(0);
+    }
+
+    50% {
+        transform:
+            perspective(1000px)
+            rotateY(-5deg)
+            rotateX(3deg)
+            translateY(-10px);
+    }
+
+}
+
+
+@keyframes glowMove {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+}
+
+
+@keyframes floatOne {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+
+}
+
+
+@keyframes floatTwo {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(10px);
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 950px) {
+
+    .home-hero {
+        grid-template-columns: 1fr;
+
+        text-align: center;
+
+        padding-top: 70px;
+    }
+
+    .home-description {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .home-actions {
+        justify-content: center;
+    }
+
+    .home-trust {
+        justify-content: center;
+    }
+
+    .home-visual {
+        margin-top: 20px;
+    }
+
+    .feature-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .home-hero {
+        padding:
+            55px 18px;
+    }
+
+    .home-title {
+        font-size: 45px;
+
+        letter-spacing: -2px;
+    }
+
+    .home-description {
+        font-size: 16px;
+    }
+
+    .meeting-window {
+        transform: none;
+    }
+
+    .video-area {
+        grid-template-columns: 1fr;
+    }
+
+    .small-videos {
+        grid-template-columns:
+            repeat(3, 1fr);
+
+        grid-template-rows: 1fr;
+    }
+
+    .small-video {
+        min-height: 80px;
+    }
+
+    .home-stats {
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        margin-left: 18px;
+        margin-right: 18px;
+    }
+
+    .stat:nth-child(2) {
+        border-right: none;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .floating-card {
+        display: none;
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="home-page">
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="home-hero">
+
+        <!-- LEFT -->
+
+        <div class="home-hero-content">
+
+            <div class="home-badge">
+
+                <span class="home-badge-dot"></span>
+
+                SMART • FAST • SECURE
+
+            </div>
+
+
+            <h1 class="home-title">
+
+                Meetings that
+
+                <span class="gradient-text">
+                    bring people
+                </span>
+
+                together.
+
+            </h1>
+
+
+            <p class="home-description">
+
+                Connect with teachers, students,
+                classmates and teams through
+                seamless live video meetings.
+
+                <strong>
+                    No complicated setup.
+                </strong>
+
+            </p>
+
+
+            <div class="home-actions">
+
+                <a
+                    href="{{ url_for('meeting.create_meeting') }}"
+                    class="home-btn home-btn-primary"
+                >
+
+                    🎥
+
+                    Start a Meeting
+
+                    →
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('meeting.join_meeting') }}"
+                    class="home-btn home-btn-secondary"
+                >
+
+                    🔗
+
+                    Join Meeting
+
+                </a>
+
+            </div>
+
+
+            <div class="home-trust">
+
+                <div class="home-avatars">
+
+                    <div class="home-avatar">
+                        K
+                    </div>
+
+                    <div class="home-avatar">
+                        V
+                    </div>
+
+                    <div class="home-avatar">
+                        S
+                    </div>
+
+                    <div class="home-avatar">
+                        +
+                    </div>
+
+                </div>
+
+
+                <div class="home-trust-text">
+
+                    <div class="home-stars">
+                        ★★★★★
+                    </div>
+
+                    Built for modern learning
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT -->
+
+        <div class="home-visual">
+
+            <div class="visual-glow"></div>
+
+
+            <!-- Notification -->
+
+            <div class="floating-card notification">
+
+                🎉
+
+                <div>
+
+                    <strong>
+                        New participant
+                    </strong>
+
+                    <br>
+
+                    <span>
+                        Vaishnavi joined
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Meeting -->
+
+            <div class="meeting-window">
+
+
+                <div class="meeting-header">
+
+                    <div class="meeting-brand">
+
+                        <div class="mini-logo">
+                            M
+                        </div>
+
+                        MeetSpace
+
+                    </div>
+
+
+                    <div class="live-status">
+
+                        <span class="live-dot"></span>
+
+                        LIVE
+
+                    </div>
+
+                </div>
+
+
+                <div class="video-area">
+
+
+                    <!-- Main video -->
+
+                    <div class="main-video">
+
+                        <div class="big-avatar">
+                            K
+                        </div>
+
+                        <div class="participant-name">
+                            Kishan
+                        </div>
+
+                        <div class="mic-status">
+                            🎤
+                        </div>
+
+                    </div>
+
+
+                    <!-- Participants -->
+
+                    <div class="small-videos">
+
+                        <div class="small-video">
+
+                            <div class="small-avatar">
+                                V
+                            </div>
+
+                            <span class="small-name">
+                                Vaishnavi
+                            </span>
+
+                        </div>
+
+
+                        <div class="small-video">
+
+                            <div class="small-avatar">
+                                S
+                            </div>
+
+                            <span class="small-name">
+                                Shaurya
+                            </span>
+
+                        </div>
+
+
+                        <div class="small-video">
+
+                            <div class="small-avatar">
+                                N
+                            </div>
+
+                            <span class="small-name">
+                                Nakul
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Controls -->
+
+                <div class="meeting-controls">
+
+                    <div class="control">
+                        🎤
+                    </div>
+
+                    <div class="control">
+                        📹
+                    </div>
+
+                    <div class="control">
+                        🖥️
+                    </div>
+
+                    <div class="control">
+                        💬
+                    </div>
+
+                    <div class="control">
+                        👥
+                    </div>
+
+                    <div class="control leave">
+                        📞
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Connection -->
+
+            <div class="floating-card connection">
+
+                ⚡
+
+                <div>
+
+                    <strong>
+                        Real-time
+                    </strong>
+
+                    <br>
+
+                    <span>
+                        Connection
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Security -->
+
+            <div class="floating-card secure">
+
+                🔒
+
+                <div>
+
+                    <strong>
+                        Secure
+                    </strong>
+
+                    <br>
+
+                    <span class="green">
+                        Protected meeting
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         STATS
+    ====================================================== -->
+
+    <section class="home-stats">
+
+        <div class="stat">
+
+            <div class="stat-number">
+                100%
+            </div>
+
+            <div class="stat-label">
+                Browser Based
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-number">
+                HD
+            </div>
+
+            <div class="stat-label">
+                Video Meetings
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-number">
+                ⚡
+            </div>
+
+            <div class="stat-label">
+                Real-Time
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-number">
+                24/7
+            </div>
+
+            <div class="stat-label">
+                Ready to Connect
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FEATURES
+    ====================================================== -->
+
+    <section class="features-section">
+
+        <div class="section-heading">
+
+            <div class="section-badge">
+                ✦ POWERFUL FEATURES
+            </div>
+
+            <h2>
+
+                Everything you need
+
+                <span class="gradient-text">
+                    to connect.
+                </span>
+
+            </h2>
+
+            <p>
+
+                Designed for online classes,
+                team meetings, presentations
+                and collaborative learning.
+
+            </p>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🎥
+                </div>
+
+                <h3>
+                    Live Video
+                </h3>
+
+                <p>
+                    Meet face-to-face with
+                    real-time browser video
+                    powered by WebRTC.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🎤
+                </div>
+
+                <h3>
+                    Clear Audio
+                </h3>
+
+                <p>
+                    Communicate naturally using
+                    live microphone audio.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🖥️
+                </div>
+
+                <h3>
+                    Screen Sharing
+                </h3>
+
+                <p>
+                    Present assignments,
+                    presentations and lessons
+                    instantly.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    💬
+                </div>
+
+                <h3>
+                    Live Chat
+                </h3>
+
+                <p>
+                    Send messages and questions
+                    without interrupting the speaker.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    👥
+                </div>
+
+                <h3>
+                    Participants
+                </h3>
+
+                <p>
+                    See who has joined your
+                    meeting in real time.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🔐
+                </div>
+
+                <h3>
+                    Secure Meetings
+                </h3>
+
+                <p>
+                    Keep your meeting experience
+                    private and reliable.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         CTA
+    ====================================================== -->
+
+    <section class="home-cta">
+
+        <div class="section-badge">
+            ✦ READY WHEN YOU ARE
+        </div>
+
+        <h2>
+
+            Your next meeting
+
+            <span class="gradient-text">
+                starts here.
+            </span>
+
+        </h2>
+
+        <p>
+
+            Create a room, invite your participants
+            and start connecting.
+
+        </p>
+
+
+        <div class="cta-buttons">
+
+            <a
+                href="{{ url_for('meeting.create_meeting') }}"
+                class="home-btn home-btn-primary"
+            >
+
+                🎥
+
+                Start a Meeting
+
+                →
+
+            </a>
+
+
+            <a
+                href="{{ url_for('meeting.join_meeting') }}"
+                class="home-btn home-btn-secondary"
+            >
+
+                🔗
+
+                Join Existing Meeting
+
+            </a>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

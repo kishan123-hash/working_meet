@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Create Account | MeetSpace
+{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+
+    .auth-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        background:
+            radial-gradient(
+                circle at 20% 20%,
+                rgba(59, 130, 246, 0.15),
+                transparent 35%
+            ),
+            radial-gradient(
+                circle at 80% 80%,
+                rgba(124, 58, 237, 0.18),
+                transparent 35%
+            ),
+            #070b18;
+    }
+
+
+    .auth-card {
+        width: 100%;
+        max-width: 460px;
+        padding: 40px;
+        border-radius: 24px;
+
+        background: rgba(15, 23, 42, 0.92);
+
+        border: 1px solid rgba(148, 163, 184, 0.15);
+
+        box-shadow:
+            0 25px 80px rgba(0, 0, 0, 0.45);
+
+        backdrop-filter: blur(20px);
+    }
+
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+
+    .auth-icon {
+        width: 70px;
+        height: 70px;
+
+        margin: 0 auto 18px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 20px;
+
+        font-size: 32px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #7c3aed
+            );
+
+        box-shadow:
+            0 12px 35px rgba(59, 130, 246, 0.3);
+    }
+
+
+    .auth-header h1 {
+        margin: 0;
+
+        font-size: 32px;
+
+        color: white;
+
+        font-weight: 800;
+    }
+
+
+    .auth-header p {
+        margin-top: 10px;
+
+        color: #94a3b8;
+
+        font-size: 15px;
+    }
+
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+
+    .form-group label {
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #e2e8f0;
+
+        font-size: 14px;
+
+        font-weight: 600;
+    }
+
+
+    .form-group input {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        padding: 14px 16px;
+
+        border-radius: 12px;
+
+        border: 1px solid #334155;
+
+        outline: none;
+
+        background: #0f172a;
+
+        color: white;
+
+        font-size: 15px;
+
+        transition: 0.2s;
+    }
+
+
+    .form-group input::placeholder {
+        color: #64748b;
+    }
+
+
+    .form-group input:focus {
+        border-color: #6366f1;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(99, 102, 241, 0.15);
+    }
+
+
+    /* =====================================================
+       OTP SECTION
+       ===================================================== */
+
+    .otp-section {
+        margin-bottom: 20px;
+
+        padding: 18px;
+
+        border-radius: 14px;
+
+        border: 1px solid rgba(99, 102, 241, 0.25);
+
+        background: rgba(30, 41, 59, 0.55);
+    }
+
+
+    .otp-title {
+        color: white;
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+        margin-bottom: 6px;
+    }
+
+
+    .otp-description {
+        color: #94a3b8;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+
+        margin: 0 0 14px;
+    }
+
+
+    .otp-send-row {
+        display: flex;
+
+        gap: 10px;
+    }
+
+
+    .otp-send-button {
+        border: none;
+
+        padding: 12px 16px;
+
+        border-radius: 10px;
+
+        color: white;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        white-space: nowrap;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #7c3aed
+            );
+
+        transition: 0.2s;
+    }
+
+
+    .otp-send-button:hover {
+        transform: translateY(-1px);
+
+        box-shadow:
+            0 8px 20px
+            rgba(99, 102, 241, 0.3);
+    }
+
+
+    .otp-send-button:disabled {
+        opacity: 0.6;
+
+        cursor: not-allowed;
+
+        transform: none;
+    }
+
+
+    .otp-input {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        padding: 14px 16px;
+
+        border-radius: 12px;
+
+        border: 1px solid #334155;
+
+        outline: none;
+
+        background: #0f172a;
+
+        color: white;
+
+        font-size: 18px;
+
+        text-align: center;
+
+        letter-spacing: 6px;
+
+        font-weight: 700;
+    }
+
+
+    .otp-input:focus {
+        border-color: #6366f1;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(99, 102, 241, 0.15);
+    }
+
+
+    .otp-input::placeholder {
+        color: #64748b;
+
+        letter-spacing: normal;
+
+        font-size: 14px;
+
+        font-weight: 400;
+    }
+
+
+    .otp-status {
+        margin-top: 8px;
+
+        color: #94a3b8;
+
+        font-size: 12px;
+    }
+
+
+    .register-button {
+        width: 100%;
+
+        border: none;
+
+        padding: 15px;
+
+        border-radius: 12px;
+
+        margin-top: 8px;
+
+        color: white;
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #7c3aed
+            );
+
+        transition: 0.2s;
+    }
+
+
+    .register-button:hover {
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 12px 30px
+            rgba(99, 102, 241, 0.3);
+    }
+
+
+    .auth-footer {
+        margin-top: 25px;
+
+        text-align: center;
+
+        color: #94a3b8;
+
+        font-size: 14px;
+    }
+
+
+    .auth-footer a {
+        color: #818cf8;
+
+        font-weight: 700;
+
+        text-decoration: none;
+    }
+
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+
+    @media (max-width: 600px) {
+
+        .auth-card {
+            padding: 28px 22px;
+        }
+
+        .auth-header h1 {
+            font-size: 27px;
+        }
+
+        .otp-send-row {
+            flex-direction: column;
+        }
+
+        .otp-send-button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<section class="auth-page">
+
+    <div class="auth-card">
+
+
+        <!-- ========================================= -->
+        <!-- HEADER -->
+        <!-- ========================================= -->
+
+        <div class="auth-header">
+
+            <div class="auth-icon">
+                ✦
+            </div>
+
+            <h1>
+                Create Account
+            </h1>
+
+            <p>
+                Join MeetSpace and start connecting.
+            </p>
+
+        </div>
+
+
+
+        <!-- ========================================= -->
+        <!-- REGISTER FORM -->
+        <!-- ========================================= -->
+
+        <form
+            method="POST"
+            action="{{ url_for('meeting.register') }}"
+            id="registerForm"
+        >
+
+
+            <!-- NAME -->
+
+            <div class="form-group">
+
+                <label for="name">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required
+                    autocomplete="name"
+                >
+
+            </div>
+
+
+
+            <!-- EMAIL -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+
+            <!-- PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    required
+                    minlength="6"
+                    autocomplete="new-password"
+                >
+
+            </div>
+
+
+
+            <!-- CONFIRM PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="confirm_password">
+                    Confirm Password
+                </label>
+
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    placeholder="Confirm your password"
+                    required
+                    minlength="6"
+                    autocomplete="new-password"
+                >
+
+            </div>
+
+
+
+            <!-- ========================================= -->
+            <!-- OTP VERIFICATION -->
+            <!-- ========================================= -->
+
+            <div class="otp-section">
+
+                <div class="otp-title">
+                    Email Verification
+                </div>
+
+                <p class="otp-description">
+                    Enter your email above and click
+                    <strong>Send OTP</strong>.
+                    A 6-digit verification code will be
+                    sent to your email.
+                </p>
+
+
+                <div class="otp-send-row">
+
+                    <input
+                        type="text"
+                        id="otp"
+                        name="otp"
+                        class="otp-input"
+                        maxlength="6"
+                        minlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        placeholder="Enter OTP"
+                        autocomplete="one-time-code"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        class="otp-send-button"
+                        id="sendOtpButton"
+                    >
+                        Send OTP
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="otp-status"
+                    id="otpStatus"
+                >
+                    OTP expires in 5 minutes.
+                </div>
+
+            </div>
+
+
+
+            <!-- ========================================= -->
+            <!-- SUBMIT -->
+            <!-- ========================================= -->
+
+            <button
+                type="submit"
+                class="register-button"
+            >
+
+                Create Account
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- ========================================= -->
+        <!-- LOGIN LINK -->
+        <!-- ========================================= -->
+
+        <div class="auth-footer">
+
+            Already have an account?
+
+            <a
+                href="{{ url_for('meeting.login') }}"
+            >
+                Login
+            </a>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- ========================================================= -->
+<!-- OTP JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const sendOtpButton =
+            document.getElementById(
+                "sendOtpButton"
+            );
+
+        const emailInput =
+            document.getElementById(
+                "email"
+            );
+
+        const otpStatus =
+            document.getElementById(
+                "otpStatus"
+            );
+
+
+        sendOtpButton.addEventListener(
+            "click",
+            async function () {
+
+                const email =
+                    emailInput.value.trim();
+
+
+                /* =====================================
+                   VALIDATE EMAIL
+                   ===================================== */
+
+                if (!email) {
+
+                    alert(
+                        "Please enter your email address first."
+                    );
+
+                    emailInput.focus();
+
+                    return;
+                }
+
+
+                /* =====================================
+                   SEND OTP REQUEST TO FLASK
+                   ===================================== */
+
+                sendOtpButton.disabled = true;
+
+                sendOtpButton.innerText =
+                    "Sending...";
+
+                otpStatus.innerText =
+                    "Sending OTP to your email...";
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "{{ url_for('meeting.send_registration_otp') }}",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+                                    email: email
+                                })
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (response.ok && data.success) {
+
+                        otpStatus.innerText =
+                            "✓ OTP sent successfully. Check your email.";
+
+                        sendOtpButton.innerText =
+                            "OTP Sent ✓";
+
+
+                        /* =================================
+                           ENABLE RESEND AFTER 30 SECONDS
+                           ================================= */
+
+                        setTimeout(
+                            function () {
+
+                                sendOtpButton.disabled =
+                                    false;
+
+                                sendOtpButton.innerText =
+                                    "Resend OTP";
+
+                            },
+                            30000
+                        );
+
+
+                    } else {
+
+                        throw new Error(
+                            data.message ||
+                            "Unable to send OTP."
+                        );
+
+                    }
+
+
+                } catch (error) {
+
+                    otpStatus.innerText =
+                        "❌ " + error.message;
+
+                    sendOtpButton.disabled =
+                        false;
+
+                    sendOtpButton.innerText =
+                        "Send OTP";
+
+                }
+
+            }
+        );
+
+
+        /* =============================================
+           OTP ONLY NUMBERS
+           ============================================= */
+
+        const otpInput =
+            document.getElementById(
+                "otp"
+            );
+
+
+        otpInput.addEventListener(
+            "input",
+            function () {
+
+                this.value =
+                    this.value
+                    .replace(/\D/g, "")
+                    .slice(0, 6);
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>MeetSpace | Meeting Room</title>
+
+    <!-- =====================================================
+         SOCKET.IO
+    ====================================================== -->
+
+    <script
+        src="{{ url_for('static', filename='js/socket.io.min.js') }}">
+    </script>
+
+    <style>
+
+        /* =====================================================
+           RESET
+        ====================================================== */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        /* =====================================================
+           BODY
+        ====================================================== */
+
+        body {
+
+            min-height: 100vh;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    #172554,
+                    transparent 40%
+                ),
+                radial-gradient(
+                    circle at bottom right,
+                    #312e81,
+                    transparent 40%
+                ),
+                #020617;
+
+            color: white;
+
+            font-family:
+                Inter,
+                Arial,
+                sans-serif;
+
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           MAIN APP
+        ====================================================== */
+
+        #meetingApp {
+
+            width: 100vw;
+
+            height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ====================================================== */
+
+        .topbar {
+
+            height: 70px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 25px;
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.97
+                );
+
+            border-bottom:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+        }
+
+
+        /* =====================================================
+           BRAND
+        ====================================================== */
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            font-size: 22px;
+
+            font-weight: 800;
+
+            min-width: 180px;
+        }
+
+
+        .brand-icon {
+
+            width: 40px;
+
+            height: 40px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                );
+
+            font-size: 20px;
+        }
+
+
+        /* =====================================================
+           MEETING INFO
+        ====================================================== */
+
+        .meeting-info {
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+        }
+
+
+        .meeting-title {
+
+            font-size: 16px;
+
+            font-weight: 700;
+        }
+
+
+        .meeting-id {
+
+            font-size: 12px;
+
+            color: #94a3b8;
+
+            margin-top: 3px;
+        }
+
+
+        .meeting-id strong {
+
+            color: #60a5fa;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* =====================================================
+           LEAVE BUTTON
+        ====================================================== */
+
+        .leave-top {
+
+            border: none;
+
+            padding: 10px 18px;
+
+            border-radius: 10px;
+
+            background: #dc2626;
+
+            color: white;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.2s ease;
+
+            min-width: 80px;
+        }
+
+
+        .leave-top:hover {
+
+            background: #b91c1c;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =====================================================
+           MEETING CONTAINER
+        ====================================================== */
+
+        .meeting-container {
+
+            flex: 1;
+
+            min-height: 0;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+
+        /* =====================================================
+           VIDEO AREA
+        ====================================================== */
+
+        .video-area {
+
+            flex: 1;
+
+            min-height: 0;
+
+            padding: 20px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        300px,
+                        1fr
+                    )
+                );
+
+            grid-auto-rows: minmax(
+                250px,
+                1fr
+            );
+
+            gap: 15px;
+
+            overflow-y: auto;
+
+            align-content: start;
+        }
+
+
+        /* =====================================================
+           VIDEO CARD
+        ====================================================== */
+
+        .video-card {
+
+            position: relative;
+
+            min-height: 250px;
+
+            background:
+                #0f172a;
+
+            border-radius: 18px;
+
+            overflow: hidden;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            box-shadow:
+                0 15px 40px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.35
+                );
+        }
+
+
+        /* =====================================================
+           VIDEO
+        ====================================================== */
+
+        .video-card video {
+
+            width: 100%;
+
+            height: 100%;
+
+            min-height: 250px;
+
+            object-fit: cover;
+
+            display: block;
+
+            background:
+                #020617;
+        }
+
+
+        /* =====================================================
+           LOCAL VIDEO
+        ====================================================== */
+
+        #localVideo {
+
+            transform: scaleX(-1);
+        }
+
+
+        /* =====================================================
+           VIDEO LABEL
+        ====================================================== */
+
+        .video-label {
+
+            position: absolute;
+
+            bottom: 12px;
+
+            left: 12px;
+
+            padding: 7px 12px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.70
+                );
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            z-index: 5;
+        }
+
+
+        /* =====================================================
+           CAMERA OFF
+        ====================================================== */
+
+        .camera-off {
+
+            position: absolute;
+
+            inset: 0;
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                #111827;
+
+            font-size: 60px;
+
+            z-index: 2;
+        }
+
+
+        /* =====================================================
+           REMOTE VIDEO
+        ====================================================== */
+
+        #remoteVideos {
+
+            display: contents;
+        }
+
+
+        .remote-video-card {
+
+            position: relative;
+        }
+
+
+        .remote-video-card video {
+
+            transform: none;
+        }
+
+
+        .video-name {
+
+            position: absolute;
+
+            left: 12px;
+
+            bottom: 12px;
+
+            padding: 7px 12px;
+
+            border-radius: 8px;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.70
+                );
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            z-index: 5;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ====================================================== */
+
+        .empty-state {
+
+            min-height: 250px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            border:
+                1px dashed
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            border-radius: 18px;
+
+            padding: 30px;
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.40
+                );
+        }
+
+
+        /* =====================================================
+           SCREEN SHARE STATUS
+        ====================================================== */
+
+        .screen-share-status {
+
+            position: absolute;
+
+            top: 15px;
+
+            left: 50%;
+
+            transform:
+                translateX(-50%);
+
+            display: none;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 8px 14px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.90
+                );
+
+            color: white;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            z-index: 10;
+
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.30
+                );
+        }
+
+
+        .screen-share-status.active {
+
+            display: flex;
+        }
+
+
+        .screen-dot {
+
+            width: 8px;
+
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #4ade80;
+
+            animation:
+                screenPulse
+                1.5s
+                infinite;
+        }
+
+
+        @keyframes screenPulse {
+
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+
+        /* =====================================================
+           CONNECTION STATUS
+        ====================================================== */
+
+        .connection-status {
+
+            position: fixed;
+
+            top: 85px;
+
+            left: 50%;
+
+            transform:
+                translateX(-50%);
+
+            padding:
+                8px 15px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.92
+                );
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.10
+                );
+
+            color: #94a3b8;
+
+            font-size: 12px;
+
+            z-index: 50;
+
+            backdrop-filter:
+                blur(10px);
+        }
+
+
+        .connection-status.connected {
+
+            color: #4ade80;
+        }
+
+
+        .connection-status.error {
+
+            color: #f87171;
+        }
+
+
+        /* =====================================================
+           CONTROL BAR
+        ====================================================== */
+
+        .controls {
+
+            height: 90px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 14px;
+
+            padding: 15px;
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.98
+                );
+
+            border-top:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+        }
+
+
+        /* =====================================================
+           CONTROL BUTTON
+        ====================================================== */
+
+        .control-btn {
+
+            width: 52px;
+
+            height: 52px;
+
+            border: none;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background:
+                #1e293b;
+
+            color: white;
+
+            font-size: 20px;
+
+            cursor: pointer;
+
+            transition:
+                0.2s ease;
+        }
+
+
+        .control-btn:hover {
+
+            transform:
+                translateY(-2px);
+
+            background:
+                #334155;
+        }
+
+
+        .control-btn.active {
+
+            background:
+                #2563eb;
+        }
+
+
+        .control-btn.off {
+
+            background:
+                #dc2626;
+        }
+
+
+        /* =====================================================
+           SCREEN SHARE BUTTON
+        ====================================================== */
+
+        .screen-btn {
+
+            width: auto;
+
+            padding:
+                0 20px;
+
+            border-radius:
+                28px;
+
+            gap: 8px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           END BUTTON
+        ====================================================== */
+
+        .end-btn {
+
+            background:
+                #dc2626;
+        }
+
+
+        .end-btn:hover {
+
+            background:
+                #b91c1c;
+        }
+
+
+
+        /* =====================================================
+           MINIMIZE / MAXIMIZE VIDEO CARD
+        ====================================================== */
+
+        .video-card,
+        .remote-video-card {
+            position: relative;
+        }
+
+        .maximize-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 20;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: 0.2s ease;
+        }
+
+        .maximize-btn:hover {
+            background: rgba(37, 99, 235, 0.90);
+            transform: scale(1.05);
+        }
+
+        .video-card.maximized,
+        .remote-video-card.maximized {
+            position: fixed !important;
+            top: 85px;
+            right: 20px;
+            bottom: 105px;
+            left: 20px;
+            width: auto !important;
+            height: auto !important;
+            min-height: 0 !important;
+            z-index: 1000;
+            border-radius: 18px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.70);
+        }
+
+        .video-card.maximized video,
+        .remote-video-card.maximized video {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            object-fit: contain;
+            background: #020617;
+        }
+
+        .video-card.maximized .maximize-btn,
+        .remote-video-card.maximized .maximize-btn {
+            width: 42px;
+            height: 42px;
+            font-size: 20px;
+        }
+
+        body.video-maximized .topbar,
+        body.video-maximized .controls {
+            position: relative;
+            z-index: 1001;
+        }
+
+        body.video-maximized .connection-status {
+            z-index: 1002;
+        }
+
+        body.video-maximized .video-area {
+            overflow: visible;
+        }
+
+        /* =====================================================
+           MOBILE
+        ====================================================== */
+
+        @media (max-width: 700px) {
+
+            body {
+
+                overflow: hidden;
+            }
+
+
+            .topbar {
+
+                height: 60px;
+
+                padding:
+                    0 12px;
+            }
+
+
+            .brand {
+
+                min-width: auto;
+
+                font-size: 18px;
+            }
+
+
+            .brand-icon {
+
+                width: 36px;
+
+                height: 36px;
+            }
+
+
+            .meeting-info {
+
+                display: none;
+            }
+
+
+            .leave-top {
+
+                padding:
+                    8px 13px;
+            }
+
+
+            .video-area {
+
+                padding: 10px;
+
+                grid-template-columns:
+                    1fr;
+
+                grid-auto-rows:
+                    minmax(
+                        220px,
+                        1fr
+                    );
+            }
+
+
+            .controls {
+
+                height: 80px;
+
+                gap: 8px;
+
+                padding: 10px;
+            }
+
+
+            .control-btn {
+
+                width: 46px;
+
+                height: 46px;
+
+                font-size: 17px;
+            }
+
+
+            .screen-btn {
+
+                padding:
+                    0 12px;
+            }
+
+            .maximize-btn {
+                top: 10px;
+                right: 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 17px;
+            }
+
+            .video-card.maximized,
+            .remote-video-card.maximized {
+                top: 70px;
+                right: 10px;
+                bottom: 90px;
+                left: 10px;
+                border-radius: 14px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         MEETING APP
+
+         IMPORTANT:
+         meeting.js reads these data attributes.
+    ====================================================== -->
+
+    <div
+        id="meetingApp"
+        data-meeting-id="{{ meeting_id }}"
+        data-user-name="{{ user_name|default('Participant') }}"
+    >
+
+
+        <!-- =================================================
+             TOP BAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    🎥
+                </div>
+
+                <span>
+                    MeetSpace
+                </span>
+
+            </div>
+
+
+            <div class="meeting-info">
+
+                <div class="meeting-title">
+                    Live Meeting
+                </div>
+
+
+                <div class="meeting-id">
+
+                    Meeting ID:
+
+                    <strong>
+                        {{ meeting_id }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <button
+                id="leaveMeetingBtn"
+                class="leave-top"
+                type="button"
+            >
+
+                Leave
+
+            </button>
+
+        </header>
+
+
+        <!-- =================================================
+             CONNECTION STATUS
+        ================================================== -->
+
+        <div
+            id="connectionStatus"
+            class="connection-status"
+        >
+
+            <span id="connectionText">
+                Connecting...
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             MEETING CONTAINER
+        ================================================== -->
+
+        <main class="meeting-container">
+
+
+            <!-- =================================================
+                 VIDEO AREA
+            ================================================== -->
+
+            <section
+                id="videoArea"
+                class="video-area"
+            >
+
+
+                <!-- =============================================
+                     LOCAL VIDEO
+                ============================================== -->
+
+                <div
+                    id="localCard"
+                    class="video-card"
+                >
+
+
+                    <video
+                        id="localVideo"
+                        autoplay
+                        muted
+                        playsinline
+                    ></video>
+
+
+                    <!-- Camera disabled placeholder -->
+
+                    <div
+                        id="localPlaceholder"
+                        class="camera-off"
+                    >
+
+                        👤
+
+                    </div>
+
+
+                    <!-- Screen sharing indicator -->
+
+                    <div
+                        id="screenShareStatus"
+                        class="screen-share-status"
+                    >
+
+                        <span
+                            class="screen-dot"
+                        ></span>
+
+                        <span>
+                            Screen sharing
+                        </span>
+
+                    </div>
+
+
+                    <!-- Local label -->
+
+                    <div class="video-label">
+
+                        You
+
+                    </div>
+
+                    <button
+                        class="maximize-btn"
+                        type="button"
+                        title="Maximize video"
+                        aria-label="Maximize video"
+                    >
+                        ⛶
+                    </button>
+
+                </div>
+
+
+                <!-- =============================================
+                     REMOTE VIDEOS
+
+                     meeting.js dynamically adds
+                     remote participant video cards here.
+                ============================================== -->
+
+                <div
+                    id="remoteVideos"
+                ></div>
+
+
+                <!-- =============================================
+                     EMPTY STATE
+                ============================================== -->
+
+                <div
+                    id="emptyState"
+                    class="empty-state"
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size: 35px;
+                                margin-bottom: 10px;
+                            "
+                        >
+                            👥
+                        </div>
+
+                        <div>
+                            Waiting for other participants...
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 CONTROLS
+            ================================================== -->
+
+            <div class="controls">
+
+
+                <!-- MICROPHONE -->
+
+                <button
+                    id="micBtn"
+                    class="control-btn active"
+                    type="button"
+                    title="Mute microphone"
+                >
+
+                    <span class="control-icon">
+                        🎤
+                    </span>
+
+                </button>
+
+
+                <!-- CAMERA -->
+
+                <button
+                    id="cameraBtn"
+                    class="control-btn active"
+                    type="button"
+                    title="Turn camera off"
+                >
+
+                    <span class="control-icon">
+                        📹
+                    </span>
+
+                </button>
+
+
+                <!-- SCREEN SHARE -->
+
+                <button
+                    id="screenShareBtn"
+                    class="control-btn screen-btn"
+                    type="button"
+                    title="Share screen"
+                >
+
+                    <span>
+                        🖥️
+                    </span>
+
+                    <span class="control-label">
+                        Share Screen
+                    </span>
+
+                </button>
+
+
+                <!-- LEAVE -->
+
+                <button
+                    id="leaveMeetingBtn2"
+                    class="control-btn end-btn"
+                    type="button"
+                    title="Leave meeting"
+                >
+
+                    📞
+
+                </button>
+
+
+            </div>
+
+
+        </main>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         MEETING JAVASCRIPT
+
+         IMPORTANT:
+         Socket.IO MUST be loaded before meeting.js.
+
+         This file contains the actual WebRTC and
+         Socket.IO logic.
+
+         Do NOT keep another WebRTC implementation
+         inside this HTML.
+    ====================================================== -->
+
+    <script
+        src="{{ url_for('static', filename='js/meeting.js') }}">
+    </script>
+
+    <!-- =====================================================
+         MINIMIZE / MAXIMIZE VIDEO FUNCTIONALITY
+
+         This only controls the visual size of a video card.
+         It does NOT modify WebRTC, Socket.IO, camera,
+         microphone, or screen-sharing logic.
+    ====================================================== -->
+
+    <script>
+        (function () {
+            "use strict";
+
+            const videoArea = document.getElementById("videoArea");
+
+            if (!videoArea) {
+                return;
+            }
+
+            const CARD_SELECTOR = ".video-card, .remote-video-card";
+
+            function addMaximizeButton(card) {
+                if (!card || card.querySelector(".maximize-btn")) {
+                    return;
+                }
+
+                const button = document.createElement("button");
+
+                button.className = "maximize-btn";
+                button.type = "button";
+                button.title = "Maximize video";
+                button.setAttribute("aria-label", "Maximize video");
+                button.textContent = "⛶";
+
+                card.appendChild(button);
+            }
+
+            function addButtonsToExistingCards() {
+                videoArea.querySelectorAll(CARD_SELECTOR).forEach(
+                    addMaximizeButton
+                );
+            }
+
+            function closeMaximizedCard() {
+                const maximizedCard =
+                    videoArea.querySelector(".maximized");
+
+                if (!maximizedCard) {
+                    return;
+                }
+
+                maximizedCard.classList.remove("maximized");
+                document.body.classList.remove("video-maximized");
+
+                const button =
+                    maximizedCard.querySelector(".maximize-btn");
+
+                if (button) {
+                    button.textContent = "⛶";
+                    button.title = "Maximize video";
+                    button.setAttribute(
+                        "aria-label",
+                        "Maximize video"
+                    );
+                }
+            }
+
+            function toggleMaximize(card) {
+                if (!card) {
+                    return;
+                }
+
+                const isMaximized =
+                    card.classList.contains("maximized");
+
+                if (isMaximized) {
+                    closeMaximizedCard();
+                    return;
+                }
+
+                const currentMaximized =
+                    videoArea.querySelector(".maximized");
+
+                if (currentMaximized) {
+                    currentMaximized.classList.remove("maximized");
+
+                    const oldButton =
+                        currentMaximized.querySelector(".maximize-btn");
+
+                    if (oldButton) {
+                        oldButton.textContent = "⛶";
+                        oldButton.title = "Maximize video";
+                        oldButton.setAttribute(
+                            "aria-label",
+                            "Maximize video"
+                        );
+                    }
+                }
+
+                card.classList.add("maximized");
+                document.body.classList.add("video-maximized");
+
+                const button =
+                    card.querySelector(".maximize-btn");
+
+                if (button) {
+                    button.textContent = "↙";
+                    button.title = "Minimize video";
+                    button.setAttribute(
+                        "aria-label",
+                        "Minimize video"
+                    );
+                }
+            }
+
+            videoArea.addEventListener("click", function (event) {
+                const button =
+                    event.target.closest(".maximize-btn");
+
+                if (!button) {
+                    return;
+                }
+
+                const card =
+                    button.closest(CARD_SELECTOR);
+
+                if (!card) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                toggleMaximize(card);
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    closeMaximizedCard();
+                }
+            });
+
+            addButtonsToExistingCards();
+
+            const observer = new MutationObserver(function () {
+                addButtonsToExistingCards();
+            });
+
+            observer.observe(videoArea, {
+                childList: true,
+                subtree: true
+            });
+        })();
+    </script>
+
+
+</body>
+
+</html>

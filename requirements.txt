@@ -1,0 +1,9 @@
+Flask
+Flask-SocketIO
+Flask-SQLAlchemy
+SQLAlchemy
+PyMySQL
+python-dotenv
+Werkzeug
+gunicorn
+simple-websocket

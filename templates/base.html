@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- ================================================= -->
+    <!-- BASIC META -->
+    <!-- ================================================= -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="MeetSpace - Modern online video meetings"
+    >
+
+    <meta
+        name="theme-color"
+        content="#070b18"
+    >
+
+
+    <!-- ================================================= -->
+    <!-- PAGE TITLE -->
+    <!-- ================================================= -->
+
+    <title>
+        {% block title %}
+            MeetSpace
+        {% endblock %}
+    </title>
+
+
+    <!-- ================================================= -->
+    <!-- GOOGLE FONT -->
+    <!-- ================================================= -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ================================================= -->
+    <!-- MAIN WEBSITE CSS -->
+    <!-- ================================================= -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+
+    <!-- ================================================= -->
+    <!-- PAGE SPECIFIC CSS -->
+    <!-- IMPORTANT FOR LOGIN / REGISTER / FORGOT PASSWORD -->
+    <!-- ================================================= -->
+
+    {% block extra_css %}
+    {% endblock %}
+
+
+    <!-- ================================================= -->
+    <!-- BASE UI FIX -->
+    <!-- ONLY UI / LAYOUT -->
+    <!-- ================================================= -->
+
+    <style>
+
+        /* =================================================
+           GLOBAL RESET
+           ================================================= */
+
+        html,
+        body {
+
+            margin: 0;
+            padding: 0;
+
+            width: 100%;
+            min-height: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        *,
+        *::before,
+        *::after {
+
+            box-sizing: border-box;
+
+        }
+
+
+        body {
+
+            overflow-x: hidden;
+
+        }
+
+
+        /* =================================================
+           NAVBAR
+           ================================================= */
+
+        .navbar {
+
+            width: 100%;
+
+            min-height: 78px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            position: relative;
+
+            z-index: 1000;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           NAV CONTAINER
+           ================================================= */
+
+        .navbar .nav-container {
+
+            width: 100%;
+
+            max-width: 1400px;
+
+            min-height: 78px;
+
+            margin: 0 auto;
+
+            padding: 0 32px;
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: space-between !important;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 20px;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           LOGO
+           ================================================= */
+
+        .navbar .logo {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: flex-start;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 12px;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        .navbar .logo-icon {
+
+            width: 42px;
+
+            height: 42px;
+
+            min-width: 42px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .navbar .logo-text {
+
+            white-space: nowrap;
+
+            display: inline-block;
+
+        }
+
+
+        /* =================================================
+           NAVIGATION LINKS
+           ================================================= */
+
+        .navbar .nav-links {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: center;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 30px;
+
+            margin: 0;
+
+            padding: 0;
+
+            flex: 1;
+
+            white-space: nowrap;
+
+        }
+
+
+        .navbar .nav-links a {
+
+            display: inline-flex !important;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+        }
+
+
+        /* =================================================
+           NAV ACTIONS
+           ================================================= */
+
+        .navbar .nav-actions {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: flex-end;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 12px;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        /* =================================================
+           LOGGED-IN USER
+           ================================================= */
+
+        .navbar .nav-user {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =================================================
+           NAV BUTTONS
+           ================================================= */
+
+        .navbar .nav-button {
+
+            display: inline-flex !important;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+        }
+
+
+        /* =================================================
+           MAIN CONTENT
+           ================================================= */
+
+        #main-content {
+
+            width: 100%;
+
+            min-height: calc(100vh - 78px);
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           AUTH PAGE
+           ================================================= */
+
+        .auth-page {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        .auth-card {
+
+            box-sizing: border-box;
+
+        }
+
+
+        .auth-card input,
+        .auth-card button {
+
+            box-sizing: border-box;
+
+            max-width: 100%;
+
+        }
+
+
+        /* =================================================
+           FLASH MESSAGES
+           ================================================= */
+
+        .flash-container {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           FOOTER
+           ================================================= */
+
+        .footer {
+
+            width: 100% !important;
+
+            margin: 0 !important;
+
+            padding: 42px 30px 30px !important;
+
+            box-sizing: border-box !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #080c1b 0%,
+                    #0b1020 50%,
+                    #071b24 100%
+                ) !important;
+
+            border-top:
+                1px solid
+                rgba(148, 163, 184, 0.12) !important;
+
+            color: #94a3b8;
+
+        }
+
+
+        /* =================================================
+           FOOTER CONTAINER
+           ================================================= */
+
+        .footer .footer-container {
+
+            width: 100% !important;
+
+            max-width: 1200px !important;
+
+            margin: 0 auto !important;
+
+            padding: 0 !important;
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: space-between !important;
+
+            gap: 40px !important;
+
+            box-sizing: border-box !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER BRAND
+           ================================================= */
+
+        .footer .footer-brand {
+
+            flex: 1 1 0 !important;
+
+            min-width: 220px;
+
+            display: flex !important;
+
+            flex-direction: column !important;
+
+            align-items: flex-start !important;
+
+            justify-content: center !important;
+
+            text-align: left !important;
+
+            gap: 8px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER LOGO
+           ================================================= */
+
+        .footer .footer-logo {
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: flex-start !important;
+
+            gap: 10px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+            color: #e2e8f0 !important;
+
+        }
+
+
+        .footer .footer-logo .logo-icon {
+
+            width: 44px !important;
+
+            height: 44px !important;
+
+            min-width: 44px !important;
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            border-radius: 14px !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #7c3aed
+                ) !important;
+
+            color: white !important;
+
+            font-size: 20px !important;
+
+            box-shadow:
+                0 8px 25px
+                rgba(99, 102, 241, 0.25) !important;
+
+        }
+
+
+        .footer .footer-logo strong {
+
+            color: #e2e8f0 !important;
+
+            font-size: 16px !important;
+
+            font-weight: 700 !important;
+
+            white-space: nowrap !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER DESCRIPTION
+           ================================================= */
+
+        .footer .footer-brand p {
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+            color: #64748b !important;
+
+            font-size: 14px !important;
+
+            line-height: 1.5 !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER LINKS
+           ================================================= */
+
+        .footer .footer-links {
+
+            flex: 0 0 auto !important;
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            flex-wrap: wrap !important;
+
+            gap: 24px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        .footer .footer-links a {
+
+            display: inline-flex !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            color: #94a3b8 !important;
+
+            text-decoration: none !important;
+
+            font-size: 14px !important;
+
+            font-weight: 500 !important;
+
+            white-space: nowrap !important;
+
+            margin: 0 !important;
+
+            padding: 4px 0 !important;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease !important;
+
+        }
+
+
+        .footer .footer-links a:hover {
+
+            color: #a78bfa !important;
+
+            text-decoration: none !important;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /* =================================================
+           COPYRIGHT
+           ================================================= */
+
+        .footer .footer-copy {
+
+            flex: 1 1 0 !important;
+
+            min-width: 220px;
+
+            text-align: right !important;
+
+            color: #475569 !important;
+
+            font-size: 13px !important;
+
+            line-height: 1.5 !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        /* =================================================
+           TABLET
+           ================================================= */
+
+        @media (max-width: 1100px) {
+
+            .navbar .nav-container {
+
+                padding-left: 24px;
+
+                padding-right: 24px;
+
+                gap: 14px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                gap: 20px;
+
+            }
+
+
+            .navbar .nav-actions {
+
+                gap: 8px;
+
+            }
+
+
+            .footer {
+
+                padding-left: 24px !important;
+
+                padding-right: 24px !important;
+
+            }
+
+
+            .footer .footer-container {
+
+                gap: 25px !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                gap: 16px !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           SMALL TABLET
+           ================================================= */
+
+        @media (max-width: 850px) {
+
+            .navbar .nav-container {
+
+                padding-left: 18px;
+
+                padding-right: 18px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                gap: 14px;
+
+            }
+
+
+            .navbar .nav-links a {
+
+                font-size: 14px;
+
+            }
+
+
+            .navbar .nav-button {
+
+                padding-left: 14px;
+
+                padding-right: 14px;
+
+            }
+
+
+            .footer .footer-container {
+
+                flex-wrap: wrap !important;
+
+                justify-content: center !important;
+
+            }
+
+
+            .footer .footer-brand {
+
+                align-items: center !important;
+
+                text-align: center !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                text-align: center !important;
+
+                flex-basis: 100% !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           MOBILE
+           ================================================= */
+
+        @media (max-width: 700px) {
+
+            .navbar {
+
+                min-height: 70px;
+
+            }
+
+
+            .navbar .nav-container {
+
+                min-height: 70px;
+
+                padding: 0 16px;
+
+                gap: 12px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                display: none !important;
+
+            }
+
+
+            .navbar .nav-actions {
+
+                margin-left: auto;
+
+            }
+
+
+            .navbar .nav-user {
+
+                display: none;
+
+            }
+
+
+            .navbar .logo-icon {
+
+                width: 38px;
+
+                height: 38px;
+
+                min-width: 38px;
+
+            }
+
+
+            .navbar .logo-text {
+
+                font-size: 20px;
+
+            }
+
+
+            #main-content {
+
+                min-height: calc(100vh - 70px);
+
+            }
+
+
+            /* FOOTER MOBILE */
+
+            .footer {
+
+                padding:
+                    35px 20px 25px !important;
+
+            }
+
+
+            .footer .footer-container {
+
+                flex-direction: column !important;
+
+                align-items: center !important;
+
+                justify-content: center !important;
+
+                gap: 22px !important;
+
+            }
+
+
+            .footer .footer-brand {
+
+                width: 100%;
+
+                min-width: 0;
+
+                align-items: center !important;
+
+                text-align: center !important;
+
+            }
+
+
+            .footer .footer-logo {
+
+                justify-content: center !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                width: 100%;
+
+                justify-content: center !important;
+
+                gap: 12px 20px !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                width: 100%;
+
+                min-width: 0;
+
+                text-align: center !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           VERY SMALL MOBILE
+           ================================================= */
+
+        @media (max-width: 450px) {
+
+            .navbar .nav-container {
+
+                padding-left: 12px;
+
+                padding-right: 12px;
+
+            }
+
+
+            .navbar .logo {
+
+                gap: 8px;
+
+            }
+
+
+            .navbar .logo-text {
+
+                font-size: 18px;
+
+            }
+
+
+            .navbar .nav-button {
+
+                padding: 9px 12px;
+
+                font-size: 13px;
+
+            }
+
+
+            .footer {
+
+                padding:
+                    30px 15px 22px !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                gap: 10px 16px !important;
+
+            }
+
+
+            .footer .footer-links a {
+
+                font-size: 13px !important;
+
+            }
+
+
+            .footer .footer-brand p {
+
+                font-size: 13px !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                font-size: 12px !important;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================================================= -->
+    <!-- NAVBAR -->
+    <!-- ================================================= -->
+
+    <header class="navbar">
+
+        <div class="nav-container">
+
+
+            <!-- ============================= -->
+            <!-- LOGO -->
+            <!-- ============================= -->
+
+            <a
+                href="{{ url_for('home') }}"
+                class="logo"
+            >
+
+                <span class="logo-icon">
+                    ✦
+                </span>
+
+                <span class="logo-text">
+                    MeetSpace
+                </span>
+
+            </a>
+
+
+            <!-- ============================= -->
+            <!-- NAVIGATION LINKS -->
+            <!-- ============================= -->
+
+            <nav class="nav-links">
+
+                <a
+                    href="{{ url_for('home') }}"
+                >
+                    Home
+                </a>
+
+                <a
+                    href="{{ url_for('meeting.create_meeting') }}"
+                >
+                    Create Meeting
+                </a>
+
+                <a
+                    href="{{ url_for('meeting.join_meeting') }}"
+                >
+                    Join Meeting
+                </a>
+
+            </nav>
+
+
+            <!-- ============================= -->
+            <!-- NAVIGATION ACTIONS -->
+            <!-- ============================= -->
+
+            <div class="nav-actions">
+
+
+                {% if session.get("user_id") %}
+
+
+                    <!-- ============================= -->
+                    <!-- LOGGED IN USER -->
+                    <!-- ============================= -->
+
+                    <span class="nav-user">
+
+                        Hello,
+                        {{ session.get("user_name", "User") }}
+
+                    </span>
+
+
+                    <a
+                        href="{{ url_for('meeting.logout') }}"
+                        class="nav-button nav-login"
+                    >
+                        Logout
+                    </a>
+
+
+                {% else %}
+
+
+                    <!-- ============================= -->
+                    <!-- LOGIN -->
+                    <!-- ============================= -->
+
+                    <a
+                        href="{{ url_for('meeting.login') }}"
+                        class="nav-button nav-login"
+                    >
+                        Login
+                    </a>
+
+
+                    <!-- ============================= -->
+                    <!-- REGISTER -->
+                    <!-- ============================= -->
+
+                    <a
+                        href="{{ url_for('meeting.register') }}"
+                        class="nav-button nav-register"
+                    >
+                        Get Started
+                    </a>
+
+
+                {% endif %}
+
+
+            </div>
+
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ================================================= -->
+    <!-- FLASH MESSAGES -->
+    <!-- ================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="flash-container">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="flash-message flash-{{ category }}"
+                        role="alert"
+                    >
+
+                        <span class="flash-icon">
+
+                            {% if category == "success" %}
+
+                                ✓
+
+                            {% elif category == "danger" %}
+
+                                !
+
+                            {% elif category == "warning" %}
+
+                                ⚠
+
+                            {% else %}
+
+                                i
+
+                            {% endif %}
+
+                        </span>
+
+
+                        <span>
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- ================================================= -->
+    <!-- MAIN WEBSITE CONTENT -->
+    <!-- ================================================= -->
+
+    <main id="main-content">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </main>
+
+
+
+    <!-- ================================================= -->
+    <!-- FOOTER -->
+    <!-- ================================================= -->
+
+    <footer class="footer">
+
+        <div class="footer-container">
+
+
+            <!-- ============================= -->
+            <!-- FOOTER BRAND -->
+            <!-- ============================= -->
+
+            <div class="footer-brand">
+
+                <div class="footer-logo">
+
+                    <span class="logo-icon">
+                        ✦
+                    </span>
+
+                    <strong>
+                        MeetSpace
+                    </strong>
+
+                </div>
+
+
+                <p>
+                    Connect. Collaborate. Together.
+                </p>
+
+            </div>
+
+
+            <!-- ============================= -->
+            <!-- FOOTER LINKS -->
+            <!-- ============================= -->
+
+            <div class="footer-links">
+
+                <a
+                    href="{{ url_for('home') }}"
+                >
+                    Home
+                </a>
+
+                <a
+                    href="{{ url_for('meeting.create_meeting') }}"
+                >
+                    Create Meeting
+                </a>
+
+                <a
+                    href="{{ url_for('meeting.join_meeting') }}"
+                >
+                    Join Meeting
+                </a>
+
+            </div>
+
+
+            <!-- ============================= -->
+            <!-- COPYRIGHT -->
+            <!-- ============================= -->
+
+            <div class="footer-copy">
+
+                © 2026 MeetSpace.
+                All rights reserved.
+
+            </div>
+
+
+        </div>
+
+    </footer>
+
+
+
+    <!-- ================================================= -->
+    <!-- GLOBAL JAVASCRIPT -->
+    <!-- ================================================= -->
+
+    <script>
+
+        /*
+        ================================================
+        FLASH MESSAGE AUTO HIDE
+        ================================================
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const messages =
+                    document.querySelectorAll(
+                        ".flash-message"
+                    );
+
+
+                messages.forEach(
+                    function (message) {
+
+                        setTimeout(
+                            function () {
+
+                                message.style.opacity = "0";
+
+                                message.style.transform =
+                                    "translateY(-10px)";
+
+
+                                setTimeout(
+                                    function () {
+
+                                        message.remove();
+
+                                    },
+                                    400
+                                );
+
+                            },
+                            4000
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+        ================================================
+        NAVBAR SCROLL EFFECT
+        ================================================
+        */
+
+        window.addEventListener(
+            "scroll",
+            function () {
+
+                const navbar =
+                    document.querySelector(
+                        ".navbar"
+                    );
+
+
+                if (!navbar) {
+
+                    return;
+
+                }
+
+
+                if (window.scrollY > 30) {
+
+                    navbar.classList.add(
+                        "navbar-scrolled"
+                    );
+
+                }
+                else {
+
+                    navbar.classList.remove(
+                        "navbar-scrolled"
+                    );
+
+                }
+
+            }
+        );
+
+    </script>
+
+
+
+    <!-- ================================================= -->
+    <!-- PAGE-SPECIFIC JAVASCRIPT -->
+    <!-- ================================================= -->
+
+    {% block scripts %}
+    {% endblock %}
+
+
+</body>
+
+</html>
