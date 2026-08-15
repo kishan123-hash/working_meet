@@ -1,13 +1,17 @@
 import os
 from urllib.parse import quote_plus
 
-from flask import Flask, render_template
+from flask import (
+    Flask,
+    render_template,
+    send_from_directory
+)
+
 from dotenv import load_dotenv
-from flask import send_from_directory
 
 
 # =========================================================
-# LOAD .ENV
+# LOAD ENVIRONMENT VARIABLES
 # =========================================================
 
 load_dotenv()
@@ -16,12 +20,13 @@ load_dotenv()
 # =========================================================
 # TI DB CLOUD SSL CERTIFICATE
 # =========================================================
-# ca.pem is located in the same folder as app.py.
-# This certificate is used for secure TiDB Cloud connections.
+# ca.pem must be in the SAME folder as app.py.
 # =========================================================
 
 CA_CERT = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
+    os.path.dirname(
+        os.path.abspath(__file__)
+    ),
     "ca.pem"
 )
 
@@ -29,9 +34,7 @@ CA_CERT = os.path.join(
 # =========================================================
 # IMPORT SHARED EXTENSIONS
 # =========================================================
-# IMPORTANT:
-# db and socketio are created in extensions.py
-# so that the same instances are used everywhere.
+# db and socketio are created in extensions.py.
 # =========================================================
 
 from extensions import db, socketio
@@ -50,12 +53,33 @@ app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY",
-    "meetspace-secret-key"
+    "meetspace-local-development-secret-key"
 )
 
 
 # =========================================================
-# MYSQL CONFIGURATION
+# SESSION CONFIGURATION
+# =========================================================
+
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+
+# Render uses HTTPS.
+# Local development remains HTTP.
+
+if os.getenv("RENDER"):
+
+    app.config["SESSION_COOKIE_SECURE"] = True
+
+else:
+
+    app.config["SESSION_COOKIE_SECURE"] = False
+
+
+# =========================================================
+# MYSQL / TIDB CONFIGURATION
 # =========================================================
 
 MYSQL_HOST = os.getenv(
@@ -85,11 +109,19 @@ MYSQL_DATABASE = os.getenv(
 
 
 # =========================================================
-# ENCODE MYSQL PASSWORD
+# ENCODE DATABASE CREDENTIALS
 # =========================================================
+
+encoded_user = quote_plus(
+    MYSQL_USER
+)
 
 encoded_password = quote_plus(
     MYSQL_PASSWORD
+)
+
+encoded_database = quote_plus(
+    MYSQL_DATABASE
 )
 
 
@@ -98,12 +130,12 @@ encoded_password = quote_plus(
 # =========================================================
 
 DATABASE_URL = (
-    f"mysql+pymysql://"
-    f"{MYSQL_USER}:"
+    "mysql+pymysql://"
+    f"{encoded_user}:"
     f"{encoded_password}@"
     f"{MYSQL_HOST}:"
     f"{MYSQL_PORT}/"
-    f"{MYSQL_DATABASE}"
+    f"{encoded_database}"
 )
 
 
@@ -111,7 +143,9 @@ DATABASE_URL = (
 # DATABASE CONFIGURATION
 # =========================================================
 
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config[
+    "SQLALCHEMY_DATABASE_URI"
+] = DATABASE_URL
 
 app.config[
     "SQLALCHEMY_TRACK_MODIFICATIONS"
@@ -119,42 +153,82 @@ app.config[
 
 
 # =========================================================
+# SQLALCHEMY CONNECTION POOL
+# =========================================================
+
+app.config[
+    "SQLALCHEMY_ENGINE_OPTIONS"
+] = {
+
+    # Check connection before using it.
+    # Useful for cloud databases.
+
+    "pool_pre_ping": True,
+
+    # Recycle old connections.
+
+    "pool_recycle": 280,
+
+    # Don't wait forever for a connection.
+
+    "pool_timeout": 30
+}
+
+
+# =========================================================
 # TI DB CLOUD SSL CONFIGURATION
 # =========================================================
+#
 # TiDB Cloud public endpoints require TLS.
 #
-# ca.pem is used to verify the TiDB Cloud server certificate.
+# ca.pem is used to verify the TiDB Cloud certificate.
 #
-# For local MySQL (localhost / 127.0.0.1), SSL is not forced.
-# This keeps your local development working normally.
+# Local MySQL does NOT require SSL.
 # =========================================================
 
 if (
-    MYSQL_HOST not in ["localhost", "127.0.0.1"]
-    and os.path.exists(CA_CERT)
+    MYSQL_HOST not in [
+        "localhost",
+        "127.0.0.1"
+    ]
 ):
 
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {
+    if os.path.exists(CA_CERT):
+
+        app.config[
+            "SQLALCHEMY_ENGINE_OPTIONS"
+        ][
+            "connect_args"
+        ] = {
+
             "ssl": {
                 "ca": CA_CERT
             }
         }
-    }
+
+    else:
+
+        print()
+        print("=" * 65)
+        print("WARNING: ca.pem NOT FOUND")
+        print("=" * 65)
+        print(
+            f"Expected location: {CA_CERT}"
+        )
+        print(
+            "TiDB Cloud SSL connection may fail."
+        )
+        print("=" * 65)
+        print()
 
 
 # =========================================================
 # INITIALIZE DATABASE
 # =========================================================
-# IMPORTANT:
-# Do NOT use:
-#
-# db = SQLAlchemy(app)
-#
-# because db already exists in extensions.py.
-# =========================================================
 
-db.init_app(app)
+db.init_app(
+    app
+)
 
 
 # =========================================================
@@ -162,12 +236,22 @@ db.init_app(app)
 # =========================================================
 
 socketio.init_app(
+
     app,
+
     cors_allowed_origins="*",
+
     async_mode="threading",
-    transports=["polling", "websocket"],
+
+    transports=[
+        "polling",
+        "websocket"
+    ],
+
     allow_upgrades=True,
+
     logger=True,
+
     engineio_logger=True
 )
 
@@ -175,7 +259,7 @@ socketio.init_app(
 # =========================================================
 # IMPORT MODELS
 # =========================================================
-# This makes sure SQLAlchemy knows about all models.
+# This makes sure SQLAlchemy knows about the models.
 # =========================================================
 
 from models.user import User
@@ -193,8 +277,11 @@ try:
 except ImportError as error:
 
     print()
-    print("❌ ERROR IMPORTING meeting.routes")
+    print("=" * 65)
+    print("ERROR IMPORTING meeting.routes")
+    print("=" * 65)
     print(error)
+    print("=" * 65)
     print()
 
     raise
@@ -222,8 +309,11 @@ try:
 except ImportError as error:
 
     print()
-    print("❌ ERROR IMPORTING meeting.socket_events")
+    print("=" * 65)
+    print("ERROR IMPORTING meeting.socket_events")
+    print("=" * 65)
     print(error)
+    print("=" * 65)
     print()
 
     raise
@@ -250,18 +340,27 @@ def home():
     )
 
 
-@app.route("/favicon.ico")
+# =========================================================
+# FAVICON
+# =========================================================
+
+@app.route(
+    "/favicon.ico"
+)
 def favicon():
 
     return send_from_directory(
+
         app.static_folder,
+
         "favicon.ico",
+
         mimetype="image/vnd.microsoft.icon"
     )
 
 
 # =========================================================
-# TEST PAGE
+# HEALTH / TEST PAGE
 # =========================================================
 
 @app.route("/test")
@@ -274,7 +373,9 @@ def test():
 
     <head>
 
-        <title>MeetSpace Test</title>
+        <title>
+            MeetSpace Test
+        </title>
 
         <style>
 
@@ -408,7 +509,7 @@ def test():
             </p>
 
             <p>
-                MySQL configuration is loaded.
+                MySQL / TiDB configuration is loaded.
             </p>
 
         </div>
@@ -423,7 +524,9 @@ def test():
 # DATABASE TEST
 # =========================================================
 
-@app.route("/database-test")
+@app.route(
+    "/database-test"
+)
 def database_test():
 
     try:
@@ -468,7 +571,9 @@ def database_test():
                     padding:50px;
                     border-radius:25px;
                     background:#0f172a;
-                    box-shadow:0 20px 60px rgba(0,0,0,.5);
+                    box-shadow:
+                        0 20px 60px
+                        rgba(0,0,0,.5);
                 "
             >
 
@@ -481,7 +586,8 @@ def database_test():
                 </h1>
 
                 <p>
-                    MySQL connection is working correctly.
+                    MySQL / TiDB Cloud connection
+                    is working correctly.
                 </p>
 
                 <br>
@@ -541,7 +647,8 @@ def database_test():
             </h1>
 
             <p>
-                Check your MySQL server and .env file.
+                Check your TiDB Cloud credentials,
+                CA certificate and environment variables.
             </p>
 
             <pre
@@ -599,13 +706,14 @@ def page_not_found(error):
 
                 color: white;
 
-                font-family: Arial, sans-serif;
+                font-family:
+                    Arial,
+                    sans-serif;
             }
 
             .error {
 
                 text-align: center;
-
             }
 
             .number {
@@ -633,14 +741,13 @@ def page_not_found(error):
 
                 font-size: 30px;
 
-                margin: 5px 0 10px;
-
+                margin:
+                    5px 0 10px;
             }
 
             p {
 
                 color: #94a3b8;
-
             }
 
             a {
@@ -808,58 +915,133 @@ def internal_server_error(error):
 if __name__ == "__main__":
 
     print()
-    print("=" * 65)
-    print("                    MEETSPACE SERVER")
-    print("=" * 65)
-    print()
-
-    print("🚀 Server starting...")
-    print()
-
-    print("🏠 Home:")
-    print("   http://127.0.0.1:5000/")
-    print()
-
-    print("🧪 Flask Test:")
-    print("   http://127.0.0.1:5000/test")
-    print()
-
-    print("🗄️ Database Test:")
-    print("   http://127.0.0.1:5000/database-test")
-    print()
-
-    print("🔐 Login:")
-    print("   http://127.0.0.1:5000/meeting/login")
-    print()
-
-    print("📝 Register:")
-    print("   http://127.0.0.1:5000/meeting/register")
-    print()
-
-    print("🔑 Forgot Password:")
-    print("   http://127.0.0.1:5000/meeting/forgot-password")
-    print()
-
-    print("🎥 Meeting Home:")
-    print("   http://127.0.0.1:5000/meeting/")
-    print()
-
-    print("🎬 Create Meeting:")
-    print("   http://127.0.0.1:5000/meeting/create")
-    print()
-
-    print("🔗 Join Meeting:")
-    print("   http://127.0.0.1:5000/meeting/join")
-    print()
 
     print("=" * 65)
+
+    print(
+        "                    MEETSPACE SERVER"
+    )
+
+    print("=" * 65)
+
+    print()
+
+    print(
+        "🚀 Server starting..."
+    )
+
+    print()
+
+    print(
+        "🏠 Home:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/"
+    )
+
+    print()
+
+    print(
+        "🧪 Flask Test:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/test"
+    )
+
+    print()
+
+    print(
+        "🗄️ Database Test:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/database-test"
+    )
+
+    print()
+
+    print(
+        "🔐 Login:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/login"
+    )
+
+    print()
+
+    print(
+        "📝 Register:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/register"
+    )
+
+    print()
+
+    print(
+        "🔑 Forgot Password:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/forgot-password"
+    )
+
+    print()
+
+    print(
+        "🎥 Meeting Home:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/"
+    )
+
+    print()
+
+    print(
+        "🎬 Create Meeting:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/create"
+    )
+
+    print()
+
+    print(
+        "🔗 Join Meeting:"
+    )
+
+    print(
+        "   http://127.0.0.1:5000/meeting/join"
+    )
+
+    print()
+
+    print("=" * 65)
+
     print()
 
     socketio.run(
+
         app,
+
         host="0.0.0.0",
-        port=5000,
+
+        port=int(
+            os.getenv(
+                "PORT",
+                "5000"
+            )
+        ),
+
         debug=False,
+
         use_reloader=False,
+
         allow_unsafe_werkzeug=True
     )

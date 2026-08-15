@@ -72,11 +72,19 @@ def login_required(function):
 )
 def register():
 
+    # -----------------------------------------------------
+    # SHOW REGISTER PAGE
+    # -----------------------------------------------------
+
     if request.method == "GET":
 
         return render_template(
             "auth/register.html"
         )
+
+    # -----------------------------------------------------
+    # USER MODEL
+    # -----------------------------------------------------
 
     from models.user import User
 
@@ -104,11 +112,6 @@ def register():
         ""
     )
 
-    otp = request.form.get(
-        "otp",
-        ""
-    ).strip()
-
     # -----------------------------------------------------
     # VALIDATION
     # -----------------------------------------------------
@@ -121,7 +124,9 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
 
     if not email:
@@ -132,7 +137,9 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
 
     if len(password) < 6:
@@ -143,7 +150,9 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
 
     if password != confirm_password:
@@ -154,84 +163,9 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
-        )
-
-    # -----------------------------------------------------
-    # CHECK OTP
-    # -----------------------------------------------------
-
-    saved_otp = session.get(
-        "registration_otp"
-    )
-
-    saved_email = session.get(
-        "registration_email"
-    )
-
-    otp_time = session.get(
-        "registration_otp_time"
-    )
-
-    if not saved_otp:
-
-        flash(
-            "Please request an OTP first.",
-            "error"
-        )
-
-        return redirect(
-            url_for("meeting.register")
-        )
-
-    if saved_email != email:
-
-        flash(
-            "OTP was sent to a different email address.",
-            "error"
-        )
-
-        return redirect(
-            url_for("meeting.register")
-        )
-
-    if otp_time:
-
-        if time.time() - otp_time > 300:
-
-            session.pop(
-                "registration_otp",
-                None
+            url_for(
+                "meeting.register"
             )
-
-            session.pop(
-                "registration_email",
-                None
-            )
-
-            session.pop(
-                "registration_otp_time",
-                None
-            )
-
-            flash(
-                "OTP has expired. Please request a new OTP.",
-                "error"
-            )
-
-            return redirect(
-                url_for("meeting.register")
-            )
-
-    if otp != saved_otp:
-
-        flash(
-            "Invalid OTP.",
-            "error"
-        )
-
-        return redirect(
-            url_for("meeting.register")
         )
 
     # -----------------------------------------------------
@@ -262,8 +196,14 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
+
+    # -----------------------------------------------------
+    # USER ALREADY EXISTS
+    # -----------------------------------------------------
 
     if existing_user:
 
@@ -273,13 +213,17 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
 
     # -----------------------------------------------------
     # CREATE USER
     # -----------------------------------------------------
-    # IMPORTANT:
+    #
+    # Registration OTP has been removed.
+    #
     # Your current User model contains:
     #
     # id
@@ -288,14 +232,19 @@ def register():
     # password_hash
     # created_at
     #
-    # Therefore we do NOT pass is_verified/is_active here.
-    # OTP verification has already happened above.
+    # Therefore we only use the fields supported
+    # by the current User model.
+    #
     # -----------------------------------------------------
 
     user = User(
         name=name,
         email=email
     )
+
+    # -----------------------------------------------------
+    # HASH PASSWORD
+    # -----------------------------------------------------
 
     user.set_password(
         password
@@ -331,11 +280,13 @@ def register():
         )
 
         return redirect(
-            url_for("meeting.register")
+            url_for(
+                "meeting.register"
+            )
         )
 
     # -----------------------------------------------------
-    # CLEAR OTP
+    # CLEAR ANY OLD REGISTRATION OTP SESSION DATA
     # -----------------------------------------------------
 
     session.pop(
@@ -363,230 +314,10 @@ def register():
     )
 
     return redirect(
-        url_for("meeting.login")
+        url_for(
+            "meeting.login"
+        )
     )
-
-
-# =========================================================
-# SEND REGISTRATION OTP
-# =========================================================
-
-@meeting_bp.route(
-    "/send-registration-otp",
-    methods=["POST"]
-)
-def send_registration_otp():
-
-    try:
-
-        data = request.get_json(
-            silent=True
-        )
-
-        if not data:
-
-            data = request.form
-
-        email = data.get(
-            "email",
-            ""
-        ).strip().lower()
-
-        if not email:
-
-            return jsonify({
-                "success": False,
-                "message": "Please enter your email address."
-            }), 400
-
-        from models.user import User
-
-        # -------------------------------------------------
-        # CHECK EXISTING USER
-        # -------------------------------------------------
-
-        try:
-
-            existing_user = User.query.filter_by(
-                email=email
-            ).first()
-
-        except Exception as e:
-
-            db.session.rollback()
-
-            print()
-            print("=" * 70)
-            print("OTP DATABASE ERROR")
-            print("=" * 70)
-            print(str(e))
-            print("=" * 70)
-            print()
-
-            return jsonify({
-                "success": False,
-                "message": "Database error while checking email."
-            }), 500
-
-        if existing_user:
-
-            return jsonify({
-                "success": False,
-                "message": "An account with this email already exists."
-            }), 400
-
-        # -------------------------------------------------
-        # MAIL CONFIG
-        # -------------------------------------------------
-
-        sender_email = os.getenv(
-            "MAIL_USERNAME"
-        )
-
-        sender_password = os.getenv(
-            "MAIL_PASSWORD"
-        )
-
-        if not sender_email or not sender_password:
-
-            return jsonify({
-                "success": False,
-                "message": "Email configuration is missing in .env"
-            }), 500
-
-        # -------------------------------------------------
-        # GENERATE OTP
-        # -------------------------------------------------
-
-        otp = str(
-            random.randint(
-                100000,
-                999999
-            )
-        )
-
-        # -------------------------------------------------
-        # EMAIL
-        # -------------------------------------------------
-
-        message = MIMEMultipart()
-
-        message["From"] = sender_email
-        message["To"] = email
-        message["Subject"] = "MeetSpace Registration OTP"
-
-        body = f"""
-Hello,
-
-Welcome to MeetSpace!
-
-Your registration OTP is:
-
-{otp}
-
-This OTP is valid for 5 minutes.
-
-If you did not request this OTP, please ignore this email.
-
-Regards,
-MeetSpace Team
-"""
-
-        message.attach(
-            MIMEText(
-                body,
-                "plain"
-            )
-        )
-
-        # -------------------------------------------------
-        # SEND
-        # -------------------------------------------------
-
-        with smtplib.SMTP(
-            "smtp.gmail.com",
-            587,
-            timeout=30
-        ) as server:
-
-            server.ehlo()
-
-            server.starttls()
-
-            server.ehlo()
-
-            server.login(
-                sender_email,
-                sender_password
-            )
-
-            server.sendmail(
-                sender_email,
-                email,
-                message.as_string()
-            )
-
-        # -------------------------------------------------
-        # SAVE OTP
-        # -------------------------------------------------
-
-        session["registration_otp"] = otp
-
-        session["registration_email"] = email
-
-        session["registration_otp_time"] = time.time()
-
-        session.modified = True
-
-        print()
-        print("=" * 60)
-        print("REGISTRATION OTP SENT")
-        print("=" * 60)
-        print("Email :", email)
-        print("OTP   :", otp)
-        print("=" * 60)
-        print()
-
-        return jsonify({
-            "success": True,
-            "message": "OTP sent successfully to your email."
-        }), 200
-
-    except smtplib.SMTPAuthenticationError as e:
-
-        print()
-        print("GMAIL AUTHENTICATION ERROR")
-        print(str(e))
-        print()
-
-        return jsonify({
-            "success": False,
-            "message": "Gmail authentication failed. Check MAIL_USERNAME and MAIL_PASSWORD."
-        }), 500
-
-    except smtplib.SMTPException as e:
-
-        print()
-        print("SMTP ERROR")
-        print(str(e))
-        print()
-
-        return jsonify({
-            "success": False,
-            "message": "Could not connect to Gmail SMTP server."
-        }), 500
-
-    except Exception as e:
-
-        print()
-        print("REGISTRATION OTP ERROR")
-        print(str(e))
-        print()
-
-        return jsonify({
-            "success": False,
-            "message": "Could not send OTP. Please try again."
-        }), 500
 
 
 # =========================================================
@@ -599,11 +330,21 @@ MeetSpace Team
 )
 def login():
 
+    # -----------------------------------------------------
+    # ALREADY LOGGED IN
+    # -----------------------------------------------------
+
     if "user_id" in session:
 
         return redirect(
-            url_for("meeting.meeting_home")
+            url_for(
+                "meeting.meeting_home"
+            )
         )
+
+    # -----------------------------------------------------
+    # SHOW LOGIN PAGE
+    # -----------------------------------------------------
 
     if request.method == "GET":
 
@@ -611,7 +352,15 @@ def login():
             "auth/login.html"
         )
 
+    # -----------------------------------------------------
+    # USER MODEL
+    # -----------------------------------------------------
+
     from models.user import User
+
+    # -----------------------------------------------------
+    # FORM DATA
+    # -----------------------------------------------------
 
     email = request.form.get(
         "email",
@@ -623,6 +372,10 @@ def login():
         ""
     )
 
+    # -----------------------------------------------------
+    # VALIDATION
+    # -----------------------------------------------------
+
     if not email or not password:
 
         flash(
@@ -631,8 +384,14 @@ def login():
         )
 
         return redirect(
-            url_for("meeting.login")
+            url_for(
+                "meeting.login"
+            )
         )
+
+    # -----------------------------------------------------
+    # FIND USER
+    # -----------------------------------------------------
 
     try:
 
@@ -655,8 +414,14 @@ def login():
         )
 
         return redirect(
-            url_for("meeting.login")
+            url_for(
+                "meeting.login"
+            )
         )
+
+    # -----------------------------------------------------
+    # USER NOT FOUND
+    # -----------------------------------------------------
 
     if user is None:
 
@@ -666,8 +431,14 @@ def login():
         )
 
         return redirect(
-            url_for("meeting.login")
+            url_for(
+                "meeting.login"
+            )
         )
+
+    # -----------------------------------------------------
+    # CHECK PASSWORD
+    # -----------------------------------------------------
 
     if not user.check_password(
         password
@@ -679,7 +450,9 @@ def login():
         )
 
         return redirect(
-            url_for("meeting.login")
+            url_for(
+                "meeting.login"
+            )
         )
 
     # -----------------------------------------------------
@@ -700,7 +473,9 @@ def login():
     )
 
     return redirect(
-        url_for("meeting.meeting_home")
+        url_for(
+            "meeting.meeting_home"
+        )
     )
 
 
@@ -721,7 +496,9 @@ def logout():
     )
 
     return redirect(
-        url_for("meeting.login")
+        url_for(
+            "meeting.login"
+        )
     )
 
 
@@ -735,11 +512,19 @@ def logout():
 )
 def forgot_password():
 
+    # -----------------------------------------------------
+    # SHOW FORGOT PASSWORD PAGE
+    # -----------------------------------------------------
+
     if request.method == "GET":
 
         return render_template(
             "auth/forgot_password.html"
         )
+
+    # -----------------------------------------------------
+    # GET EMAIL
+    # -----------------------------------------------------
 
     email = request.form.get(
         "email",
@@ -754,10 +539,20 @@ def forgot_password():
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
 
+    # -----------------------------------------------------
+    # USER MODEL
+    # -----------------------------------------------------
+
     from models.user import User
+
+    # -----------------------------------------------------
+    # FIND USER
+    # -----------------------------------------------------
 
     try:
 
@@ -780,8 +575,14 @@ def forgot_password():
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # USER NOT FOUND
+    # -----------------------------------------------------
 
     if not user:
 
@@ -791,8 +592,14 @@ def forgot_password():
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # MAIL CONFIG
+    # -----------------------------------------------------
 
     sender_email = os.getenv(
         "MAIL_USERNAME"
@@ -810,8 +617,14 @@ def forgot_password():
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # GENERATE OTP
+    # -----------------------------------------------------
 
     otp = str(
         random.randint(
@@ -820,11 +633,19 @@ def forgot_password():
         )
     )
 
+    # -----------------------------------------------------
+    # EMAIL MESSAGE
+    # -----------------------------------------------------
+
     message = MIMEMultipart()
 
     message["From"] = sender_email
+
     message["To"] = email
-    message["Subject"] = "MeetSpace Password Reset OTP"
+
+    message["Subject"] = (
+        "MeetSpace Password Reset OTP"
+    )
 
     body = f"""
 Hello,
@@ -848,6 +669,10 @@ MeetSpace Team
         )
     )
 
+    # -----------------------------------------------------
+    # SEND PASSWORD RESET OTP
+    # -----------------------------------------------------
+
     try:
 
         with smtplib.SMTP(
@@ -873,11 +698,21 @@ MeetSpace Team
                 message.as_string()
             )
 
-        session["forgot_password_otp"] = otp
+        # -------------------------------------------------
+        # SAVE OTP IN SESSION
+        # -------------------------------------------------
 
-        session["forgot_password_email"] = email
+        session[
+            "forgot_password_otp"
+        ] = otp
 
-        session["forgot_password_otp_time"] = time.time()
+        session[
+            "forgot_password_email"
+        ] = email
+
+        session[
+            "forgot_password_otp_time"
+        ] = time.time()
 
         session.modified = True
 
@@ -896,7 +731,9 @@ MeetSpace Team
         )
 
         return redirect(
-            url_for("meeting.reset_password")
+            url_for(
+                "meeting.reset_password"
+            )
         )
 
     except Exception as e:
@@ -915,7 +752,9 @@ MeetSpace Team
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
 
 
@@ -929,6 +768,10 @@ MeetSpace Team
 )
 def reset_password():
 
+    # -----------------------------------------------------
+    # GET SAVED OTP
+    # -----------------------------------------------------
+
     saved_otp = session.get(
         "forgot_password_otp"
     )
@@ -941,6 +784,10 @@ def reset_password():
         "forgot_password_otp_time"
     )
 
+    # -----------------------------------------------------
+    # CHECK OTP SESSION
+    # -----------------------------------------------------
+
     if not saved_otp or not email:
 
         flash(
@@ -949,8 +796,14 @@ def reset_password():
         )
 
         return redirect(
-            url_for("meeting.forgot_password")
+            url_for(
+                "meeting.forgot_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # CHECK OTP EXPIRY
+    # -----------------------------------------------------
 
     if otp_time:
 
@@ -977,8 +830,14 @@ def reset_password():
             )
 
             return redirect(
-                url_for("meeting.forgot_password")
+                url_for(
+                    "meeting.forgot_password"
+                )
             )
+
+    # -----------------------------------------------------
+    # SHOW RESET PAGE
+    # -----------------------------------------------------
 
     if request.method == "GET":
 
@@ -986,6 +845,10 @@ def reset_password():
             "auth/reset_password.html",
             email=email
         )
+
+    # -----------------------------------------------------
+    # FORM DATA
+    # -----------------------------------------------------
 
     otp = request.form.get(
         "otp",
@@ -1002,6 +865,10 @@ def reset_password():
         ""
     )
 
+    # -----------------------------------------------------
+    # CHECK OTP
+    # -----------------------------------------------------
+
     if otp != saved_otp:
 
         flash(
@@ -1010,8 +877,14 @@ def reset_password():
         )
 
         return redirect(
-            url_for("meeting.reset_password")
+            url_for(
+                "meeting.reset_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # PASSWORD VALIDATION
+    # -----------------------------------------------------
 
     if len(password) < 6:
 
@@ -1021,7 +894,9 @@ def reset_password():
         )
 
         return redirect(
-            url_for("meeting.reset_password")
+            url_for(
+                "meeting.reset_password"
+            )
         )
 
     if password != confirm_password:
@@ -1032,10 +907,20 @@ def reset_password():
         )
 
         return redirect(
-            url_for("meeting.reset_password")
+            url_for(
+                "meeting.reset_password"
+            )
         )
 
+    # -----------------------------------------------------
+    # USER MODEL
+    # -----------------------------------------------------
+
     from models.user import User
+
+    # -----------------------------------------------------
+    # UPDATE PASSWORD
+    # -----------------------------------------------------
 
     try:
 
@@ -1051,7 +936,9 @@ def reset_password():
             )
 
             return redirect(
-                url_for("meeting.forgot_password")
+                url_for(
+                    "meeting.forgot_password"
+                )
             )
 
         user.set_password(
@@ -1078,8 +965,14 @@ def reset_password():
         )
 
         return redirect(
-            url_for("meeting.reset_password")
+            url_for(
+                "meeting.reset_password"
+            )
         )
+
+    # -----------------------------------------------------
+    # CLEAR RESET SESSION
+    # -----------------------------------------------------
 
     session.pop(
         "forgot_password_otp",
@@ -1096,13 +989,19 @@ def reset_password():
         None
     )
 
+    # -----------------------------------------------------
+    # SUCCESS
+    # -----------------------------------------------------
+
     flash(
         "Password reset successfully. Please login.",
         "success"
     )
 
     return redirect(
-        url_for("meeting.login")
+        url_for(
+            "meeting.login"
+        )
     )
 
 
@@ -1129,6 +1028,10 @@ def meeting_home():
 @login_required
 def create_meeting():
 
+    # -----------------------------------------------------
+    # SHOW CREATE MEETING PAGE
+    # -----------------------------------------------------
+
     if request.method == "GET":
 
         return render_template(
@@ -1149,6 +1052,10 @@ def create_meeting():
         "meeting"
     ).strip()
 
+    # -----------------------------------------------------
+    # VALIDATE TITLE
+    # -----------------------------------------------------
+
     if not title:
 
         flash(
@@ -1157,7 +1064,9 @@ def create_meeting():
         )
 
         return redirect(
-            url_for("meeting.create_meeting")
+            url_for(
+                "meeting.create_meeting"
+            )
         )
 
     if not meeting_type:
@@ -1168,7 +1077,13 @@ def create_meeting():
     # GENERATE UNIQUE MEETING ID
     # -----------------------------------------------------
 
-    meeting_id = uuid.uuid4().hex[:8].upper()
+    meeting_id = uuid.uuid4().hex[
+        :8
+    ].upper()
+
+    # -----------------------------------------------------
+    # MEETING MODEL
+    # -----------------------------------------------------
 
     from models.meeting import Meeting
 
@@ -1180,7 +1095,9 @@ def create_meeting():
         meeting_id=meeting_id,
         title=title,
         meeting_type=meeting_type,
-        created_by=session.get("user_id")
+        created_by=session.get(
+            "user_id"
+        )
     )
 
     # -----------------------------------------------------
@@ -1199,10 +1116,24 @@ def create_meeting():
         print("=" * 70)
         print("✅ NEW MEETING CREATED")
         print("=" * 70)
-        print("Meeting ID   :", meeting_id)
-        print("Title        :", title)
-        print("Meeting Type :", meeting_type)
-        print("Created By   :", session.get("user_name"))
+        print(
+            "Meeting ID   :",
+            meeting_id
+        )
+        print(
+            "Title        :",
+            title
+        )
+        print(
+            "Meeting Type :",
+            meeting_type
+        )
+        print(
+            "Created By   :",
+            session.get(
+                "user_name"
+            )
+        )
         print("=" * 70)
         print()
 
@@ -1212,6 +1143,7 @@ def create_meeting():
 
         # IMPORTANT:
         # Print complete database traceback/error.
+
         import traceback
 
         print()
@@ -1258,7 +1190,9 @@ def create_meeting():
 @login_required
 def start_meeting():
 
-    meeting_id = uuid.uuid4().hex[:8].upper()
+    meeting_id = uuid.uuid4().hex[
+        :8
+    ].upper()
 
     return redirect(
         url_for(
@@ -1279,22 +1213,44 @@ def start_meeting():
 @login_required
 def join_meeting():
 
+    # -----------------------------------------------------
+    # SHOW JOIN PAGE
+    # -----------------------------------------------------
+
     if request.method == "GET":
 
         return render_template(
             "meeting/join_meeting.html"
         )
 
+    # -----------------------------------------------------
+    # GET MEETING CODE
+    # -----------------------------------------------------
+
     meeting_code = request.form.get(
         "meeting_code",
         ""
     ).strip().upper()
 
+    # -----------------------------------------------------
+    # REMOVE SPACES AND HYPHENS
+    # -----------------------------------------------------
+
     meeting_code = (
         meeting_code
-        .replace(" ", "")
-        .replace("-", "")
+        .replace(
+            " ",
+            ""
+        )
+        .replace(
+            "-",
+            ""
+        )
     )
+
+    # -----------------------------------------------------
+    # VALIDATE CODE
+    # -----------------------------------------------------
 
     if not meeting_code:
 
@@ -1304,7 +1260,9 @@ def join_meeting():
         )
 
         return redirect(
-            url_for("meeting.join_meeting")
+            url_for(
+                "meeting.join_meeting"
+            )
         )
 
     if len(meeting_code) < 4:
@@ -1315,17 +1273,35 @@ def join_meeting():
         )
 
         return redirect(
-            url_for("meeting.join_meeting")
+            url_for(
+                "meeting.join_meeting"
+            )
         )
+
+    # -----------------------------------------------------
+    # PRINT JOIN INFORMATION
+    # -----------------------------------------------------
 
     print()
     print("=" * 55)
     print("JOIN MEETING")
     print("=" * 55)
-    print("Meeting ID :", meeting_code)
-    print("User       :", session.get("user_name"))
+    print(
+        "Meeting ID :",
+        meeting_code
+    )
+    print(
+        "User       :",
+        session.get(
+            "user_name"
+        )
+    )
     print("=" * 55)
     print()
+
+    # -----------------------------------------------------
+    # OPEN MEETING ROOM
+    # -----------------------------------------------------
 
     return redirect(
         url_for(
@@ -1343,7 +1319,9 @@ def join_meeting():
     "/join/<meeting_id>"
 )
 @login_required
-def direct_join(meeting_id):
+def direct_join(
+    meeting_id
+):
 
     meeting_id = (
         meeting_id
@@ -1367,7 +1345,9 @@ def direct_join(meeting_id):
     "/room/<meeting_id>"
 )
 @login_required
-def meeting_room(meeting_id):
+def meeting_room(
+    meeting_id
+):
 
     meeting_id = (
         meeting_id

@@ -154,154 +154,6 @@
     }
 
 
-    /* =====================================================
-       OTP SECTION
-       ===================================================== */
-
-    .otp-section {
-        margin-bottom: 20px;
-
-        padding: 18px;
-
-        border-radius: 14px;
-
-        border: 1px solid rgba(99, 102, 241, 0.25);
-
-        background: rgba(30, 41, 59, 0.55);
-    }
-
-
-    .otp-title {
-        color: white;
-
-        font-size: 15px;
-
-        font-weight: 700;
-
-        margin-bottom: 6px;
-    }
-
-
-    .otp-description {
-        color: #94a3b8;
-
-        font-size: 13px;
-
-        line-height: 1.5;
-
-        margin: 0 0 14px;
-    }
-
-
-    .otp-send-row {
-        display: flex;
-
-        gap: 10px;
-    }
-
-
-    .otp-send-button {
-        border: none;
-
-        padding: 12px 16px;
-
-        border-radius: 10px;
-
-        color: white;
-
-        font-size: 14px;
-
-        font-weight: 700;
-
-        cursor: pointer;
-
-        white-space: nowrap;
-
-        background:
-            linear-gradient(
-                135deg,
-                #2563eb,
-                #7c3aed
-            );
-
-        transition: 0.2s;
-    }
-
-
-    .otp-send-button:hover {
-        transform: translateY(-1px);
-
-        box-shadow:
-            0 8px 20px
-            rgba(99, 102, 241, 0.3);
-    }
-
-
-    .otp-send-button:disabled {
-        opacity: 0.6;
-
-        cursor: not-allowed;
-
-        transform: none;
-    }
-
-
-    .otp-input {
-        width: 100%;
-
-        box-sizing: border-box;
-
-        padding: 14px 16px;
-
-        border-radius: 12px;
-
-        border: 1px solid #334155;
-
-        outline: none;
-
-        background: #0f172a;
-
-        color: white;
-
-        font-size: 18px;
-
-        text-align: center;
-
-        letter-spacing: 6px;
-
-        font-weight: 700;
-    }
-
-
-    .otp-input:focus {
-        border-color: #6366f1;
-
-        box-shadow:
-            0 0 0 3px
-            rgba(99, 102, 241, 0.15);
-    }
-
-
-    .otp-input::placeholder {
-        color: #64748b;
-
-        letter-spacing: normal;
-
-        font-size: 14px;
-
-        font-weight: 400;
-    }
-
-
-    .otp-status {
-        margin-top: 8px;
-
-        color: #94a3b8;
-
-        font-size: 12px;
-    }
-
-
     .register-button {
         width: 100%;
 
@@ -372,16 +224,9 @@
             padding: 28px 22px;
         }
 
+
         .auth-header h1 {
             font-size: 27px;
-        }
-
-        .otp-send-row {
-            flex-direction: column;
-        }
-
-        .otp-send-button {
-            width: 100%;
         }
 
     }
@@ -519,63 +364,6 @@
 
 
             <!-- ========================================= -->
-            <!-- OTP VERIFICATION -->
-            <!-- ========================================= -->
-
-            <div class="otp-section">
-
-                <div class="otp-title">
-                    Email Verification
-                </div>
-
-                <p class="otp-description">
-                    Enter your email above and click
-                    <strong>Send OTP</strong>.
-                    A 6-digit verification code will be
-                    sent to your email.
-                </p>
-
-
-                <div class="otp-send-row">
-
-                    <input
-                        type="text"
-                        id="otp"
-                        name="otp"
-                        class="otp-input"
-                        maxlength="6"
-                        minlength="6"
-                        inputmode="numeric"
-                        pattern="[0-9]{6}"
-                        placeholder="Enter OTP"
-                        autocomplete="one-time-code"
-                        required
-                    >
-
-
-                    <button
-                        type="button"
-                        class="otp-send-button"
-                        id="sendOtpButton"
-                    >
-                        Send OTP
-                    </button>
-
-                </div>
-
-
-                <div
-                    class="otp-status"
-                    id="otpStatus"
-                >
-                    OTP expires in 5 minutes.
-                </div>
-
-            </div>
-
-
-
-            <!-- ========================================= -->
             <!-- SUBMIT -->
             <!-- ========================================= -->
 
@@ -615,8 +403,9 @@
 </section>
 
 
+
 <!-- ========================================================= -->
-<!-- OTP JAVASCRIPT -->
+<!-- PASSWORD VALIDATION ONLY -->
 <!-- ========================================================= -->
 
 <script>
@@ -625,155 +414,68 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-        const sendOtpButton =
+        const registerForm =
             document.getElementById(
-                "sendOtpButton"
+                "registerForm"
             );
 
-        const emailInput =
+        const passwordInput =
             document.getElementById(
-                "email"
+                "password"
             );
 
-        const otpStatus =
+        const confirmPasswordInput =
             document.getElementById(
-                "otpStatus"
+                "confirm_password"
             );
 
 
-        sendOtpButton.addEventListener(
-            "click",
-            async function () {
+        function validatePasswords() {
 
-                const email =
-                    emailInput.value.trim();
+            const password =
+                passwordInput.value;
 
-
-                /* =====================================
-                   VALIDATE EMAIL
-                   ===================================== */
-
-                if (!email) {
-
-                    alert(
-                        "Please enter your email address first."
-                    );
-
-                    emailInput.focus();
-
-                    return;
-                }
+            const confirmPassword =
+                confirmPasswordInput.value;
 
 
-                /* =====================================
-                   SEND OTP REQUEST TO FLASK
-                   ===================================== */
+            if (
+                confirmPassword &&
+                password !== confirmPassword
+            ) {
 
-                sendOtpButton.disabled = true;
+                confirmPasswordInput.setCustomValidity(
+                    "Passwords do not match."
+                );
 
-                sendOtpButton.innerText =
-                    "Sending...";
+            } else {
 
-                otpStatus.innerText =
-                    "Sending OTP to your email...";
-
-
-                try {
-
-                    const response =
-                        await fetch(
-                            "{{ url_for('meeting.send_registration_otp') }}",
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body: JSON.stringify({
-                                    email: email
-                                })
-                            }
-                        );
-
-
-                    const data =
-                        await response.json();
-
-
-                    if (response.ok && data.success) {
-
-                        otpStatus.innerText =
-                            "✓ OTP sent successfully. Check your email.";
-
-                        sendOtpButton.innerText =
-                            "OTP Sent ✓";
-
-
-                        /* =================================
-                           ENABLE RESEND AFTER 30 SECONDS
-                           ================================= */
-
-                        setTimeout(
-                            function () {
-
-                                sendOtpButton.disabled =
-                                    false;
-
-                                sendOtpButton.innerText =
-                                    "Resend OTP";
-
-                            },
-                            30000
-                        );
-
-
-                    } else {
-
-                        throw new Error(
-                            data.message ||
-                            "Unable to send OTP."
-                        );
-
-                    }
-
-
-                } catch (error) {
-
-                    otpStatus.innerText =
-                        "❌ " + error.message;
-
-                    sendOtpButton.disabled =
-                        false;
-
-                    sendOtpButton.innerText =
-                        "Send OTP";
-
-                }
+                confirmPasswordInput.setCustomValidity(
+                    ""
+                );
 
             }
+
+        }
+
+
+        passwordInput.addEventListener(
+            "input",
+            validatePasswords
         );
 
 
-        /* =============================================
-           OTP ONLY NUMBERS
-           ============================================= */
-
-        const otpInput =
-            document.getElementById(
-                "otp"
-            );
-
-
-        otpInput.addEventListener(
+        confirmPasswordInput.addEventListener(
             "input",
+            validatePasswords
+        );
+
+
+        registerForm.addEventListener(
+            "submit",
             function () {
 
-                this.value =
-                    this.value
-                    .replace(/\D/g, "")
-                    .slice(0, 6);
+                validatePasswords();
 
             }
         );
