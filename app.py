@@ -261,7 +261,7 @@ socketio.init_app(
         "websocket"
     ],
 
-    allow_upgrades=True,
+    allow_upgrades=False,
 
     # Keep the connection alive on cloud hosting.
     ping_interval=25,
