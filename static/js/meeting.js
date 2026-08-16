@@ -424,6 +424,7 @@ const rtcConfiguration = {
 
     iceServers: [
 
+        // Google STUN
         {
             urls:
                 "stun:stun.l.google.com:19302"
@@ -432,12 +433,40 @@ const rtcConfiguration = {
         {
             urls:
                 "stun:stun1.l.google.com:19302"
+        },
+
+        // TURN server
+        {
+            urls:
+                "turn:YOUR_TURN_SERVER:3478",
+            username:
+                "YOUR_TURN_USERNAME",
+            credential:
+                "YOUR_TURN_PASSWORD"
+        },
+
+        // TURN over TLS
+        {
+            urls:
+                "turns:YOUR_TURN_SERVER:5349",
+            username:
+                "YOUR_TURN_USERNAME",
+            credential:
+                "YOUR_TURN_PASSWORD"
         }
 
-    ]
+    ],
+
+    iceTransportPolicy:
+        "all",
+
+    bundlePolicy:
+        "max-bundle",
+
+    rtcpMuxPolicy:
+        "require"
 
 };
-
 
 /* =========================================================
    4. CONNECTION STATUS
