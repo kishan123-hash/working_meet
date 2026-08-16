@@ -238,6 +238,434 @@ let socketScriptLoading = false;
 
 
 /* =========================================================
+   DUPLICATE SESSION PROTECTION
+========================================================= */
+
+const duplicateSessionToken =
+    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+let duplicateSessionChannel = null;
+
+let duplicateSessionHeartbeat = null;
+
+let duplicateSessionStarted = false;
+
+let duplicateSessionLost = false;
+
+
+function getDuplicateSessionKey() {
+
+    if (!meetingId) {
+        return null;
+    }
+
+    const safeUserName =
+        String(
+            userName ||
+            "Participant"
+        )
+            .trim()
+            .toLowerCase();
+
+    return (
+        `meetspace-active-session:` +
+        `${meetingId}:` +
+        `${safeUserName}`
+    );
+}
+
+
+function forceCloseDuplicateSession() {
+
+    if (
+        duplicateSessionLost ||
+        hasLeftMeeting
+    ) {
+        return;
+    }
+
+    duplicateSessionLost = true;
+
+    hasLeftMeeting = true;
+
+
+    console.warn(
+        "MeetSpace: duplicate meeting session detected."
+    );
+
+
+    if (duplicateSessionHeartbeat) {
+
+        clearInterval(
+            duplicateSessionHeartbeat
+        );
+
+        duplicateSessionHeartbeat =
+            null;
+    }
+
+
+    const lockKey =
+        getDuplicateSessionKey();
+
+
+    try {
+
+        if (lockKey) {
+
+            const currentLock =
+                JSON.parse(
+                    localStorage.getItem(
+                        lockKey
+                    ) || "null"
+                );
+
+
+            if (
+                currentLock?.token ===
+                duplicateSessionToken
+            ) {
+
+                localStorage.removeItem(
+                    lockKey
+                );
+            }
+        }
+
+    } catch (error) {}
+
+
+    if (duplicateSessionChannel) {
+
+        try {
+            duplicateSessionChannel.close();
+        } catch (error) {}
+
+        duplicateSessionChannel =
+            null;
+    }
+
+
+    /*
+    Stop camera and microphone.
+    */
+
+    stopLocalMedia();
+
+
+    /*
+    Close all WebRTC connections.
+    */
+
+    closeAllPeerConnections();
+
+
+    /*
+    Disconnect Socket.IO.
+    */
+
+    if (socket) {
+
+        try {
+            socket.disconnect();
+        } catch (error) {}
+    }
+
+
+    updateConnectionStatus(
+        "error",
+        "Meeting opened in another tab"
+    );
+
+
+    showToast(
+        "error",
+        "This meeting was opened in another tab. This tab has been disconnected."
+    );
+}
+
+
+function initializeDuplicateSessionProtection() {
+
+    if (
+        duplicateSessionStarted ||
+        !meetingId
+    ) {
+        return;
+    }
+
+    duplicateSessionStarted =
+        true;
+
+
+    const lockKey =
+        getDuplicateSessionKey();
+
+
+    if (!lockKey) {
+        return;
+    }
+
+
+    /*
+    BroadcastChannel allows tabs of the
+    same browser to communicate immediately.
+    */
+
+    if (
+        typeof BroadcastChannel ===
+        "function"
+    ) {
+
+        try {
+
+            duplicateSessionChannel =
+                new BroadcastChannel(
+                    `meetspace-session-${meetingId}`
+                );
+
+
+            duplicateSessionChannel.onmessage =
+                function (event) {
+
+                    const data =
+                        event?.data || {};
+
+
+                    if (
+                        data.type ===
+                            "MEETSPACE_SESSION_CLAIM" &&
+
+                        data.token !==
+                            duplicateSessionToken &&
+
+                        data.userKey ===
+                            lockKey
+                    ) {
+
+                        forceCloseDuplicateSession();
+                    }
+                };
+
+
+        } catch (error) {
+
+            duplicateSessionChannel =
+                null;
+        }
+    }
+
+
+    /*
+    localStorage provides a second layer
+    of duplicate-session protection.
+    */
+
+    try {
+
+        localStorage.setItem(
+            lockKey,
+            JSON.stringify({
+
+                token:
+                    duplicateSessionToken,
+
+                timestamp:
+                    Date.now()
+            })
+        );
+
+
+        /*
+        Detect when another tab replaces
+        the current session lock.
+        */
+
+        window.addEventListener(
+            "storage",
+            function (event) {
+
+                if (
+                    event.key !==
+                        lockKey ||
+                    !event.newValue
+                ) {
+                    return;
+                }
+
+
+                try {
+
+                    const data =
+                        JSON.parse(
+                            event.newValue
+                        );
+
+
+                    if (
+                        data?.token &&
+                        data.token !==
+                            duplicateSessionToken
+                    ) {
+
+                        forceCloseDuplicateSession();
+                    }
+
+                } catch (error) {}
+            }
+        );
+
+
+        /*
+        Keep the active session lock alive.
+        */
+
+        duplicateSessionHeartbeat =
+            setInterval(
+                function () {
+
+                    if (
+                        duplicateSessionLost ||
+                        hasLeftMeeting
+                    ) {
+                        return;
+                    }
+
+
+                    try {
+
+                        const currentLock =
+                            JSON.parse(
+                                localStorage.getItem(
+                                    lockKey
+                                ) || "null"
+                            );
+
+
+                        if (
+                            currentLock?.token &&
+                            currentLock.token !==
+                                duplicateSessionToken
+                        ) {
+
+                            forceCloseDuplicateSession();
+
+                            return;
+                        }
+
+
+                        localStorage.setItem(
+                            lockKey,
+                            JSON.stringify({
+
+                                token:
+                                    duplicateSessionToken,
+
+                                timestamp:
+                                    Date.now()
+                            })
+                        );
+
+
+                    } catch (error) {}
+
+                },
+                2000
+            );
+
+
+    } catch (error) {
+
+        console.warn(
+            "MeetSpace: localStorage duplicate-session protection unavailable.",
+            error
+        );
+    }
+
+
+    /*
+    Announce this active session to other tabs.
+    */
+
+    if (duplicateSessionChannel) {
+
+        try {
+
+            duplicateSessionChannel.postMessage({
+
+                type:
+                    "MEETSPACE_SESSION_CLAIM",
+
+                token:
+                    duplicateSessionToken,
+
+                userKey:
+                    lockKey
+
+            });
+
+        } catch (error) {}
+    }
+}
+
+
+function releaseDuplicateSessionLock() {
+
+    if (duplicateSessionHeartbeat) {
+
+        clearInterval(
+            duplicateSessionHeartbeat
+        );
+
+        duplicateSessionHeartbeat =
+            null;
+    }
+
+
+    const lockKey =
+        getDuplicateSessionKey();
+
+
+    try {
+
+        if (lockKey) {
+
+            const currentLock =
+                JSON.parse(
+                    localStorage.getItem(
+                        lockKey
+                    ) || "null"
+                );
+
+
+            if (
+                currentLock?.token ===
+                duplicateSessionToken
+            ) {
+
+                localStorage.removeItem(
+                    lockKey
+                );
+            }
+        }
+
+    } catch (error) {}
+
+
+    if (duplicateSessionChannel) {
+
+        try {
+            duplicateSessionChannel.close();
+        } catch (error) {}
+
+        duplicateSessionChannel =
+            null;
+    }
+}
+
+
+
+/* =========================================================
    WEBRTC CONFIGURATION
 ========================================================= */
 
@@ -297,7 +725,8 @@ function initializeSocket() {
         return;
     }
 
-    socketInitialized = true;
+    socketInitialized =
+        true;
 
 
     /*
@@ -305,7 +734,10 @@ function initializeSocket() {
     immediately create the connection.
     */
 
-    if (typeof window.io === "function") {
+    if (
+        typeof window.io ===
+        "function"
+    ) {
 
         console.log(
             "Socket.IO client already available."
@@ -321,9 +753,11 @@ function initializeSocket() {
         "Socket.IO client not found."
     );
 
+
     console.log(
         "Loading Socket.IO client from Flask server..."
     );
+
 
     loadFlaskSocketIO();
 }
@@ -339,7 +773,8 @@ function loadFlaskSocketIO() {
         return;
     }
 
-    socketScriptLoading = true;
+    socketScriptLoading =
+        true;
 
 
     const existingScript =
@@ -359,7 +794,9 @@ function loadFlaskSocketIO() {
 
 
     const script =
-        document.createElement("script");
+        document.createElement(
+            "script"
+        );
 
 
     /*
@@ -372,7 +809,8 @@ function loadFlaskSocketIO() {
         "/socket.io/socket.io.js";
 
 
-    script.async = false;
+    script.async =
+        false;
 
 
     script.dataset.meetspaceSocketio =
@@ -382,15 +820,19 @@ function loadFlaskSocketIO() {
     script.onload =
         function () {
 
-            socketScriptLoading = false;
+            socketScriptLoading =
+                false;
+
 
             console.log(
                 "================================="
             );
 
+
             console.log(
                 "SOCKET.IO CLIENT LOADED FROM FLASK"
             );
+
 
             console.log(
                 "================================="
@@ -398,14 +840,17 @@ function loadFlaskSocketIO() {
 
 
             if (
-                typeof window.io === "function"
+                typeof window.io ===
+                "function"
             ) {
 
                 console.log(
                     "Socket.IO client detected."
                 );
 
+
                 createSocket();
+
 
             } else {
 
@@ -413,10 +858,12 @@ function loadFlaskSocketIO() {
                     "Socket.IO script loaded but io() is unavailable."
                 );
 
+
                 updateConnectionStatus(
                     "error",
                     "Socket.IO unavailable"
                 );
+
 
                 showToast(
                     "error",
@@ -429,23 +876,29 @@ function loadFlaskSocketIO() {
     script.onerror =
         function () {
 
-            socketScriptLoading = false;
+            socketScriptLoading =
+                false;
+
 
             console.error(
                 "================================="
             );
 
+
             console.error(
                 "FLASK SOCKET.IO CLIENT FAILED"
             );
+
 
             console.error(
                 "Expected:"
             );
 
+
             console.error(
                 "/socket.io/socket.io.js"
             );
+
 
             console.error(
                 "================================="
@@ -465,7 +918,9 @@ function loadFlaskSocketIO() {
         };
 
 
-    document.head.appendChild(script);
+    document.head.appendChild(
+        script
+    );
 }
 
 
@@ -485,16 +940,21 @@ function createSocket() {
     }
 
 
-    if (typeof window.io !== "function") {
+    if (
+        typeof window.io !==
+        "function"
+    ) {
 
         console.error(
             "Cannot create socket: io() unavailable."
         );
 
+
         updateConnectionStatus(
             "error",
             "Socket.IO unavailable"
         );
+
 
         return;
     }
@@ -559,7 +1019,10 @@ function createSocket() {
             error
         );
 
-        socket = null;
+
+        socket =
+            null;
+
 
         updateConnectionStatus(
             "error",
@@ -585,7 +1048,8 @@ function registerSocketEvents() {
     }
 
 
-    socketEventsRegistered = true;
+    socketEventsRegistered =
+        true;
 
 
     /* =====================================================
@@ -600,33 +1064,41 @@ function registerSocketEvents() {
                 "================================="
             );
 
+
             console.log(
                 "SOCKET.IO CONNECTED"
             );
+
 
             console.log(
                 "Socket ID:",
                 socket.id
             );
 
+
             console.log(
                 "Meeting ID:",
                 meetingId
             );
+
 
             console.log(
                 "User:",
                 userName
             );
 
+
             console.log(
                 "================================="
             );
 
 
-            hasLeftMeeting = false;
+            hasLeftMeeting =
+                false;
 
-            socketRoomJoined = false;
+
+            socketRoomJoined =
+                false;
 
 
             updateConnectionStatus(
@@ -689,7 +1161,10 @@ function registerSocketEvents() {
                     attempt
                 );
 
-                socketRoomJoined = false;
+
+                socketRoomJoined =
+                    false;
+
 
                 updateConnectionStatus(
                     "connecting",
@@ -708,7 +1183,10 @@ function registerSocketEvents() {
                     attempt
                 );
 
-                socketRoomJoined = false;
+
+                socketRoomJoined =
+                    false;
+
 
                 if (
                     !hasLeftMeeting &&
@@ -737,7 +1215,8 @@ function registerSocketEvents() {
             );
 
 
-            socketRoomJoined = false;
+            socketRoomJoined =
+                false;
 
 
             if (!hasLeftMeeting) {
@@ -821,7 +1300,8 @@ function registerSocketEvents() {
 
                 participants[
                     remoteSocketId
-                ] = remoteName;
+                ] =
+                    remoteName;
 
 
                 const peerConnection =
@@ -935,7 +1415,8 @@ function registerSocketEvents() {
 
             participants[
                 remoteSocketId
-            ] = remoteName;
+            ] =
+                remoteName;
 
 
             /*
@@ -1006,7 +1487,8 @@ function registerSocketEvents() {
 
             participants[
                 remoteSocketId
-            ] = remoteName;
+            ] =
+                remoteName;
 
 
             const peerConnection =
@@ -1121,6 +1603,7 @@ function registerSocketEvents() {
                     remoteSocketId
                 );
 
+
                 return;
             }
 
@@ -1204,6 +1687,7 @@ function registerSocketEvents() {
                     candidate
                 );
 
+
                 return;
             }
 
@@ -1218,6 +1702,7 @@ function registerSocketEvents() {
                     candidate
                 );
 
+
                 return;
             }
 
@@ -1230,6 +1715,7 @@ function registerSocketEvents() {
                             candidate
                         )
                     );
+
 
             } catch (error) {
 
@@ -1334,8 +1820,6 @@ function registerSocketEvents() {
         }
     );
 }
-
-
 /* =========================================================
    7. INITIALIZE CAMERA + MICROPHONE
 ========================================================= */
@@ -1352,7 +1836,8 @@ async function initializeMeeting() {
     }
 
 
-    mediaInitializationStarted = true;
+    mediaInitializationStarted =
+        true;
 
 
     if (!meetingId) {
@@ -1361,10 +1846,12 @@ async function initializeMeeting() {
             "Meeting ID is missing."
         );
 
+
         updateConnectionStatus(
             "error",
             "Meeting ID missing"
         );
+
 
         return;
     }
@@ -1430,19 +1917,23 @@ async function initializeMeeting() {
             "================================="
         );
 
+
         console.log(
             "CAMERA + MICROPHONE OBTAINED"
         );
+
 
         console.log(
             "Video tracks:",
             localStream.getVideoTracks().length
         );
 
+
         console.log(
             "Audio tracks:",
             localStream.getAudioTracks().length
         );
+
 
         console.log(
             "================================="
@@ -1480,32 +1971,40 @@ async function initializeMeeting() {
             localVideo.srcObject =
                 localStream;
 
+
             localVideo.muted =
                 true;
+
 
             localVideo.defaultMuted =
                 true;
 
+
             localVideo.autoplay =
                 true;
 
+
             localVideo.playsInline =
                 true;
+
 
             localVideo.setAttribute(
                 "autoplay",
                 ""
             );
 
+
             localVideo.setAttribute(
                 "muted",
                 ""
             );
 
+
             localVideo.setAttribute(
                 "playsinline",
                 ""
             );
+
 
             localVideo.style.display =
                 "block";
@@ -1557,6 +2056,7 @@ async function initializeMeeting() {
             localVideo.srcObject =
                 null;
 
+
             localVideo.style.display =
                 "none";
         }
@@ -1571,6 +2071,7 @@ async function initializeMeeting() {
 
         microphoneEnabled =
             false;
+
 
         cameraEnabled =
             false;
@@ -1616,11 +2117,14 @@ async function playLocalVideo() {
         localVideo.muted =
             true;
 
+
         localVideo.defaultMuted =
             true;
 
+
         localVideo.autoplay =
             true;
+
 
         localVideo.playsInline =
             true;
@@ -1662,7 +2166,10 @@ async function playLocalVideo() {
 function getMediaErrorMessage(error) {
 
     if (!error) {
-        return "Camera or microphone unavailable.";
+
+        return (
+            "Camera or microphone unavailable."
+        );
     }
 
 
@@ -1733,6 +2240,7 @@ function joinMeetingRoom() {
             "Cannot join meeting: socket unavailable."
         );
 
+
         return;
     }
 
@@ -1742,6 +2250,7 @@ function joinMeetingRoom() {
         console.warn(
             "Cannot join meeting: socket not connected."
         );
+
 
         return;
     }
@@ -1753,6 +2262,7 @@ function joinMeetingRoom() {
             "Cannot join meeting: meeting ID missing."
         );
 
+
         return;
     }
 
@@ -1763,6 +2273,7 @@ function joinMeetingRoom() {
             "Already joined Socket.IO room."
         );
 
+
         return;
     }
 
@@ -1771,24 +2282,29 @@ function joinMeetingRoom() {
         "================================="
     );
 
+
     console.log(
         "JOINING SOCKET.IO ROOM"
     );
+
 
     console.log(
         "Meeting:",
         meetingId
     );
 
+
     console.log(
         "User:",
         userName
     );
 
+
     console.log(
         "Socket:",
         socket.id
     );
+
 
     console.log(
         "================================="
@@ -1990,6 +2506,7 @@ function createPeerConnection(
                 stream =
                     new MediaStream();
 
+
                 remoteStreams[
                     remoteSocketId
                 ] =
@@ -2046,6 +2563,7 @@ function createPeerConnection(
                 !socket ||
                 !socket.connected
             ) {
+
                 return;
             }
 
@@ -2268,6 +2786,7 @@ async function flushPendingIceCandidates(
     if (
         !peerConnection.remoteDescription
     ) {
+
         return;
     }
 
@@ -2290,6 +2809,7 @@ async function flushPendingIceCandidates(
                         candidate
                     )
                 );
+
 
         } catch (error) {
 
@@ -2323,6 +2843,7 @@ function createRemoteVideo(
             "#remoteVideos not found."
         );
 
+
         return;
     }
 
@@ -2350,17 +2871,22 @@ function createRemoteVideo(
             video.autoplay =
                 true;
 
+
             video.playsInline =
                 true;
+
 
             video.controls =
                 false;
 
+
             video.muted =
                 false;
 
+
             video.volume =
                 1;
+
 
             video.srcObject =
                 stream;
@@ -2397,9 +2923,7 @@ function createRemoteVideo(
         document.createElement(
             "div"
         );
-
-
-    card.className =
+            card.className =
         "video-card remote-video-card";
 
 
@@ -2420,27 +2944,34 @@ function createRemoteVideo(
     video.autoplay =
         true;
 
+
     video.playsInline =
         true;
+
 
     video.controls =
         false;
 
+
     video.muted =
         false;
 
+
     video.volume =
         1;
+
 
     video.setAttribute(
         "autoplay",
         ""
     );
 
+
     video.setAttribute(
         "playsinline",
         ""
     );
+
 
     video.srcObject =
         stream;
@@ -2617,10 +3148,13 @@ function removeRemoteParticipant(
             peerConnection.ontrack =
                 null;
 
+
             peerConnection.onicecandidate =
                 null;
 
+
             peerConnection.close();
+
 
         } catch (error) {
 
@@ -2636,13 +3170,16 @@ function removeRemoteParticipant(
         socketId
     ];
 
+
     delete participants[
         socketId
     ];
 
+
     delete pendingIceCandidates[
         socketId
     ];
+
 
     delete remoteStreams[
         socketId
@@ -2689,6 +3226,7 @@ function toggleMicrophone() {
             "Microphone is unavailable."
         );
 
+
         return;
     }
 
@@ -2703,6 +3241,7 @@ function toggleMicrophone() {
             "error",
             "No microphone found."
         );
+
 
         return;
     }
@@ -2756,6 +3295,7 @@ function updateMicrophoneButton() {
             "active"
         );
 
+
         micBtn.classList.remove(
             "off"
         );
@@ -2777,6 +3317,7 @@ function updateMicrophoneButton() {
         micBtn.classList.remove(
             "active"
         );
+
 
         micBtn.classList.add(
             "off"
@@ -2818,6 +3359,7 @@ function toggleCamera() {
             "Camera is unavailable."
         );
 
+
         return;
     }
 
@@ -2832,6 +3374,7 @@ function toggleCamera() {
             "error",
             "No camera found."
         );
+
 
         return;
     }
@@ -2873,17 +3416,22 @@ function toggleCamera() {
                 localVideo.srcObject =
                     localStream;
 
+
                 localVideo.muted =
                     true;
+
 
                 localVideo.defaultMuted =
                     true;
 
+
                 localVideo.autoplay =
                     true;
 
+
                 localVideo.playsInline =
                     true;
+
 
                 localVideo.style.display =
                     "block";
@@ -2955,6 +3503,7 @@ function updateCameraButton() {
             "active"
         );
 
+
         cameraBtn.classList.remove(
             "off"
         );
@@ -2976,6 +3525,7 @@ function updateCameraButton() {
         cameraBtn.classList.remove(
             "active"
         );
+
 
         cameraBtn.classList.add(
             "off"
@@ -3147,6 +3697,7 @@ async function replaceVideoTrackForAllPeers(
                 socketId
             );
 
+
             continue;
         }
 
@@ -3210,20 +3761,24 @@ function setLocalVideoStream(
         true;
 
 
-    if (
-        stream &&
-        showVideo
-    ) {
+    if (showVideo) {
 
         localVideo.style.display =
             "block";
+
+
+        if (localPlaceholder) {
+
+            localPlaceholder.style.display =
+                "none";
+        }
 
 
         localVideo.play().catch(
             function (error) {
 
                 console.warn(
-                    "Local video playback warning:",
+                    "Local preview playback failed:",
                     error
                 );
             }
@@ -3234,97 +3789,33 @@ function setLocalVideoStream(
 
         localVideo.style.display =
             "none";
+
+
+        if (localPlaceholder) {
+
+            localPlaceholder.style.display =
+                "flex";
+        }
     }
 }
 
 
 /* =========================================================
-   SCREEN SHARE BUTTON
+   START SCREEN SHARING
 ========================================================= */
 
-function updateScreenShareButton(
-    isSharing
-) {
-
-    if (!screenShareBtn) {
-        return;
-    }
-
-
-    if (isSharing) {
-
-        screenShareBtn.classList.add(
-            "active"
-        );
-
-
-    } else {
-
-        screenShareBtn.classList.remove(
-            "active"
-        );
-    }
-
-
-    const label =
-        screenShareBtn.querySelector(
-            ".control-label"
-        );
-
-
-    if (label) {
-
-        label.textContent =
-            isSharing
-                ? "Stop Share"
-                : "Share Screen";
-    }
-
-
-    screenShareBtn.title =
-        isSharing
-            ? "Stop screen sharing"
-            : "Share your screen";
-}
-
-
-/* =========================================================
-   START / STOP SCREEN SHARE
-========================================================= */
-
-async function toggleScreenShare() {
-
-    /*
-    If already sharing,
-    stop screen sharing.
-    */
+async function startScreenSharing() {
 
     if (screenStream) {
 
-        await stopScreenSharing();
-
-        return;
-    }
-
-
-    /*
-    Camera and microphone should already exist.
-    */
-
-    if (!localStream) {
-
-        showToast(
-            "error",
-            "Camera and microphone are not ready yet."
+        console.log(
+            "Screen sharing is already active."
         );
 
+
         return;
     }
 
-
-    /*
-    Browser support check.
-    */
 
     if (
         !navigator.mediaDevices ||
@@ -3333,8 +3824,9 @@ async function toggleScreenShare() {
 
         showToast(
             "error",
-            "Screen sharing is not supported in this browser."
+            "Screen sharing is not supported by this browser."
         );
+
 
         return;
     }
@@ -3343,100 +3835,58 @@ async function toggleScreenShare() {
     try {
 
         console.log(
-            "================================="
-        );
-
-        console.log(
-            "STARTING SCREEN SHARE"
-        );
-
-        console.log(
-            "================================="
+            "Starting screen sharing..."
         );
 
 
-        /*
-        IMPORTANT:
-
-        Audio is intentionally false.
-
-        The existing microphone WebRTC audio track
-        continues working normally.
-
-        This prevents creating an additional audio
-        sender and avoids unnecessary renegotiation.
-        */
-
-        const selectedScreenStream =
+        screenStream =
             await navigator.mediaDevices
                 .getDisplayMedia({
 
                     video: {
 
-                        cursor:
-                            "always"
+                        frameRate: {
+                            ideal: 30,
+                            max: 30
+                        }
                     },
 
-                    audio:
-                        false
+                    audio: false
                 });
 
 
         const screenTrack =
-            selectedScreenStream
-                .getVideoTracks()[0];
+            screenStream.getVideoTracks()[0];
 
 
         if (!screenTrack) {
 
-            selectedScreenStream
-                .getTracks()
-                .forEach(
-                    function (track) {
-
-                        track.stop();
-                    }
-                );
-
-
             throw new Error(
-                "Screen video track was not returned by the browser."
+                "No screen video track was returned."
             );
         }
 
 
         /*
-        Save the screen stream globally.
-
-        This is important because createPeerConnection()
-        checks screenStream when a NEW participant joins.
+        Browser's native "Stop sharing" button.
         */
 
-        screenStream =
-            selectedScreenStream;
+        screenTrack.onended =
+            function () {
+
+                console.log(
+                    "Browser stopped screen sharing."
+                );
 
 
-        console.log(
-            "Screen track:",
-            screenTrack.id
-        );
+                stopScreenSharing(
+                    true
+                );
+            };
 
 
         /*
-        =====================================================
-        REPLACE CAMERA WITH SCREEN FOR EXISTING PEERS
-        =====================================================
-        */
-
-        await replaceVideoTrackForAllPeers(
-            screenTrack
-        );
-
-
-        /*
-        =====================================================
-        LOCAL SCREEN PREVIEW
-        =====================================================
+        Show screen locally.
         */
 
         setLocalVideoStream(
@@ -3445,17 +3895,18 @@ async function toggleScreenShare() {
         );
 
 
-        if (localPlaceholder) {
+        /*
+        Replace camera track with screen track
+        for every existing WebRTC peer.
+        */
 
-            localPlaceholder.style.display =
-                "none";
-        }
+        await replaceVideoTrackForAllPeers(
+            screenTrack
+        );
 
 
         /*
-        =====================================================
-        UPDATE BUTTON
-        =====================================================
+        Update button.
         */
 
         updateScreenShareButton(
@@ -3470,70 +3921,16 @@ async function toggleScreenShare() {
 
 
         console.log(
-            "Screen sharing is now active."
+            "Screen sharing started successfully."
         );
-
-
-        /*
-        =====================================================
-        BROWSER STOP SHARING
-        =====================================================
-
-        When the user clicks the browser's native
-        "Stop sharing" button, the screen track fires
-        the ended event.
-        */
-
-        screenTrack.onended =
-            function () {
-
-                console.log(
-                    "Browser ended screen sharing."
-                );
-
-
-                stopScreenSharing(
-                    false
-                );
-            };
 
 
     } catch (error) {
 
         console.error(
-            "Screen sharing error:",
+            "Screen sharing failed:",
             error
         );
-
-
-        /*
-        Clean up failed screen stream.
-        */
-
-        if (screenStream) {
-
-            screenStream
-                .getTracks()
-                .forEach(
-                    function (track) {
-
-                        try {
-
-                            track.onended =
-                                null;
-
-                            track.stop();
-
-                        } catch (stopError) {
-
-                            console.warn(
-                                "Unable to stop screen track:",
-                                stopError
-                            );
-                        }
-                    }
-                );
-        }
 
 
         screenStream =
@@ -3545,16 +3942,15 @@ async function toggleScreenShare() {
         );
 
 
-        /*
-        User cancelled the screen picker.
-        */
-
         if (
-            error?.name ===
+            error &&
+            (
+                error.name ===
                 "NotAllowedError" ||
 
-            error?.name ===
+                error.name ===
                 "AbortError"
+            )
         ) {
 
             showToast(
@@ -3563,13 +3959,27 @@ async function toggleScreenShare() {
             );
 
 
-        } else {
+            /*
+            Restore camera preview.
+            */
 
-            showToast(
-                "error",
-                "Unable to start screen sharing."
-            );
+            if (localStream) {
+
+                setLocalVideoStream(
+                    localStream,
+                    cameraEnabled
+                );
+            }
+
+
+            return;
         }
+
+
+        showToast(
+            "error",
+            "Unable to start screen sharing."
+        );
     }
 }
 
@@ -3579,40 +3989,33 @@ async function toggleScreenShare() {
 ========================================================= */
 
 async function stopScreenSharing(
-    showMessage = true
+    fromBrowser = false
 ) {
 
-    /*
-    Save the current screen stream.
-
-    screenStream is cleared immediately so that
-    another "ended" event cannot recursively call
-    this function.
-    */
-
-    const activeScreenStream =
-        screenStream;
-
-
-    if (!activeScreenStream) {
+    if (!screenStream) {
 
         updateScreenShareButton(
             false
         );
 
+
+        if (localStream) {
+
+            setLocalVideoStream(
+                localStream,
+                cameraEnabled
+            );
+        }
+
+
         return;
     }
 
 
-    screenStream =
-        null;
+    console.log(
+        "Stopping screen sharing..."
+    );
 
-
-    /*
-    =====================================================
-    FIND ORIGINAL CAMERA TRACK
-    =====================================================
-    */
 
     const cameraTrack =
         localStream
@@ -3629,9 +4032,27 @@ async function stopScreenSharing(
 
 
     /*
-    =====================================================
-    RESTORE CAMERA FOR ALL EXISTING PEERS
-    =====================================================
+    Stop the screen tracks.
+    */
+
+    screenStream
+        .getTracks()
+        .forEach(
+            function (track) {
+
+                try {
+                    track.stop();
+                } catch (error) {}
+            }
+        );
+
+
+    screenStream =
+        null;
+
+
+    /*
+    Restore camera track to every peer.
     */
 
     if (cameraTrack) {
@@ -3643,86 +4064,24 @@ async function stopScreenSharing(
 
 
     /*
-    =====================================================
-    STOP SCREEN TRACK
-    =====================================================
-    */
-
-    activeScreenStream
-        .getTracks()
-        .forEach(
-            function (track) {
-
-                try {
-
-                    track.onended =
-                        null;
-
-                    track.stop();
-
-                } catch (error) {
-
-                    console.warn(
-                        "Unable to stop screen track:",
-                        error
-                    );
-                }
-            }
-        );
-
-
-    /*
-    =====================================================
-    RESTORE LOCAL CAMERA PREVIEW
-    =====================================================
+    Restore local camera preview.
     */
 
     if (localStream) {
 
-        if (cameraEnabled) {
-
-            setLocalVideoStream(
-                localStream,
-                true
-            );
-
-
-            if (localPlaceholder) {
-
-                localPlaceholder.style.display =
-                    "none";
-            }
-
-
-        } else {
-
-            setLocalVideoStream(
-                localStream,
-                false
-            );
-
-
-            if (localPlaceholder) {
-
-                localPlaceholder.style.display =
-                    "flex";
-            }
-        }
+        setLocalVideoStream(
+            localStream,
+            cameraEnabled
+        );
     }
 
-
-    /*
-    =====================================================
-    RESET SCREEN SHARE BUTTON
-    =====================================================
-    */
 
     updateScreenShareButton(
         false
     );
 
 
-    if (showMessage) {
+    if (!fromBrowser) {
 
         showToast(
             "info",
@@ -3732,11 +4091,105 @@ async function stopScreenSharing(
 
 
     console.log(
-        "Screen sharing stopped and camera restored."
+        "Screen sharing stopped."
     );
 }
 
 
+/* =========================================================
+   TOGGLE SCREEN SHARING
+========================================================= */
+
+async function toggleScreenShare() {
+
+    if (hasLeftMeeting) {
+        return;
+    }
+
+
+    if (screenStream) {
+
+        await stopScreenSharing();
+
+        return;
+    }
+
+
+    await startScreenSharing();
+}
+
+
+/* =========================================================
+   SCREEN SHARE BUTTON UI
+========================================================= */
+
+function updateScreenShareButton(
+    sharing
+) {
+
+    if (!screenShareBtn) {
+        return;
+    }
+
+
+    if (sharing) {
+
+        screenShareBtn.classList.add(
+            "active"
+        );
+
+
+        screenShareBtn.classList.remove(
+            "off"
+        );
+
+
+        screenShareBtn.title =
+            "Stop sharing screen";
+
+
+        const icon =
+            screenShareBtn.querySelector(
+                ".control-icon"
+            );
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🛑";
+        }
+
+
+    } else {
+
+        screenShareBtn.classList.remove(
+            "active"
+        );
+
+
+        screenShareBtn.classList.remove(
+            "off"
+        );
+
+
+        screenShareBtn.title =
+            "Share screen";
+
+
+        const icon =
+            screenShareBtn.querySelector(
+                ".control-icon"
+            );
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🖥️";
+        }
+    }
+}
 /* =========================================================
    16. PARTICIPANT COUNT
 ========================================================= */
@@ -3779,11 +4232,19 @@ function updateParticipantsList() {
         "";
 
 
+    /*
+    Add current user.
+    */
+
     addParticipantToList(
         userName,
         "You"
     );
 
+
+    /*
+    Add remote participants.
+    */
 
     Object.values(
         participants
@@ -3856,7 +4317,8 @@ function addParticipantToList(
 
 
     strong.textContent =
-        name;
+        name ||
+        "Participant";
 
 
     const span =
@@ -3866,7 +4328,8 @@ function addParticipantToList(
 
 
     span.textContent =
-        status;
+        status ||
+        "Connected";
 
 
     details.appendChild(
@@ -3917,6 +4380,27 @@ if (chatForm) {
             }
 
 
+            /*
+            Do not send chat when this tab has
+            already been disconnected because
+            another tab joined the same meeting.
+            */
+
+            if (
+                duplicateSessionLost ||
+                hasLeftMeeting
+            ) {
+
+                showToast(
+                    "error",
+                    "This meeting session is no longer active."
+                );
+
+
+                return;
+            }
+
+
             if (
                 !socket ||
                 !socket.connected
@@ -3926,6 +4410,7 @@ if (chatForm) {
                     "error",
                     "Chat connection unavailable."
                 );
+
 
                 return;
             }
@@ -3946,6 +4431,10 @@ if (chatForm) {
                 }
             );
 
+
+            /*
+            Show our own message immediately.
+            */
 
             addChatMessage(
                 userName,
@@ -3999,7 +4488,8 @@ function addChatMessage(
 
 
     nameElement.textContent =
-        name;
+        name ||
+        "Participant";
 
 
     const textElement =
@@ -4027,6 +4517,10 @@ function addChatMessage(
     );
 
 
+    /*
+    Always scroll to the latest message.
+    */
+
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
 }
@@ -4036,7 +4530,9 @@ function addChatMessage(
    18. SIDEBAR
 ========================================================= */
 
-function openChat() {
+function openSidebar(
+    section = "chat"
+) {
 
     if (!meetingSidebar) {
         return;
@@ -4044,36 +4540,32 @@ function openChat() {
 
 
     meetingSidebar.classList.add(
-        "show-chat"
+        "open"
     );
 
 
     meetingSidebar.classList.remove(
-        "show-participants"
+        "hidden"
     );
-}
 
 
-function openParticipants() {
+    if (
+        section ===
+        "participants"
+    ) {
 
-    if (!meetingSidebar) {
-        return;
+        showParticipantsPanel();
+
+    } else {
+
+        showChatPanel();
     }
-
-
-    meetingSidebar.classList.add(
-        "show-participants"
-    );
-
-
-    meetingSidebar.classList.remove(
-        "show-chat"
-    );
-
-
-    updateParticipantsList();
 }
 
+
+/* =========================================================
+   CLOSE SIDEBAR
+========================================================= */
 
 function closeSidebar() {
 
@@ -4083,21 +4575,125 @@ function closeSidebar() {
 
 
     meetingSidebar.classList.remove(
-        "show-chat"
+        "open"
+    );
+
+
+    meetingSidebar.classList.add(
+        "hidden"
+    );
+}
+
+
+/* =========================================================
+   SHOW CHAT PANEL
+========================================================= */
+
+function showChatPanel() {
+
+    const chatPanel =
+        document.getElementById(
+            "chatPanel"
+        );
+
+
+    const participantsPanel =
+        document.getElementById(
+            "participantsPanel"
+        );
+
+
+    if (chatPanel) {
+
+        chatPanel.style.display =
+            "block";
+    }
+
+
+    if (participantsPanel) {
+
+        participantsPanel.style.display =
+            "none";
+    }
+
+
+    openSidebarWithoutAnimation();
+}
+
+
+/* =========================================================
+   SHOW PARTICIPANTS PANEL
+========================================================= */
+
+function showParticipantsPanel() {
+
+    const chatPanel =
+        document.getElementById(
+            "chatPanel"
+        );
+
+
+    const participantsPanel =
+        document.getElementById(
+            "participantsPanel"
+        );
+
+
+    if (chatPanel) {
+
+        chatPanel.style.display =
+            "none";
+    }
+
+
+    if (participantsPanel) {
+
+        participantsPanel.style.display =
+            "block";
+    }
+
+
+    updateParticipantsList();
+
+
+    openSidebarWithoutAnimation();
+}
+
+
+/* =========================================================
+   OPEN SIDEBAR
+========================================================= */
+
+function openSidebarWithoutAnimation() {
+
+    if (!meetingSidebar) {
+        return;
+    }
+
+
+    meetingSidebar.classList.add(
+        "open"
     );
 
 
     meetingSidebar.classList.remove(
-        "show-participants"
+        "hidden"
     );
 }
 
+
+/* =========================================================
+   CHAT BUTTONS
+========================================================= */
 
 if (chatBtn) {
 
     chatBtn.addEventListener(
         "click",
-        openChat
+        function () {
+
+            showChatPanel();
+        }
     );
 }
 
@@ -4106,16 +4702,26 @@ if (meetingChatBtn) {
 
     meetingChatBtn.addEventListener(
         "click",
-        openChat
+        function () {
+
+            showChatPanel();
+        }
     );
 }
 
+
+/* =========================================================
+   PARTICIPANT BUTTONS
+========================================================= */
 
 if (participantsBtn) {
 
     participantsBtn.addEventListener(
         "click",
-        openParticipants
+        function () {
+
+            showParticipantsPanel();
+        }
     );
 }
 
@@ -4124,22 +4730,538 @@ if (meetingParticipantsBtn) {
 
     meetingParticipantsBtn.addEventListener(
         "click",
-        openParticipants
-    );
-}
+        function () {
 
-
-if (sidebarClose) {
-
-    sidebarClose.addEventListener(
-        "click",
-        closeSidebar
+            showParticipantsPanel();
+        }
     );
 }
 
 
 /* =========================================================
-   19. LEAVE MEETING
+   SIDEBAR CLOSE BUTTON
+========================================================= */
+
+if (sidebarClose) {
+
+    sidebarClose.addEventListener(
+        "click",
+        function () {
+
+            closeSidebar();
+        }
+    );
+}
+
+
+/* =========================================================
+   19. TOAST
+========================================================= */
+
+function showToast(
+    type,
+    message
+) {
+
+    if (!meetingToast) {
+
+        console.log(
+            `[${type}] ${message}`
+        );
+
+
+        return;
+    }
+
+
+    if (toastMessage) {
+
+        toastMessage.textContent =
+            message;
+    }
+
+
+    if (toastIcon) {
+
+        if (type === "success") {
+
+            toastIcon.textContent =
+                "✓";
+
+
+        } else if (type === "error") {
+
+            toastIcon.textContent =
+                "✕";
+
+
+        } else {
+
+            toastIcon.textContent =
+                "ℹ";
+        }
+    }
+
+
+    meetingToast.classList.remove(
+        "success",
+        "error",
+        "info"
+    );
+
+
+    meetingToast.classList.add(
+        type
+    );
+
+
+    meetingToast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        meetingToast._hideTimer
+    );
+
+
+    meetingToast._hideTimer =
+        setTimeout(
+            function () {
+
+                meetingToast.classList.remove(
+                    "show"
+                );
+
+            },
+            3000
+        );
+}
+
+
+/* =========================================================
+   20. CONNECTION STATUS
+========================================================= */
+
+function updateConnectionStatus(
+    type,
+    message
+) {
+
+    if (connectionStatus) {
+
+        connectionStatus.classList.remove(
+            "connected",
+            "connecting",
+            "error",
+            "disconnected"
+        );
+
+
+        connectionStatus.classList.add(
+            type
+        );
+    }
+
+
+    if (connectionText) {
+
+        connectionText.textContent =
+            message;
+    }
+}
+
+
+/* =========================================================
+   21. CLOSE ALL PEER CONNECTIONS
+========================================================= */
+
+function closeAllPeerConnections() {
+
+    console.log(
+        "Closing all WebRTC peer connections..."
+    );
+
+
+    Object.keys(
+        peerConnections
+    ).forEach(
+        function (socketId) {
+
+            const peerConnection =
+                peerConnections[
+                    socketId
+                ];
+
+
+            if (!peerConnection) {
+                return;
+            }
+
+
+            try {
+
+                /*
+                Remove handlers before closing.
+                This prevents cleanup events from
+                creating unwanted new UI states.
+                */
+
+                peerConnection.ontrack =
+                    null;
+
+
+                peerConnection.onicecandidate =
+                    null;
+
+
+                peerConnection.onconnectionstatechange =
+                    null;
+
+
+                peerConnection.oniceconnectionstatechange =
+                    null;
+
+
+                peerConnection.onicegatheringstatechange =
+                    null;
+
+
+                peerConnection.close();
+
+
+            } catch (error) {
+
+                console.warn(
+                    "Peer connection cleanup error:",
+                    error
+                );
+            }
+        }
+    );
+
+
+    /*
+    Clear peer objects.
+    */
+
+    Object.keys(
+        peerConnections
+    ).forEach(
+        function (socketId) {
+
+            delete peerConnections[
+                socketId
+            ];
+        }
+    );
+
+
+    /*
+    Clear participant state.
+    */
+
+    Object.keys(
+        participants
+    ).forEach(
+        function (socketId) {
+
+            delete participants[
+                socketId
+            ];
+        }
+    );
+
+
+    /*
+    Clear ICE queues.
+    */
+
+    Object.keys(
+        pendingIceCandidates
+    ).forEach(
+        function (socketId) {
+
+            delete pendingIceCandidates[
+                socketId
+            ];
+        }
+    );
+
+
+    /*
+    Clear remote streams.
+    */
+
+    Object.keys(
+        remoteStreams
+    ).forEach(
+        function (socketId) {
+
+            delete remoteStreams[
+                socketId
+            ];
+        }
+    );
+
+
+    /*
+    Remove remote video cards.
+    */
+
+    if (remoteVideos) {
+
+        remoteVideos.innerHTML =
+            "";
+    }
+
+
+    if (emptyState) {
+
+        emptyState.style.display =
+            "flex";
+    }
+
+
+    updateParticipantCount();
+}
+
+
+/* =========================================================
+   22. STOP LOCAL MEDIA
+========================================================= */
+
+function stopLocalMedia() {
+
+    console.log(
+        "Stopping local media..."
+    );
+
+
+    /*
+    Stop screen-sharing tracks.
+    */
+
+    if (screenStream) {
+
+        screenStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    try {
+
+                        track.onended =
+                            null;
+
+                        track.stop();
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Screen track cleanup error:",
+                            error
+                        );
+                    }
+                }
+            );
+
+
+        screenStream =
+            null;
+    }
+
+
+    /*
+    Stop camera + microphone tracks.
+    */
+
+    if (localStream) {
+
+        localStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    try {
+
+                        track.stop();
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Local media cleanup error:",
+                            error
+                        );
+                    }
+                }
+            );
+
+
+        localStream =
+            null;
+    }
+
+
+    /*
+    Clear local video.
+    */
+
+    if (localVideo) {
+
+        try {
+            localVideo.pause();
+        } catch (error) {}
+
+
+        localVideo.srcObject =
+            null;
+
+
+        localVideo.style.display =
+            "none";
+    }
+
+
+    if (localPlaceholder) {
+
+        localPlaceholder.style.display =
+            "flex";
+    }
+
+
+    microphoneEnabled =
+        false;
+
+
+    cameraEnabled =
+        false;
+
+
+    updateMicrophoneButton();
+
+    updateCameraButton();
+
+    updateScreenShareButton(
+        false
+    );
+
+
+    console.log(
+        "Local media stopped."
+    );
+}
+
+
+/* =========================================================
+   23. LEAVE MEETING
+========================================================= */
+
+function leaveMeeting() {
+
+    if (hasLeftMeeting) {
+        return;
+    }
+
+
+    hasLeftMeeting =
+        true;
+
+
+    console.log(
+        "Leaving meeting..."
+    );
+
+
+    /*
+    Tell the server that we are leaving.
+    */
+
+    if (
+        socket &&
+        socket.connected
+    ) {
+
+        try {
+
+            socket.emit(
+                "leave-meeting",
+                {
+
+                    meeting_id:
+                        meetingId
+                }
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "Leave event failed:",
+                error
+            );
+        }
+    }
+
+
+    /*
+    Stop all local media.
+    */
+
+    stopLocalMedia();
+
+
+    /*
+    Close all WebRTC connections.
+    */
+
+    closeAllPeerConnections();
+
+
+    /*
+    Disconnect Socket.IO.
+    */
+
+    if (socket) {
+
+        try {
+
+            socket.disconnect();
+
+        } catch (error) {
+
+            console.warn(
+                "Socket disconnect error:",
+                error
+            );
+        }
+    }
+
+
+    /*
+    IMPORTANT DUPLICATE-SESSION FIX:
+    Release our tab's session lock.
+    */
+
+    releaseDuplicateSessionLock();
+
+
+    updateConnectionStatus(
+        "disconnected",
+        "Meeting ended"
+    );
+
+
+    /*
+    Return to meeting page.
+    */
+
+    window.location.href =
+        "/meeting/";
+}
+
+
+/* =========================================================
+   LEAVE BUTTONS
 ========================================================= */
 
 if (leaveMeetingBtn) {
@@ -4160,344 +5282,6 @@ if (leaveMeetingBtn2) {
 }
 
 
-function leaveMeeting() {
-
-    if (hasLeftMeeting) {
-        return;
-    }
-
-
-    const confirmed =
-        window.confirm(
-            "Are you sure you want to leave the meeting?"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    hasLeftMeeting =
-        true;
-
-
-    if (
-        socket &&
-        socket.connected
-    ) {
-
-        socket.emit(
-            "leave-meeting",
-            {
-
-                meeting_id:
-                    meetingId
-            }
-        );
-    }
-
-
-    stopLocalMedia();
-
-    closeAllPeerConnections();
-
-
-    if (socket) {
-        socket.disconnect();
-    }
-
-
-    window.location.href =
-        "/meeting/";
-}
-
-
-/* =========================================================
-   20. STOP LOCAL MEDIA
-========================================================= */
-
-function stopLocalMedia() {
-
-    if (localStream) {
-
-        localStream
-            .getTracks()
-            .forEach(
-                function (track) {
-
-                    track.stop();
-                }
-            );
-
-
-        localStream =
-            null;
-    }
-
-
-    if (screenStream) {
-
-        screenStream
-            .getTracks()
-            .forEach(
-                function (track) {
-
-                    track.stop();
-                }
-            );
-
-
-        screenStream =
-            null;
-    }
-
-
-    if (localVideo) {
-
-        try {
-            localVideo.pause();
-        } catch (error) {}
-
-
-        localVideo.srcObject =
-            null;
-    }
-}
-
-
-/* =========================================================
-   21. CLOSE ALL PEERS
-========================================================= */
-
-function closeAllPeerConnections() {
-
-    Object.keys(
-        peerConnections
-    ).forEach(
-        function (socketId) {
-
-            try {
-
-                const peer =
-                    peerConnections[
-                        socketId
-                    ];
-
-
-                peer.ontrack =
-                    null;
-
-                peer.onicecandidate =
-                    null;
-
-                peer.close();
-
-            } catch (error) {
-
-                console.error(
-                    "Peer close error:",
-                    error
-                );
-            }
-        }
-    );
-
-
-    Object.keys(
-        peerConnections
-    ).forEach(
-        function (key) {
-
-            delete peerConnections[
-                key
-            ];
-        }
-    );
-
-
-    Object.keys(
-        participants
-    ).forEach(
-        function (key) {
-
-            delete participants[
-                key
-            ];
-        }
-    );
-
-
-    Object.keys(
-        pendingIceCandidates
-    ).forEach(
-        function (key) {
-
-            delete pendingIceCandidates[
-                key
-            ];
-        }
-    );
-
-
-    Object.keys(
-        remoteStreams
-    ).forEach(
-        function (key) {
-
-            delete remoteStreams[
-                key
-            ];
-        }
-    );
-
-
-    if (emptyState) {
-
-        emptyState.style.display =
-            "flex";
-    }
-
-
-    updateParticipantCount();
-}
-
-
-/* =========================================================
-   22. CONNECTION STATUS
-========================================================= */
-
-function updateConnectionStatus(
-    type,
-    text
-) {
-
-    if (!connectionStatus) {
-        return;
-    }
-
-
-    connectionStatus.classList.remove(
-        "connected",
-        "error",
-        "connecting"
-    );
-
-
-    if (type === "connected") {
-
-        connectionStatus.classList.add(
-            "connected"
-        );
-    }
-
-
-    if (type === "error") {
-
-        connectionStatus.classList.add(
-            "error"
-        );
-    }
-
-
-    if (type === "connecting") {
-
-        connectionStatus.classList.add(
-            "connecting"
-        );
-    }
-
-
-    if (connectionText) {
-
-        connectionText.textContent =
-            text;
-
-    } else {
-
-        connectionStatus.textContent =
-            text;
-    }
-}
-
-
-/* =========================================================
-   23. TOAST
-========================================================= */
-
-let toastTimer =
-    null;
-
-
-function showToast(
-    type,
-    message
-) {
-
-    if (
-        !meetingToast ||
-        !toastMessage
-    ) {
-
-        console.log(
-            `[${type}] ${message}`
-        );
-
-        return;
-    }
-
-
-    toastMessage.textContent =
-        message;
-
-
-    if (toastIcon) {
-
-        if (type === "error") {
-
-            toastIcon.textContent =
-                "⚠️";
-
-        } else if (type === "info") {
-
-            toastIcon.textContent =
-                "ℹ️";
-
-        } else {
-
-            toastIcon.textContent =
-                "✓";
-        }
-    }
-
-
-    meetingToast.classList.add(
-        "show"
-    );
-
-
-    if (toastTimer) {
-
-        clearTimeout(
-            toastTimer
-        );
-    }
-
-
-    toastTimer =
-        setTimeout(
-            function () {
-
-                meetingToast.classList.remove(
-                    "show"
-                );
-
-            },
-            2500
-        );
-}
-
-
 /* =========================================================
    24. BEFORE UNLOAD
 ========================================================= */
@@ -4506,124 +5290,170 @@ window.addEventListener(
     "beforeunload",
     function () {
 
+        /*
+        Tell server that the participant
+        is leaving.
+
+        IMPORTANT:
+        Use sendBeacon-style behavior through
+        Socket.IO if it is still connected.
+        */
+
         if (
             socket &&
             socket.connected &&
-            meetingId &&
-            !hasLeftMeeting
+            meetingId
         ) {
 
-            socket.emit(
-                "leave-meeting",
-                {
+            try {
 
-                    meeting_id:
-                        meetingId
-                }
-            );
+                socket.emit(
+                    "leave-meeting",
+                    {
+
+                        meeting_id:
+                            meetingId
+                    }
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "beforeunload leave failed:",
+                    error
+                );
+            }
         }
 
 
+        /*
+        Stop microphone and camera.
+        */
+
         stopLocalMedia();
+
+
+        /*
+        Close WebRTC.
+        */
+
+        closeAllPeerConnections();
+
+
+        /*
+        Release the duplicate-session lock.
+        */
+
+        releaseDuplicateSessionLock();
     }
 );
 
 
 /* =========================================================
-   25. USER INTERACTION PLAYBACK FALLBACK
+   25. PAGE VISIBILITY
 ========================================================= */
 
 document.addEventListener(
-    "click",
+    "visibilitychange",
     function () {
 
         /*
-        Local video.
+        IMPORTANT:
+
+        Do NOT leave the meeting merely because
+        the user switches browser tabs.
+
+        A user may legitimately switch tabs
+        while keeping the meeting active.
+
+        Duplicate-session protection handles
+        another meeting tab separately.
         */
 
         if (
-            localVideo &&
-            localVideo.srcObject
+            document.visibilityState ===
+            "visible"
         ) {
 
-            localVideo.play().catch(
-                function () {}
-            );
-        }
+            if (
+                localVideo &&
+                localVideo.srcObject
+            ) {
 
-
-        /*
-        Remote videos.
-        */
-
-        if (remoteVideos) {
-
-            remoteVideos
-                .querySelectorAll(
-                    "video"
-                )
-                .forEach(
-                    function (video) {
-
-                        video.play().catch(
-                            function () {}
-                        );
-                    }
+                localVideo.play().catch(
+                    function () {}
                 );
+            }
         }
-
-    },
-    {
-        passive: true
     }
 );
 
 
 /* =========================================================
-   26. PAGE INITIALIZATION
+   26. INITIALIZE MEETING PAGE
 ========================================================= */
 
-function initializeMeetSpacePage() {
+async function initializeMeetSpacePage() {
+
+    if (meetingInitialized) {
+        return;
+    }
+
 
     console.log(
         "================================="
     );
 
+
     console.log(
-        "MeetSpace meeting.js loaded."
+        "INITIALIZING MEETSPACE"
     );
+
 
     console.log(
         "Meeting:",
         meetingId
     );
 
+
     console.log(
         "User:",
         userName
     );
+
 
     console.log(
         "================================="
     );
 
 
-    if (!meetingId) {
+    /*
+    IMPORTANT:
 
-        console.error(
-            "Meeting ID is missing from #meetingApp."
-        );
+    Start duplicate-session protection BEFORE
+    Socket.IO and WebRTC initialization.
+
+    This prevents a duplicate tab from creating
+    another microphone/camera connection.
+    */
+
+    initializeDuplicateSessionProtection();
 
 
-        updateConnectionStatus(
-            "error",
-            "Meeting ID missing"
+    if (duplicateSessionLost) {
+
+        console.warn(
+            "Duplicate meeting session detected. Initialization stopped."
         );
 
 
         return;
     }
 
+
+    /*
+    Update participant count.
+    */
 
     updateParticipantCount();
 
@@ -4637,7 +5467,7 @@ function initializeMeetSpacePage() {
 
 
 /* =========================================================
-   27. DOM READY
+   27. INITIAL PAGE LOAD
 ========================================================= */
 
 if (
@@ -4647,10 +5477,7 @@ if (
 
     document.addEventListener(
         "DOMContentLoaded",
-        initializeMeetSpacePage,
-        {
-            once: true
-        }
+        initializeMeetSpacePage
     );
 
 } else {
@@ -4660,5 +5487,5 @@ if (
 
 
 /* =========================================================
-                    END OF FILE
+   END OF MEETING.JS
 ========================================================= */
