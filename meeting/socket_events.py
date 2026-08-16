@@ -464,16 +464,9 @@ def register_socket_events(socketio):
         ).strip()
 
 
-        name = str(
-            data.get(
-                "name",
-                "Participant"
-            )
-        ).strip()
-
-
-        if not name:
-            name = "Participant"
+        # Keep chat messages within the limit used by
+        # meeting_room.html.
+        message = message[:1000]
 
 
         if not meeting_id or not message:
@@ -503,10 +496,18 @@ def register_socket_events(socketio):
             return
 
 
+        # Use the server-side participant name so a client
+        # cannot impersonate another participant in chat.
+        sender_name = meeting.get(
+            request.sid,
+            "Participant"
+        )
+
+
         emit(
             "chat-message",
             {
-                "name": name,
+                "name": sender_name,
                 "message": message
             },
             to=meeting_id

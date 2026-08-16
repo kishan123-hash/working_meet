@@ -517,20 +517,12 @@ function initializeDuplicateSessionProtection() {
 
 
         /*
-        Keep the active session lock alive.
+        Refresh the session timestamp.
         */
 
         duplicateSessionHeartbeat =
             setInterval(
                 function () {
-
-                    if (
-                        duplicateSessionLost ||
-                        hasLeftMeeting
-                    ) {
-                        return;
-                    }
-
 
                     try {
 
@@ -566,30 +558,17 @@ function initializeDuplicateSessionProtection() {
                             })
                         );
 
-
                     } catch (error) {}
-
                 },
                 2000
             );
 
 
-    } catch (error) {
+        /*
+        Announce this tab.
+        */
 
-        console.warn(
-            "MeetSpace: localStorage duplicate-session protection unavailable.",
-            error
-        );
-    }
-
-
-    /*
-    Announce this active session to other tabs.
-    */
-
-    if (duplicateSessionChannel) {
-
-        try {
+        if (duplicateSessionChannel) {
 
             duplicateSessionChannel.postMessage({
 
@@ -601,15 +580,25 @@ function initializeDuplicateSessionProtection() {
 
                 userKey:
                     lockKey
-
             });
+        }
 
-        } catch (error) {}
+    } catch (error) {
+
+        console.warn(
+            "Duplicate session protection unavailable:",
+            error
+        );
     }
 }
 
 
 function releaseDuplicateSessionLock() {
+
+    if (!duplicateSessionStarted) {
+        return;
+    }
+
 
     if (duplicateSessionHeartbeat) {
 
@@ -655,189 +644,45 @@ function releaseDuplicateSessionLock() {
     if (duplicateSessionChannel) {
 
         try {
+
+            duplicateSessionChannel.postMessage({
+
+                type:
+                    "MEETSPACE_SESSION_RELEASE",
+
+                token:
+                    duplicateSessionToken,
+
+                userKey:
+                    lockKey
+            });
+
             duplicateSessionChannel.close();
+
         } catch (error) {}
 
         duplicateSessionChannel =
             null;
     }
-}
 
 
-
-/* =========================================================
-   WEBRTC CONFIGURATION
-========================================================= */
-
-const rtcConfiguration = {
-
-    iceServers: [
-
-        {
-            urls: "stun:stun.l.google.com:19302"
-        },
-
-        {
-            urls: "stun:stun1.l.google.com:19302"
-        },
-
-        {
-            urls: "stun:stun2.l.google.com:19302"
-        }
-
-    ]
-
-};
-
-
-/* =========================================================
-   4. SOCKET.IO CLIENT LOADER
-========================================================= */
-
-/*
-IMPORTANT FIX
-
-We DO NOT use:
-
-/static/js/socket.io.min.js
-
-We DO NOT use:
-
-https://cdn.socket.io/...
-
-Instead Flask-SocketIO provides its Socket.IO client at:
-
-/socket.io/socket.io.js
-
-This avoids the CDN timeout problem and also avoids
-having to keep a socket.io.min.js file in static/js.
-*/
-
-
-function initializeSocket() {
-
-    if (socketInitialized) {
-
-        console.log(
-            "Socket initialization already started."
-        );
-
-        return;
-    }
-
-    socketInitialized =
-        true;
-
-
-    /*
-    If Socket.IO is already present,
-    immediately create the connection.
-    */
-
-    if (
-        typeof window.io ===
-        "function"
-    ) {
-
-        console.log(
-            "Socket.IO client already available."
-        );
-
-        createSocket();
-
-        return;
-    }
-
-
-    console.log(
-        "Socket.IO client not found."
-    );
-
-
-    console.log(
-        "Loading Socket.IO client from Flask server..."
-    );
-
-
-    loadFlaskSocketIO();
-}
-
-
-/* =========================================================
-   LOAD SOCKET.IO FROM FLASK-SOCKETIO
-========================================================= */
-
-function loadFlaskSocketIO() {
-
-    if (socketScriptLoading) {
-        return;
-    }
-
-    socketScriptLoading =
-        true;
-
-
-    const existingScript =
-        document.querySelector(
-            'script[data-meetspace-socketio="true"]'
-        );
-
-
-    if (existingScript) {
-
-        console.log(
-            "Socket.IO script is already loading."
-        );
-
-        return;
-    }
-
-
-    const script =
-        document.createElement(
-            "script"
-        );
-
-
-    /*
-    IMPORTANT:
-
-    Flask-SocketIO serves this file automatically.
-    */
-
-    script.src =
-        "/socket.io/socket.io.js";
-
-
-    script.async =
+    duplicateSessionStarted =
         false;
+}
 
 
-    script.dataset.meetspaceSocketio =
-        "true";
+/* =========================================================
+   4. SOCKET.IO SCRIPT LOADING
+========================================================= */
 
+function loadSocketIO() {
 
-    script.onload =
-        function () {
+    return new Promise(
+        function (resolve, reject) {
 
-            socketScriptLoading =
-                false;
-
-
-            console.log(
-                "================================="
-            );
-
-
-            console.log(
-                "SOCKET.IO CLIENT LOADED FROM FLASK"
-            );
-
-
-            console.log(
-                "================================="
-            );
-
+            /*
+            Socket.IO already available.
+            */
 
             if (
                 typeof window.io ===
@@ -845,81 +690,248 @@ function loadFlaskSocketIO() {
             ) {
 
                 console.log(
-                    "Socket.IO client detected."
+                    "Socket.IO client already loaded."
                 );
 
+                resolve();
 
-                createSocket();
-
-
-            } else {
-
-                console.error(
-                    "Socket.IO script loaded but io() is unavailable."
-                );
-
-
-                updateConnectionStatus(
-                    "error",
-                    "Socket.IO unavailable"
-                );
-
-
-                showToast(
-                    "error",
-                    "Socket.IO client could not be initialized."
-                );
+                return;
             }
-        };
 
 
-    script.onerror =
-        function () {
+            /*
+            Prevent duplicate script loading.
+            */
+
+            if (socketScriptLoading) {
+
+                const waitForSocket =
+                    setInterval(
+                        function () {
+
+                            if (
+                                typeof window.io ===
+                                "function"
+                            ) {
+
+                                clearInterval(
+                                    waitForSocket
+                                );
+
+                                resolve();
+
+                            }
+
+                        },
+                        100
+                    );
+
+
+                setTimeout(
+                    function () {
+
+                        clearInterval(
+                            waitForSocket
+                        );
+
+                        if (
+                            typeof window.io !==
+                            "function"
+                        ) {
+
+                            reject(
+                                new Error(
+                                    "Socket.IO client failed to load."
+                                )
+                            );
+                        }
+
+                    },
+                    10000
+                );
+
+                return;
+            }
+
 
             socketScriptLoading =
-                false;
+                true;
 
 
-            console.error(
-                "================================="
+            console.log(
+                "Loading Flask Socket.IO client..."
             );
 
 
-            console.error(
-                "FLASK SOCKET.IO CLIENT FAILED"
+            const existingScript =
+                document.querySelector(
+                    'script[src="/socket.io/socket.io.js"]'
+                );
+
+
+            if (existingScript) {
+
+                const waitForExistingScript =
+                    setInterval(
+                        function () {
+
+                            if (
+                                typeof window.io ===
+                                "function"
+                            ) {
+
+                                clearInterval(
+                                    waitForExistingScript
+                                );
+
+                                socketScriptLoading =
+                                    false;
+
+                                resolve();
+
+                            }
+
+                        },
+                        100
+                    );
+
+
+                setTimeout(
+                    function () {
+
+                        clearInterval(
+                            waitForExistingScript
+                        );
+
+                        socketScriptLoading =
+                            false;
+
+
+                        if (
+                            typeof window.io ===
+                            "function"
+                        ) {
+
+                            resolve();
+
+                        } else {
+
+                            reject(
+                                new Error(
+                                    "Existing Socket.IO script did not load."
+                                )
+                            );
+                        }
+
+                    },
+                    10000
+                );
+
+                return;
+            }
+
+
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+
+            script.src =
+                "/socket.io/socket.io.js";
+
+
+            script.async =
+                true;
+
+
+            script.onload =
+                function () {
+
+                    socketScriptLoading =
+                        false;
+
+
+                    if (
+                        typeof window.io ===
+                        "function"
+                    ) {
+
+                        console.log(
+                            "Flask Socket.IO client loaded successfully."
+                        );
+
+                        resolve();
+
+                    } else {
+
+                        reject(
+                            new Error(
+                                "Socket.IO script loaded but io() is unavailable."
+                            )
+                        );
+                    }
+                };
+
+
+            script.onerror =
+                function (error) {
+
+                    socketScriptLoading =
+                        false;
+
+
+                    console.error(
+                        "================================="
+                    );
+
+
+                    console.error(
+                        "FLASK SOCKET.IO CLIENT FAILED"
+                    );
+
+
+                    console.error(
+                        "Expected:"
+                    );
+
+
+                    console.error(
+                        "/socket.io/socket.io.js"
+                    );
+
+
+                    console.error(
+                        "================================="
+                    );
+
+
+                    updateConnectionStatus(
+                        "error",
+                        "Socket.IO unavailable"
+                    );
+
+
+                    showToast(
+                        "error",
+                        "Unable to load Socket.IO client from Flask."
+                    );
+
+
+                    reject(
+                        error ||
+                        new Error(
+                            "Socket.IO client failed to load."
+                        )
+                    );
+                };
+
+
+            document.head.appendChild(
+                script
             );
 
-
-            console.error(
-                "Expected:"
-            );
-
-
-            console.error(
-                "/socket.io/socket.io.js"
-            );
-
-
-            console.error(
-                "================================="
-            );
-
-
-            updateConnectionStatus(
-                "error",
-                "Socket.IO unavailable"
-            );
-
-
-            showToast(
-                "error",
-                "Unable to load Socket.IO client from Flask."
-            );
-        };
-
-
-    document.head.appendChild(
-        script
+        }
     );
 }
 
@@ -1419,13 +1431,6 @@ function registerSocketEvents() {
                 remoteName;
 
 
-            /*
-            Create the peer now.
-
-            The new participant should receive
-            an offer from the existing participant.
-            */
-
             createPeerConnection(
                 remoteSocketId,
                 remoteName
@@ -1435,16 +1440,94 @@ function registerSocketEvents() {
             updateParticipantCount();
 
 
-            showToast(
-                "info",
-                `${remoteName} joined the meeting.`
+            /*
+            Avoid duplicate names in the UI.
+            */
+
+            const participantKey =
+                `${remoteSocketId}:${remoteName}`;
+
+
+            if (
+                displayedNames.has(
+                    participantKey
+                )
+            ) {
+                return;
+            }
+
+
+            displayedNames.add(
+                participantKey
+            );
+
+
+            addParticipantToList(
+                remoteName,
+                "Connected"
+            );
+        }
+    );
+
+        /* =====================================================
+       USER LEFT
+    ===================================================== */
+
+    socket.on(
+        "user-left",
+        function (data) {
+
+            console.log(
+                "USER LEFT:",
+                data
+            );
+
+
+            const remoteSocketId =
+                data?.sid ||
+                data?.socket_id ||
+                data?.id;
+
+
+            if (!remoteSocketId) {
+                return;
+            }
+
+
+            removeRemoteParticipant(
+                remoteSocketId
             );
         }
     );
 
 
     /* =====================================================
-       RECEIVE OFFER
+       PARTICIPANT COUNT
+    ===================================================== */
+
+    socket.on(
+        "participant-count",
+        function (data) {
+
+            console.log(
+                "PARTICIPANT COUNT:",
+                data
+            );
+
+
+            /*
+            The server count is useful for connection
+            state, but the visible participant count is
+            calculated from our unique participant list.
+            */
+
+            updateParticipantCount();
+        }
+    );
+
+
+    /* =====================================================
+       OFFER
     ===================================================== */
 
     socket.on(
@@ -1459,8 +1542,13 @@ function registerSocketEvents() {
 
             const remoteSocketId =
                 data?.sender ||
-                data?.from ||
-                data?.socket_id;
+                data?.sid ||
+                data?.socket_id ||
+                data?.from;
+
+
+            const offer =
+                data?.offer;
 
 
             const remoteName =
@@ -1471,8 +1559,13 @@ function registerSocketEvents() {
 
             if (
                 !remoteSocketId ||
-                !data?.offer
+                !offer
             ) {
+
+                console.warn(
+                    "Invalid offer received."
+                );
+
                 return;
             }
 
@@ -1503,10 +1596,15 @@ function registerSocketEvents() {
                 await peerConnection
                     .setRemoteDescription(
                         new RTCSessionDescription(
-                            data.offer
+                            offer
                         )
                     );
 
+
+                /*
+                Add ICE candidates that arrived
+                before the remote description.
+                */
 
                 await flushPendingIceCandidates(
                     remoteSocketId
@@ -1515,14 +1613,7 @@ function registerSocketEvents() {
 
                 const answer =
                     await peerConnection
-                        .createAnswer({
-
-                            offerToReceiveAudio:
-                                true,
-
-                            offerToReceiveVideo:
-                                true
-                        });
+                        .createAnswer();
 
 
                 await peerConnection
@@ -1540,15 +1631,22 @@ function registerSocketEvents() {
 
                         answer:
                             peerConnection
-                                .localDescription
+                                .localDescription,
+
+                        name:
+                            userName
                     }
                 );
 
 
                 console.log(
                     "ANSWER SENT ->",
-                    remoteName
+                    remoteName,
+                    remoteSocketId
                 );
+
+
+                updateParticipantCount();
 
 
             } catch (error) {
@@ -1563,7 +1661,7 @@ function registerSocketEvents() {
 
 
     /* =====================================================
-       RECEIVE ANSWER
+       ANSWER
     ===================================================== */
 
     socket.on(
@@ -1578,14 +1676,24 @@ function registerSocketEvents() {
 
             const remoteSocketId =
                 data?.sender ||
-                data?.from ||
-                data?.socket_id;
+                data?.sid ||
+                data?.socket_id ||
+                data?.from;
+
+
+            const answer =
+                data?.answer;
 
 
             if (
                 !remoteSocketId ||
-                !data?.answer
+                !answer
             ) {
+
+                console.warn(
+                    "Invalid answer received."
+                );
+
                 return;
             }
 
@@ -1599,10 +1707,9 @@ function registerSocketEvents() {
             if (!peerConnection) {
 
                 console.warn(
-                    "Peer connection not found:",
+                    "No peer connection for answer:",
                     remoteSocketId
                 );
-
 
                 return;
             }
@@ -1613,7 +1720,7 @@ function registerSocketEvents() {
                 await peerConnection
                     .setRemoteDescription(
                         new RTCSessionDescription(
-                            data.answer
+                            answer
                         )
                     );
 
@@ -1650,8 +1757,9 @@ function registerSocketEvents() {
 
             const remoteSocketId =
                 data?.sender ||
-                data?.from ||
-                data?.socket_id;
+                data?.sid ||
+                data?.socket_id ||
+                data?.from;
 
 
             const candidate =
@@ -1666,24 +1774,34 @@ function registerSocketEvents() {
             }
 
 
-            if (
-                remoteSocketId ===
-                socket.id
-            ) {
-                return;
-            }
-
-
             const peerConnection =
                 peerConnections[
                     remoteSocketId
                 ];
 
 
+            /*
+            If the peer does not exist yet,
+            queue the candidate.
+            */
+
             if (!peerConnection) {
 
-                queueIceCandidate(
-                    remoteSocketId,
+                if (
+                    !pendingIceCandidates[
+                        remoteSocketId
+                    ]
+                ) {
+
+                    pendingIceCandidates[
+                        remoteSocketId
+                    ] = [];
+                }
+
+
+                pendingIceCandidates[
+                    remoteSocketId
+                ].push(
                     candidate
                 );
 
@@ -1692,13 +1810,31 @@ function registerSocketEvents() {
             }
 
 
+            /*
+            If remote description has not arrived,
+            queue the candidate.
+            */
+
             if (
                 !peerConnection
                     .remoteDescription
             ) {
 
-                queueIceCandidate(
-                    remoteSocketId,
+                if (
+                    !pendingIceCandidates[
+                        remoteSocketId
+                    ]
+                ) {
+
+                    pendingIceCandidates[
+                        remoteSocketId
+                    ] = [];
+                }
+
+
+                pendingIceCandidates[
+                    remoteSocketId
+                ].push(
                     candidate
                 );
 
@@ -1719,8 +1855,8 @@ function registerSocketEvents() {
 
             } catch (error) {
 
-                console.error(
-                    "ICE candidate error:",
+                console.warn(
+                    "ICE candidate failed:",
                     error
                 );
             }
@@ -1729,142 +1865,2576 @@ function registerSocketEvents() {
 
 
     /* =====================================================
-       CHAT
+       DUPLICATE SESSION
+    ===================================================== */
+
+    socket.on(
+        "duplicate-session",
+        function (data) {
+
+            console.warn(
+                "Duplicate session received:",
+                data
+            );
+
+
+            forceCloseDuplicateSession();
+        }
+    );
+
+
+    socket.on(
+        "duplicate-login",
+        function (data) {
+
+            console.warn(
+                "Duplicate login/session received:",
+                data
+            );
+
+
+            forceCloseDuplicateSession();
+        }
+    );
+
+
+    socket.on(
+        "session-replaced",
+        function (data) {
+
+            console.warn(
+                "Session replaced:",
+                data
+            );
+
+
+            forceCloseDuplicateSession();
+        }
+    );
+
+
+    /* =====================================================
+       CHAT MESSAGE
     ===================================================== */
 
     socket.on(
         "chat-message",
         function (data) {
 
-            addChatMessage(
+            console.log(
+                "CHAT MESSAGE:",
+                data
+            );
+
+
+            const name =
                 data?.name ||
                 data?.username ||
-                "Participant",
+                "Participant";
 
+
+            const message =
                 data?.message ||
-                ""
+                "";
+
+
+            if (!message) {
+                return;
+            }
+
+
+            /*
+            IMPORTANT:
+
+            Do NOT display our own message immediately
+            inside the submit handler.
+
+            The server broadcasts the message back
+            to the meeting room and this listener
+            displays it exactly once.
+            */
+
+            addChatMessage(
+                name,
+                message
+            );
+
+
+            /*
+            If chat sidebar is closed, show unread
+            count for messages received.
+            */
+
+            if (
+                meetingSidebar &&
+                !meetingSidebar.classList.contains(
+                    "open"
+                )
+            ) {
+
+                increaseUnreadChatCount();
+            }
+        }
+    );
+
+
+    /* =====================================================
+       SERVER ERROR
+    ===================================================== */
+
+    socket.on(
+        "error",
+        function (data) {
+
+            console.error(
+                "Socket server error:",
+                data
+            );
+
+
+            const message =
+                data?.message ||
+                "Meeting server error.";
+
+
+            showToast(
+                "error",
+                message
             );
         }
     );
 
 
     /* =====================================================
-       USER LEFT
+       MEETING ERROR
     ===================================================== */
 
     socket.on(
-        "user-left",
+        "meeting-error",
         function (data) {
 
-            console.log(
-                "USER LEFT:",
+            console.error(
+                "Meeting error:",
                 data
             );
 
 
-            const remoteSocketId =
-                data?.sid ||
-                data?.socket_id ||
-                data?.id;
-
-
-            const remoteName =
-                data?.name ||
-                data?.username ||
-                "Participant";
-
-
-            if (!remoteSocketId) {
-                return;
-            }
-
-
-            removeRemoteParticipant(
-                remoteSocketId
-            );
-
-
             showToast(
-                "info",
-                `${remoteName} left the meeting.`
+                "error",
+                data?.message ||
+                "Unable to process meeting request."
             );
         }
     );
 
 
+    /* =====================================================
+       SOCKET READY
+    ===================================================== */
+
+    socket.on(
+        "room-joined",
+        function (data) {
+
+            console.log(
+                "ROOM JOINED:",
+                data
+            );
+
+
+            socketRoomJoined =
+                true;
+
+
+            updateConnectionStatus(
+                "connected",
+                "Connected"
+            );
+
+
+            updateParticipantCount();
+        }
+    );
+
+
+    /*
+    Some backend versions may use "joined-room"
+    instead of "room-joined".
+    */
+
+    socket.on(
+        "joined-room",
+        function (data) {
+
+            console.log(
+                "JOINED ROOM:",
+                data
+            );
+
+
+            socketRoomJoined =
+                true;
+
+
+            updateConnectionStatus(
+                "connected",
+                "Connected"
+            );
+
+
+            updateParticipantCount();
+        }
+    );
+
+
+    /*
+    Generic meeting-connected event.
+    */
+
+    socket.on(
+        "meeting-connected",
+        function (data) {
+
+            console.log(
+                "MEETING CONNECTED:",
+                data
+            );
+
+
+            socketRoomJoined =
+                true;
+
+
+            updateConnectionStatus(
+                "connected",
+                "Connected"
+            );
+
+
+            updateParticipantCount();
+        }
+    );
+}
+
+
 /* =========================================================
-   PARTICIPANT COUNT
+   7. JOIN MEETING ROOM
 ========================================================= */
 
-function updateParticipantCount() {
+function joinMeetingRoom() {
 
-    /*
-    Use unique participant names for the displayed count.
+    if (
+        !socket ||
+        !socket.connected
+    ) {
 
-    This prevents the same person from being counted
-    multiple times when more than one Socket.IO connection
-    exists for the same display name.
-    */
-
-    const uniqueParticipants =
-        new Set();
-
-
-    /*
-    Always include the current user.
-    */
-
-    const currentUser =
-        String(
-            userName || "Participant"
-        )
-            .trim()
-            .toLowerCase();
-
-
-    if (currentUser) {
-
-        uniqueParticipants.add(
-            currentUser
+        console.warn(
+            "Cannot join room: socket not connected."
         );
+
+        return;
+    }
+
+
+    if (
+        !meetingId
+    ) {
+
+        console.error(
+            "Cannot join meeting: meeting ID missing."
+        );
+
+        showToast(
+            "error",
+            "Meeting ID is missing."
+        );
+
+        return;
+    }
+
+
+    if (
+        duplicateSessionLost ||
+        hasLeftMeeting
+    ) {
+        return;
     }
 
 
     /*
-    Add remote participants only once.
+    Prevent duplicate join events.
     */
 
-    Object.values(
-        participants
-    ).forEach(
-        function (name) {
+    if (socketRoomJoined) {
 
-            const normalizedName =
-                String(
-                    name || "Participant"
-                )
-                    .trim()
-                    .toLowerCase();
+        console.log(
+            "Already joined meeting room."
+        );
+
+        return;
+    }
 
 
-            if (normalizedName) {
+    console.log(
+        "Joining meeting room:",
+        meetingId
+    );
 
-                uniqueParticipants.add(
-                    normalizedName
-                );
-            }
+
+    updateConnectionStatus(
+        "connecting",
+        "Joining meeting..."
+    );
+
+
+    socket.emit(
+        "join-meeting",
+        {
+
+            meeting_id:
+                meetingId,
+
+            name:
+                userName
         }
     );
 
 
-    const total =
-        uniqueParticipants.size;
+    /*
+    We don't immediately mark socketRoomJoined
+    here because the server still needs to confirm
+    the room join.
+    */
+}
 
 
-    if (participantCount) {
+/* =========================================================
+   8. INITIALIZE SOCKET
+========================================================= */
 
-        participantCount.textContent =
-            total;
+async function initializeSocket() {
+
+    if (
+        socketInitialized
+    ) {
+        return;
+    }
+
+
+    if (
+        duplicateSessionLost ||
+        hasLeftMeeting
+    ) {
+        return;
+    }
+
+
+    socketInitialized =
+        true;
+
+
+    try {
+
+        await loadSocketIO();
+
+
+        if (
+            duplicateSessionLost ||
+            hasLeftMeeting
+        ) {
+
+            socketInitialized =
+                false;
+
+            return;
+        }
+
+
+        createSocket();
+
+
+    } catch (error) {
+
+        socketInitialized =
+            false;
+
+
+        console.error(
+            "Socket initialization failed:",
+            error
+        );
+
+
+        updateConnectionStatus(
+            "error",
+            "Socket.IO initialization failed"
+        );
+
+
+        showToast(
+            "error",
+            "Unable to connect to meeting server."
+        );
+    }
+}
+
+
+/* =========================================================
+   9. INITIALIZE MEETING MEDIA
+========================================================= */
+
+async function initializeMeeting() {
+
+    if (
+        mediaInitializationStarted
+    ) {
+        return;
+    }
+
+
+    if (
+        duplicateSessionLost ||
+        hasLeftMeeting
+    ) {
+        return;
+    }
+
+
+    mediaInitializationStarted =
+        true;
+
+
+    console.log(
+        "Initializing local media..."
+    );
+
+
+    try {
+
+        /*
+        Request camera + microphone.
+        */
+
+        localStream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        width: {
+                            ideal: 1280
+                        },
+
+                        height: {
+                            ideal: 720
+                        },
+
+                        frameRate: {
+                            ideal: 30,
+                            max: 30
+                        }
+                    },
+
+                    audio: {
+
+                        echoCancellation:
+                            true,
+
+                        noiseSuppression:
+                            true,
+
+                        autoGainControl:
+                            true
+                    }
+                });
+
+
+        microphoneEnabled =
+            true;
+
+
+        cameraEnabled =
+            true;
+
+
+        setLocalVideoStream(
+            localStream,
+            true
+        );
+
+
+        updateMicrophoneButton();
+
+        updateCameraButton();
+
+
+        console.log(
+            "Local media initialized successfully."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Local media initialization failed:",
+            error
+        );
+
+
+        mediaInitializationStarted =
+            false;
+
+
+        /*
+        Try audio-only if camera access failed.
+        */
+
+        try {
+
+            localStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+
+                        video:
+                            false,
+
+                        audio: {
+
+                            echoCancellation:
+                                true,
+
+                            noiseSuppression:
+                                true,
+
+                            autoGainControl:
+                                true
+                        }
+                    });
+
+
+            microphoneEnabled =
+                true;
+
+
+            cameraEnabled =
+                false;
+
+
+            setLocalVideoStream(
+                localStream,
+                false
+            );
+
+
+            updateMicrophoneButton();
+
+            updateCameraButton();
+
+
+            showToast(
+                "info",
+                "Camera unavailable. Joined with microphone only."
+            );
+
+
+        } catch (audioError) {
+
+            console.error(
+                "Audio-only initialization failed:",
+                audioError
+            );
+
+
+            microphoneEnabled =
+                false;
+
+
+            cameraEnabled =
+                false;
+
+
+            updateMicrophoneButton();
+
+            updateCameraButton();
+
+
+            showToast(
+                "error",
+                "Camera and microphone access was denied."
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   10. LOCAL VIDEO STREAM
+========================================================= */
+
+function setLocalVideoStream(
+    stream,
+    showVideo = true
+) {
+
+    if (!localVideo) {
+        return;
+    }
+
+
+    localVideo.srcObject =
+        stream || null;
+
+
+    if (
+        stream &&
+        showVideo
+    ) {
+
+        localVideo.style.display =
+            "block";
+
+
+        if (localPlaceholder) {
+
+            localPlaceholder.style.display =
+                "none";
+        }
+
+
+        localVideo.muted =
+            true;
+
+
+        const playPromise =
+            localVideo.play();
+
+
+        if (
+            playPromise &&
+            typeof playPromise.catch ===
+                "function"
+        ) {
+
+            playPromise.catch(
+                function (error) {
+
+                    console.warn(
+                        "Local video autoplay blocked:",
+                        error
+                    );
+                }
+            );
+        }
+
+
+    } else {
+
+        localVideo.style.display =
+            "none";
+
+
+        if (localPlaceholder) {
+
+            localPlaceholder.style.display =
+                "flex";
+        }
+    }
+}
+
+
+/* =========================================================
+   11. CREATE WEBRTC PEER CONNECTION
+========================================================= */
+
+function createPeerConnection(
+    remoteSocketId,
+    remoteName = "Participant"
+) {
+
+    if (!remoteSocketId) {
+        return null;
+    }
+
+
+    /*
+    IMPORTANT DUPLICATE CONNECTION PROTECTION:
+
+    If a connection already exists for this Socket.IO
+    participant, return the existing connection.
+
+    This prevents accidental creation of multiple
+    RTCPeerConnections for the same remote socket.
+    */
+
+    if (
+        peerConnections[
+            remoteSocketId
+        ]
+    ) {
+
+        return peerConnections[
+            remoteSocketId
+        ];
+    }
+
+
+    console.log(
+        "Creating WebRTC peer connection:",
+        remoteSocketId,
+        remoteName
+    );
+
+
+    const peerConnection =
+        new RTCPeerConnection({
+
+            iceServers: [
+
+                {
+                    urls:
+                        "stun:stun.l.google.com:19302"
+                },
+
+                {
+                    urls:
+                        "stun:stun1.l.google.com:19302"
+                }
+
+            ]
+        });
+
+
+    peerConnections[
+        remoteSocketId
+    ] =
+        peerConnection;
+
+
+    participants[
+        remoteSocketId
+    ] =
+        remoteName;
+
+
+    /*
+    Add local tracks.
+    */
+
+    if (localStream) {
+
+        localStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    try {
+
+                        peerConnection.addTrack(
+                            track,
+                            localStream
+                        );
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Could not add local track:",
+                            error
+                        );
+                    }
+                }
+            );
+    }
+
+
+    /*
+    ICE candidate handling.
+    */
+
+    peerConnection.onicecandidate =
+        function (event) {
+
+            if (
+                !event.candidate ||
+                !socket ||
+                !socket.connected
+            ) {
+                return;
+            }
+
+
+            socket.emit(
+                "ice-candidate",
+                {
+
+                    target:
+                        remoteSocketId,
+
+                    candidate:
+                        event.candidate
+                }
+            );
+        };
+
+
+    /*
+    Remote track handling.
+    */
+
+    peerConnection.ontrack =
+        function (event) {
+
+            console.log(
+                "Remote track received:",
+                remoteSocketId,
+                event.track?.kind
+            );
+
+
+            let remoteStream =
+                remoteStreams[
+                    remoteSocketId
+                ];
+
+
+            if (!remoteStream) {
+
+                remoteStream =
+                    new MediaStream();
+
+
+                remoteStreams[
+                    remoteSocketId
+                ] =
+                    remoteStream;
+            }
+
+
+            /*
+            Avoid adding the same track twice.
+            */
+
+            const alreadyAdded =
+                remoteStream
+                    .getTracks()
+                    .some(
+                        function (track) {
+
+                            return (
+                                track.id ===
+                                event.track.id
+                            );
+                        }
+                    );
+
+
+            if (!alreadyAdded) {
+
+                remoteStream.addTrack(
+                    event.track
+                );
+            }
+
+
+            createOrUpdateRemoteVideo(
+                remoteSocketId,
+                remoteName,
+                remoteStream
+            );
+
+
+            /*
+            Some browsers fire the event
+            before the stream is completely ready.
+            */
+
+            event.track.onended =
+                function () {
+
+                    console.log(
+                        "Remote track ended:",
+                        remoteSocketId,
+                        event.track.kind
+                    );
+                };
+        };
+
+
+    /*
+    Connection state.
+    */
+
+    peerConnection.onconnectionstatechange =
+        function () {
+
+            const state =
+                peerConnection.connectionState;
+
+
+            console.log(
+                "Peer connection state:",
+                remoteSocketId,
+                state
+            );
+
+
+            if (
+                state ===
+                    "connected"
+            ) {
+
+                updateParticipantCount();
+            }
+
+
+            if (
+                state ===
+                    "failed"
+            ) {
+
+                console.warn(
+                    "Peer connection failed:",
+                    remoteSocketId
+                );
+
+
+                /*
+                Attempt ICE restart.
+                */
+
+                try {
+
+                    if (
+                        socket &&
+                        socket.connected
+                    ) {
+
+                        peerConnection.restartIce();
+                    }
+
+                } catch (error) {}
+            }
+
+
+            if (
+                state ===
+                    "closed"
+            ) {
+
+                removeRemoteParticipant(
+                    remoteSocketId
+                );
+            }
+        };
+
+
+    /*
+    ICE connection state.
+    */
+
+    peerConnection.oniceconnectionstatechange =
+        function () {
+
+            const state =
+                peerConnection
+                    .iceConnectionState;
+
+
+            console.log(
+                "ICE state:",
+                remoteSocketId,
+                state
+            );
+
+
+            if (
+                state ===
+                    "failed"
+            ) {
+
+                try {
+
+                    peerConnection.restartIce();
+
+                } catch (error) {}
+            }
+        };
+
+
+    /*
+    ICE gathering state.
+    */
+
+    peerConnection.onicegatheringstatechange =
+        function () {
+
+            console.log(
+                "ICE gathering state:",
+                remoteSocketId,
+                peerConnection
+                    .iceGatheringState
+            );
+        };
+
+
+    updateParticipantCount();
+
+
+    return peerConnection;
+}
+
+
+/* =========================================================
+   12. CREATE / UPDATE REMOTE VIDEO
+========================================================= */
+
+function createOrUpdateRemoteVideo(
+    remoteSocketId,
+    remoteName,
+    stream
+) {
+
+    if (
+        !remoteVideos ||
+        !remoteSocketId
+    ) {
+        return;
+    }
+
+
+    let container =
+        document.getElementById(
+            `remote-${remoteSocketId}`
+        );
+
+
+    let video;
+
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+
+        container.className =
+            "video-container remote-video-container";
+
+
+        container.id =
+            `remote-${remoteSocketId}`;
+
+
+        video =
+            document.createElement(
+                "video"
+            );
+
+
+        video.autoplay =
+            true;
+
+
+        video.playsInline =
+            true;
+
+
+        video.className =
+            "remote-video";
+
+
+        video.dataset.socketId =
+            remoteSocketId;
+
+
+        const nameLabel =
+            document.createElement(
+                "div"
+            );
+
+
+        nameLabel.className =
+            "video-name";
+
+
+        nameLabel.textContent =
+            remoteName ||
+            "Participant";
+
+
+        container.appendChild(
+            video
+        );
+
+
+        container.appendChild(
+            nameLabel
+        );
+
+
+        remoteVideos.appendChild(
+            container
+        );
+
+
+    } else {
+
+        video =
+            container.querySelector(
+                "video"
+            );
+    }
+
+
+    if (!video) {
+        return;
+    }
+
+
+    if (
+        video.srcObject !==
+        stream
+    ) {
+
+        video.srcObject =
+            stream;
+    }
+
+
+    video.muted =
+        false;
+
+
+    /*
+    Attempt playback.
+    */
+
+    const playPromise =
+        video.play();
+
+
+    if (
+        playPromise &&
+        typeof playPromise.catch ===
+            "function"
+    ) {
+
+        playPromise.catch(
+            function (error) {
+
+                console.warn(
+                    "Remote video autoplay blocked:",
+                    error
+                );
+            }
+        );
+    }
+
+
+    if (emptyState) {
+
+        emptyState.style.display =
+            "none";
+    }
+}
+
+
+/* =========================================================
+   13. FLUSH PENDING ICE
+========================================================= */
+
+async function flushPendingIceCandidates(
+    remoteSocketId
+) {
+
+    const peerConnection =
+        peerConnections[
+            remoteSocketId
+        ];
+
+
+    if (!peerConnection) {
+        return;
+    }
+
+
+    const queue =
+        pendingIceCandidates[
+            remoteSocketId
+        ];
+
+
+    if (
+        !queue ||
+        !queue.length
+    ) {
+        return;
+    }
+
+
+    /*
+    Only add candidates after remote
+    description is available.
+    */
+
+    if (
+        !peerConnection
+            .remoteDescription
+    ) {
+        return;
+    }
+
+
+    while (queue.length) {
+
+        const candidate =
+            queue.shift();
+
+
+        try {
+
+            await peerConnection
+                .addIceCandidate(
+                    new RTCIceCandidate(
+                        candidate
+                    )
+                );
+
+        } catch (error) {
+
+            console.warn(
+                "Queued ICE candidate failed:",
+                error
+            );
+        }
+    }
+
+
+    delete pendingIceCandidates[
+        remoteSocketId
+    ];
+}
+
+
+/* =========================================================
+   14. REMOVE REMOTE PARTICIPANT
+========================================================= */
+
+function removeRemoteParticipant(
+    remoteSocketId
+) {
+
+    if (!remoteSocketId) {
+        return;
+    }
+
+
+    console.log(
+        "Removing remote participant:",
+        remoteSocketId
+    );
+
+
+    /*
+    Close WebRTC connection.
+    */
+
+    const peerConnection =
+        peerConnections[
+            remoteSocketId
+        ];
+
+
+    if (peerConnection) {
+
+        try {
+
+            peerConnection.ontrack =
+                null;
+
+            peerConnection.onicecandidate =
+                null;
+
+            peerConnection.onconnectionstatechange =
+                null;
+
+            peerConnection.oniceconnectionstatechange =
+                null;
+
+            peerConnection.close();
+
+        } catch (error) {
+
+            console.warn(
+                "Peer close error:",
+                error
+            );
+        }
+
+
+        delete peerConnections[
+            remoteSocketId
+        ];
+    }
+
+
+    /*
+    Remove participant state.
+    */
+
+    delete participants[
+        remoteSocketId
+    ];
+
+
+    delete pendingIceCandidates[
+        remoteSocketId
+    ];
+
+
+    /*
+    Stop remote stream tracks.
+    */
+
+    const remoteStream =
+        remoteStreams[
+            remoteSocketId
+        ];
+
+
+    if (remoteStream) {
+
+        remoteStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    try {
+                        track.stop();
+                    } catch (error) {}
+                }
+            );
+
+
+        delete remoteStreams[
+            remoteSocketId
+        ];
+    }
+
+
+    /*
+    Remove video card.
+    */
+
+    const container =
+        document.getElementById(
+            `remote-${remoteSocketId}`
+        );
+
+
+    if (container) {
+
+        container.remove();
+    }
+
+
+    /*
+    Show empty state if there are
+    no remote participants.
+    */
+
+    if (
+        remoteVideos &&
+        remoteVideos.children.length ===
+            0 &&
+        emptyState
+    ) {
+
+        emptyState.style.display =
+            "flex";
+    }
+
+
+    updateParticipantCount();
+}
+
+
+/* =========================================================
+   15. MICROPHONE BUTTON
+========================================================= */
+
+function updateMicrophoneButton() {
+
+    if (!micBtn) {
+        return;
+    }
+
+
+    const icon =
+        micBtn.querySelector(
+            ".control-icon"
+        );
+
+
+    if (microphoneEnabled) {
+
+        micBtn.classList.remove(
+            "off"
+        );
+
+
+        micBtn.classList.add(
+            "active"
+        );
+
+
+        micBtn.title =
+            "Mute microphone";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🎤";
+        }
+
+
+    } else {
+
+        micBtn.classList.remove(
+            "active"
+        );
+
+
+        micBtn.classList.add(
+            "off"
+        );
+
+
+        micBtn.title =
+            "Unmute microphone";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🔇";
+        }
+    }
+}
+
+
+/* =========================================================
+   16. TOGGLE MICROPHONE
+========================================================= */
+
+function toggleMicrophone() {
+
+    if (
+        hasLeftMeeting ||
+        duplicateSessionLost
+    ) {
+        return;
+    }
+
+
+    if (!localStream) {
+
+        showToast(
+            "error",
+            "Microphone is not available."
+        );
+
+        return;
+    }
+
+
+    const audioTracks =
+        localStream.getAudioTracks();
+
+
+    if (!audioTracks.length) {
+
+        showToast(
+            "error",
+            "No microphone track found."
+        );
+
+        return;
+    }
+
+
+    microphoneEnabled =
+        !microphoneEnabled;
+
+
+    audioTracks.forEach(
+        function (track) {
+
+            track.enabled =
+                microphoneEnabled;
+        }
+    );
+
+
+    updateMicrophoneButton();
+
+
+    showToast(
+        "info",
+        microphoneEnabled
+            ? "Microphone unmuted."
+            : "Microphone muted."
+    );
+}
+
+
+/* =========================================================
+   17. CAMERA BUTTON
+========================================================= */
+
+function updateCameraButton() {
+
+    if (!cameraBtn) {
+        return;
+    }
+
+
+    const icon =
+        cameraBtn.querySelector(
+            ".control-icon"
+        );
+
+
+    if (cameraEnabled) {
+
+        cameraBtn.classList.remove(
+            "off"
+        );
+
+
+        cameraBtn.classList.add(
+            "active"
+        );
+
+
+        cameraBtn.title =
+            "Turn camera off";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "📹";
+        }
+
+
+    } else {
+
+        cameraBtn.classList.remove(
+            "active"
+        );
+
+
+        cameraBtn.classList.add(
+            "off"
+        );
+
+
+        cameraBtn.title =
+            "Turn camera on";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "📷";
+        }
+    }
+}
+
+
+/* =========================================================
+   18. TOGGLE CAMERA
+========================================================= */
+
+function toggleCamera() {
+
+    if (
+        hasLeftMeeting ||
+        duplicateSessionLost
+    ) {
+        return;
+    }
+
+
+    if (!localStream) {
+
+        showToast(
+            "error",
+            "Camera is not available."
+        );
+
+        return;
+    }
+
+
+    const videoTracks =
+        localStream.getVideoTracks();
+
+
+    if (!videoTracks.length) {
+
+        showToast(
+            "error",
+            "No camera track found."
+        );
+
+        return;
+    }
+
+
+    cameraEnabled =
+        !cameraEnabled;
+
+
+    videoTracks.forEach(
+        function (track) {
+
+            track.enabled =
+                cameraEnabled;
+        }
+    );
+
+
+    /*
+    Keep local placeholder in sync.
+    */
+
+    if (cameraEnabled) {
+
+        setLocalVideoStream(
+            localStream,
+            true
+        );
+
+    } else {
+
+        setLocalVideoStream(
+            localStream,
+            false
+        );
+    }
+
+
+    updateCameraButton();
+
+
+    showToast(
+        "info",
+        cameraEnabled
+            ? "Camera turned on."
+            : "Camera turned off."
+    );
+}
+
+
+/* =========================================================
+   19. BUTTON EVENTS
+========================================================= */
+
+if (micBtn) {
+
+    micBtn.addEventListener(
+        "click",
+        toggleMicrophone
+    );
+}
+
+
+if (cameraBtn) {
+
+    cameraBtn.addEventListener(
+        "click",
+        toggleCamera
+    );
+}
+
+/* =========================================================
+   20. SCREEN SHARE
+========================================================= */
+
+function updateScreenShareButton(
+    sharing
+) {
+
+    if (!screenShareBtn) {
+        return;
+    }
+
+
+    const icon =
+        screenShareBtn.querySelector(
+            ".control-icon"
+        );
+
+
+    if (sharing) {
+
+        screenShareBtn.classList.add(
+            "active"
+        );
+
+
+        screenShareBtn.title =
+            "Stop screen sharing";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🛑";
+        }
+
+
+    } else {
+
+        screenShareBtn.classList.remove(
+            "active"
+        );
+
+
+        screenShareBtn.title =
+            "Share screen";
+
+
+        if (icon) {
+
+            icon.textContent =
+                "🖥️";
+        }
+    }
+}
+
+
+/* =========================================================
+   21. START SCREEN SHARE
+========================================================= */
+
+async function startScreenShare() {
+
+    if (
+        hasLeftMeeting ||
+        duplicateSessionLost
+    ) {
+        return;
+    }
+
+
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getDisplayMedia
+    ) {
+
+        showToast(
+            "error",
+            "Screen sharing is not supported by this browser."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        console.log(
+            "Starting screen share..."
+        );
+
+
+        screenStream =
+            await navigator.mediaDevices
+                .getDisplayMedia({
+
+                    video: {
+
+                        cursor:
+                            "always"
+                    },
+
+                    audio:
+                        false
+                });
+
+
+        const screenTrack =
+            screenStream.getVideoTracks()[0];
+
+
+        if (!screenTrack) {
+
+            throw new Error(
+                "No screen video track received."
+            );
+        }
+
+
+        /*
+        Replace the camera video track in every
+        existing peer connection.
+        */
+
+        for (
+            const remoteSocketId
+            of Object.keys(
+                peerConnections
+            )
+        ) {
+
+            const peerConnection =
+                peerConnections[
+                    remoteSocketId
+                ];
+
+
+            if (!peerConnection) {
+                continue;
+            }
+
+
+            const senders =
+                peerConnection
+                    .getSenders();
+
+
+            const videoSender =
+                senders.find(
+                    function (sender) {
+
+                        return (
+                            sender.track &&
+                            sender.track.kind ===
+                                "video"
+                        );
+                    }
+                );
+
+
+            if (videoSender) {
+
+                try {
+
+                    await videoSender
+                        .replaceTrack(
+                            screenTrack
+                        );
+
+                } catch (error) {
+
+                    console.warn(
+                        "Could not replace video track:",
+                        remoteSocketId,
+                        error
+                    );
+                }
+            }
+        }
+
+
+        /*
+        Show the shared screen locally.
+        */
+
+        if (localVideo) {
+
+            localVideo.srcObject =
+                screenStream;
+
+
+            localVideo.style.display =
+                "block";
+
+
+            if (localPlaceholder) {
+
+                localPlaceholder.style.display =
+                    "none";
+            }
+
+
+            localVideo.muted =
+                true;
+
+
+            const playPromise =
+                localVideo.play();
+
+
+            if (
+                playPromise &&
+                typeof playPromise.catch ===
+                    "function"
+            ) {
+
+                playPromise.catch(
+                    function () {}
+                );
+            }
+        }
+
+
+        updateScreenShareButton(
+            true
+        );
+
+
+        showToast(
+            "success",
+            "Screen sharing started."
+        );
+
+
+        /*
+        Automatically stop when the browser's
+        "Stop sharing" button is pressed.
+        */
+
+        screenTrack.onended =
+            function () {
+
+                stopScreenShare();
+            };
+
+
+    } catch (error) {
+
+        console.error(
+            "Screen sharing failed:",
+            error
+        );
+
+
+        screenStream =
+            null;
+
+
+        updateScreenShareButton(
+            false
+        );
+
+
+        if (
+            error?.name ===
+            "NotAllowedError"
+        ) {
+
+            showToast(
+                "info",
+                "Screen sharing cancelled."
+            );
+
+        } else {
+
+            showToast(
+                "error",
+                "Unable to start screen sharing."
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   22. STOP SCREEN SHARE
+========================================================= */
+
+async function stopScreenShare() {
+
+    if (!screenStream) {
+
+        updateScreenShareButton(
+            false
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "Stopping screen share..."
+    );
+
+
+    /*
+    Stop screen tracks.
+    */
+
+    screenStream
+        .getTracks()
+        .forEach(
+            function (track) {
+
+                try {
+
+                    track.onended =
+                        null;
+
+                    track.stop();
+
+                } catch (error) {}
+            }
+        );
+
+
+    screenStream =
+        null;
+
+
+    /*
+    Restore camera track.
+    */
+
+    const cameraTrack =
+        localStream
+            ?.getVideoTracks()
+            ?.find(
+                function (track) {
+
+                    return track.readyState !==
+                        "ended";
+                }
+            );
+
+
+    if (cameraTrack) {
+
+        cameraTrack.enabled =
+            cameraEnabled;
+
+
+        for (
+            const remoteSocketId
+            of Object.keys(
+                peerConnections
+            )
+        ) {
+
+            const peerConnection =
+                peerConnections[
+                    remoteSocketId
+                ];
+
+
+            if (!peerConnection) {
+                continue;
+            }
+
+
+            const senders =
+                peerConnection
+                    .getSenders();
+
+
+            const videoSender =
+                senders.find(
+                    function (sender) {
+
+                        return (
+                            sender.track &&
+                            sender.track.kind ===
+                                "video"
+                        );
+                    }
+                );
+
+
+            if (videoSender) {
+
+                try {
+
+                    await videoSender
+                        .replaceTrack(
+                            cameraTrack
+                        );
+
+                } catch (error) {
+
+                    console.warn(
+                        "Could not restore camera track:",
+                        remoteSocketId,
+                        error
+                    );
+                }
+            }
+        }
+
+
+        setLocalVideoStream(
+            localStream,
+            cameraEnabled
+        );
+
+
+    } else {
+
+        /*
+        If camera is unavailable,
+        keep the placeholder visible.
+        */
+
+        setLocalVideoStream(
+            null,
+            false
+        );
+    }
+
+
+    updateScreenShareButton(
+        false
+    );
+
+
+    showToast(
+        "info",
+        "Screen sharing stopped."
+    );
+}
+
+
+if (screenShareBtn) {
+
+    screenShareBtn.addEventListener(
+        "click",
+        function () {
+
+            if (screenStream) {
+
+                stopScreenShare();
+
+            } else {
+
+                startScreenShare();
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   23. CHAT HELPERS
+========================================================= */
+
+let unreadChatCount = 0;
+
+
+function increaseUnreadChatCount() {
+
+    unreadChatCount +=
+        1;
+
+
+    updateUnreadChatBadge();
+}
+
+
+function clearUnreadChatCount() {
+
+    unreadChatCount =
+        0;
+
+
+    updateUnreadChatBadge();
+}
+
+
+function updateUnreadChatBadge() {
+
+    const badge =
+        document.getElementById(
+            "chatUnreadBadge"
+        );
+
+
+    if (!badge) {
+        return;
+    }
+
+
+    if (
+        unreadChatCount >
+        0
+    ) {
+
+        badge.textContent =
+            unreadChatCount >
+            99
+                ? "99+"
+                : String(
+                    unreadChatCount
+                );
+
+
+        badge.classList.add(
+            "show"
+        );
+
+
+    } else {
+
+        badge.textContent =
+            "0";
+
+
+        badge.classList.remove(
+            "show"
+        );
+    }
+}
+
+
+/* =========================================================
+   24. ADD CHAT MESSAGE
+========================================================= */
+
+function addChatMessage(
+    name,
+    message
+) {
+
+    if (!chatMessages) {
+        return;
+    }
+
+
+    const cleanName =
+        String(
+            name ||
+            "Participant"
+        ).trim();
+
+
+    const cleanMessage =
+        String(
+            message ||
+            ""
+        ).trim();
+
+
+    if (!cleanMessage) {
+        return;
+    }
+
+
+    /*
+    Remove empty-state message.
+    */
+
+    const emptyMessage =
+        chatMessages.querySelector(
+            ".sidebar-empty"
+        );
+
+
+    if (emptyMessage) {
+
+        emptyMessage.remove();
+    }
+
+
+    const messageElement =
+        document.createElement(
+            "div"
+        );
+
+
+    messageElement.className =
+        "chat-message";
+
+
+    /*
+    IMPORTANT SECURITY FIX:
+
+    Use textContent instead of innerHTML
+    for user-provided chat text.
+    */
+
+    const nameElement =
+        document.createElement(
+            "strong"
+        );
+
+
+    nameElement.textContent =
+        cleanName;
+
+
+    const textElement =
+        document.createElement(
+            "span"
+        );
+
+
+    textElement.textContent =
+        cleanMessage;
+
+
+    messageElement.appendChild(
+        nameElement
+    );
+
+
+    messageElement.appendChild(
+        textElement
+    );
+
+
+    chatMessages.appendChild(
+        messageElement
+    );
+
+
+    /*
+    Automatically scroll to newest message.
+    */
+
+    chatMessages.scrollTop =
+        chatMessages.scrollHeight;
+}
+
+
+/* =========================================================
+   25. CHAT FORM
+========================================================= */
+
+if (chatForm) {
+
+    chatForm.addEventListener(
+        "submit",
+        function (event) {
+
+            event.preventDefault();
+
+
+            const message =
+                chatInput?.value?.trim();
+
+
+            if (!message) {
+                return;
+            }
+
+
+            if (
+                hasLeftMeeting ||
+                duplicateSessionLost
+            ) {
+
+                showToast(
+                    "error",
+                    "This meeting session is no longer active."
+                );
+
+                return;
+            }
+
+
+            if (
+                !socket ||
+                !socket.connected
+            ) {
+
+                showToast(
+                    "error",
+                    "Chat connection unavailable."
+                );
+
+                return;
+            }
+
+
+            /*
+            IMPORTANT:
+
+            Do NOT call addChatMessage() here.
+
+            The server broadcasts the message back
+            through the "chat-message" Socket.IO event.
+
+            The socket listener displays it exactly once.
+            */
+
+            socket.emit(
+                "chat-message",
+                {
+
+                    meeting_id:
+                        meetingId,
+
+                    name:
+                        userName,
+
+                    message:
+                        message
+                }
+            );
+
+
+            if (chatInput) {
+
+                chatInput.value =
+                    "";
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   26. CHAT SIDEBAR
+========================================================= */
+
+function openMeetingSidebar(
+    panel
+) {
+
+    if (!meetingSidebar) {
+        return;
+    }
+
+
+    meetingSidebar.classList.remove(
+        "hidden"
+    );
+
+
+    meetingSidebar.classList.add(
+        "open"
+    );
+
+
+    const chatPanel =
+        document.getElementById(
+            "chatPanel"
+        );
+
+
+    const participantsPanel =
+        document.getElementById(
+            "participantsPanel"
+        );
+
+
+    const chatTab =
+        document.getElementById(
+            "meetingChatBtn"
+        );
+
+
+    const participantsTab =
+        document.getElementById(
+            "meetingParticipantsBtn"
+        );
+
+
+    if (
+        panel ===
+        "participants"
+    ) {
+
+        if (chatPanel) {
+
+            chatPanel.classList.remove(
+                "active"
+            );
+        }
+
+
+        if (participantsPanel) {
+
+            participantsPanel.classList.add(
+                "active"
+            );
+        }
+
+
+        if (chatTab) {
+
+            chatTab.classList.remove(
+                "active"
+            );
+        }
+
+
+        if (participantsTab) {
+
+            participantsTab.classList.add(
+                "active"
+            );
+        }
+
+
+    } else {
+
+        if (chatPanel) {
+
+            chatPanel.classList.add(
+                "active"
+            );
+        }
+
+
+        if (participantsPanel) {
+
+            participantsPanel.classList.remove(
+                "active"
+            );
+        }
+
+
+        if (chatTab) {
+
+            chatTab.classList.add(
+                "active"
+            );
+        }
+
+
+        if (participantsTab) {
+
+            participantsTab.classList.remove(
+                "active"
+            );
+        }
+    }
+
+
+    if (
+        panel ===
+        "chat"
+    ) {
+
+        clearUnreadChatCount();
+
+
+        setTimeout(
+            function () {
+
+                if (chatInput) {
+
+                    chatInput.focus();
+                }
+
+
+                if (chatMessages) {
+
+                    chatMessages.scrollTop =
+                        chatMessages.scrollHeight;
+                }
+
+            },
+            100
+        );
     }
 
 
@@ -1872,9 +4442,274 @@ function updateParticipantCount() {
 }
 
 
+function closeMeetingSidebar() {
+
+    if (!meetingSidebar) {
+        return;
+    }
+
+
+    meetingSidebar.classList.remove(
+        "open"
+    );
+
+
+    /*
+    Keep hidden class for CSS
+    pointer-event behavior.
+    */
+
+    setTimeout(
+        function () {
+
+            if (
+                meetingSidebar &&
+                !meetingSidebar.classList.contains(
+                    "open"
+                )
+            ) {
+
+                meetingSidebar.classList.add(
+                    "hidden"
+                );
+            }
+
+        },
+        250
+    );
+}
+
+
+if (chatBtn) {
+
+    chatBtn.addEventListener(
+        "click",
+        function () {
+
+            openMeetingSidebar(
+                "chat"
+            );
+        }
+    );
+}
+
+
+if (meetingChatBtn) {
+
+    meetingChatBtn.addEventListener(
+        "click",
+        function () {
+
+            openMeetingSidebar(
+                "chat"
+            );
+        }
+    );
+}
+
+
+if (participantsBtn) {
+
+    participantsBtn.addEventListener(
+        "click",
+        function () {
+
+            openMeetingSidebar(
+                "participants"
+            );
+        }
+    );
+}
+
+
+if (meetingParticipantsBtn) {
+
+    meetingParticipantsBtn.addEventListener(
+        "click",
+        function () {
+
+            openMeetingSidebar(
+                "participants"
+            );
+        }
+    );
+}
+
+
+if (sidebarClose) {
+
+    sidebarClose.addEventListener(
+        "click",
+        closeMeetingSidebar
+    );
+}
+
+
 /* =========================================================
-   PARTICIPANT LIST
+   27. PARTICIPANT LIST
 ========================================================= */
+
+/*
+Set used to prevent duplicate participant names
+from being displayed in the visible list.
+*/
+
+const displayedNames =
+    new Set();
+
+
+function normalizeParticipantName(
+    name
+) {
+
+    return String(
+        name ||
+        "Participant"
+    )
+        .trim()
+        .toLowerCase();
+}
+
+
+function addParticipantToList(
+    name,
+    status = "Connected"
+) {
+
+    if (!participantsList) {
+        return;
+    }
+
+
+    const cleanName =
+        String(
+            name ||
+            "Participant"
+        ).trim();
+
+
+    const normalizedName =
+        normalizeParticipantName(
+            cleanName
+        );
+
+
+    /*
+    Do not display the same person twice.
+    */
+
+    const existingItems =
+        participantsList.querySelectorAll(
+            ".participant-item"
+        );
+
+
+    for (
+        const item
+        of existingItems
+    ) {
+
+        const existingName =
+            item.dataset.participantName ||
+            "";
+
+
+        if (
+            existingName ===
+            normalizedName
+        ) {
+
+            return;
+        }
+    }
+
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "participant-item";
+
+
+    item.dataset.participantName =
+        normalizedName;
+
+
+    const avatar =
+        document.createElement(
+            "div"
+        );
+
+
+    avatar.className =
+        "participant-small-avatar";
+
+
+    avatar.textContent =
+        cleanName
+            .charAt(0)
+            .toUpperCase() ||
+        "P";
+
+
+    const details =
+        document.createElement(
+            "div"
+        );
+
+
+    details.className =
+        "participant-details";
+
+
+    const nameElement =
+        document.createElement(
+            "strong"
+        );
+
+
+    nameElement.textContent =
+        cleanName;
+
+
+    const statusElement =
+        document.createElement(
+            "span"
+        );
+
+
+    statusElement.textContent =
+        status;
+
+
+    details.appendChild(
+        nameElement
+    );
+
+
+    details.appendChild(
+        statusElement
+    );
+
+
+    item.appendChild(
+        avatar
+    );
+
+
+    item.appendChild(
+        details
+    );
+
+
+    participantsList.appendChild(
+        item
+    );
+}
+
 
 function updateParticipantsList() {
 
@@ -1883,49 +4718,15 @@ function updateParticipantsList() {
     }
 
 
-    /*
-    Clear the old list first.
-    */
-
     participantsList.innerHTML =
         "";
 
 
-    /*
-    Keep track of names already displayed.
-
-    This is the important duplicate fix.
-    */
-
-    const displayedNames =
-        new Set();
+    displayedNames.clear();
 
 
     /*
-    Normalize names so these are considered
-    the same participant:
-
-        Kishan
-        kishan
-        Kishan 
-    */
-
-    function normalizeParticipantName(
-        name
-    ) {
-
-        return String(
-            name || "Participant"
-        )
-            .trim()
-            .toLowerCase();
-    }
-
-
-    /*
-    Add CURRENT USER.
-
-    The current user should always appear exactly once.
+    Always show current user first.
     */
 
     const currentName =
@@ -1939,27 +4740,19 @@ function updateParticipantsList() {
         );
 
 
-    if (!displayedNames.has(
+    displayedNames.add(
         currentKey
-    )) {
-
-        displayedNames.add(
-            currentKey
-        );
+    );
 
 
-        addParticipantToList(
-            currentName,
-            "You"
-        );
-    }
+    addParticipantToList(
+        currentName,
+        "You"
+    );
 
 
     /*
-    Add REMOTE participants.
-
-    If the same name exists under multiple Socket.IO
-    IDs, only the first one is displayed.
+    Add remote participants only once.
     */
 
     Object.values(
@@ -1979,11 +4772,8 @@ function updateParticipantsList() {
 
 
             /*
-            IMPORTANT:
-
-            Do not display the current user again
-            if another Socket.IO connection belonging
-            to the same user appears.
+            Prevent current user from being
+            added again under another Socket.IO ID.
             */
 
             if (
@@ -1996,7 +4786,7 @@ function updateParticipantsList() {
 
 
             /*
-            Skip duplicate names.
+            Prevent duplicate names.
             */
 
             if (
@@ -2021,2942 +4811,76 @@ function updateParticipantsList() {
         }
     );
 }
-/* =========================================================
-   7. INITIALIZE CAMERA + MICROPHONE
-========================================================= */
-
-async function initializeMeeting() {
-
-    if (meetingInitialized) {
-        return;
-    }
-
-
-    if (mediaInitializationStarted) {
-        return;
-    }
-
-
-    mediaInitializationStarted =
-        true;
-
-
-    if (!meetingId) {
-
-        console.error(
-            "Meeting ID is missing."
-        );
-
-
-        updateConnectionStatus(
-            "error",
-            "Meeting ID missing"
-        );
-
-
-        return;
-    }
-
-
-    try {
-
-        updateConnectionStatus(
-            "connecting",
-            "Requesting camera & microphone..."
-        );
-
-
-        if (
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia
-        ) {
-
-            throw new Error(
-                "getUserMedia is not supported by this browser."
-            );
-        }
-
-
-        localStream =
-            await navigator.mediaDevices
-                .getUserMedia({
-
-                    video: {
-
-                        width: {
-                            ideal: 1280
-                        },
-
-                        height: {
-                            ideal: 720
-                        },
-
-                        frameRate: {
-                            ideal: 30,
-                            max: 30
-                        },
-
-                        facingMode:
-                            "user"
-                    },
-
-                    audio: {
-
-                        echoCancellation:
-                            true,
-
-                        noiseSuppression:
-                            true,
-
-                        autoGainControl:
-                            true
-                    }
-                });
-
-
-        console.log(
-            "================================="
-        );
-
-
-        console.log(
-            "CAMERA + MICROPHONE OBTAINED"
-        );
-
-
-        console.log(
-            "Video tracks:",
-            localStream.getVideoTracks().length
-        );
-
-
-        console.log(
-            "Audio tracks:",
-            localStream.getAudioTracks().length
-        );
-
-
-        console.log(
-            "================================="
-        );
-
-
-        const videoTracks =
-            localStream.getVideoTracks();
-
-
-        const audioTracks =
-            localStream.getAudioTracks();
-
-
-        microphoneEnabled =
-            audioTracks.length > 0 &&
-            audioTracks.some(
-                track => track.enabled
-            );
-
-
-        cameraEnabled =
-            videoTracks.length > 0 &&
-            videoTracks.some(
-                track => track.enabled
-            );
-
-
-        /* =====================================================
-           LOCAL VIDEO
-        ===================================================== */
-
-        if (localVideo) {
-
-            localVideo.srcObject =
-                localStream;
-
-
-            localVideo.muted =
-                true;
-
-
-            localVideo.defaultMuted =
-                true;
-
-
-            localVideo.autoplay =
-                true;
-
-
-            localVideo.playsInline =
-                true;
-
-
-            localVideo.setAttribute(
-                "autoplay",
-                ""
-            );
-
-
-            localVideo.setAttribute(
-                "muted",
-                ""
-            );
-
-
-            localVideo.setAttribute(
-                "playsinline",
-                ""
-            );
-
-
-            localVideo.style.display =
-                "block";
-
-
-            await playLocalVideo();
-        }
-
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                cameraEnabled
-                    ? "none"
-                    : "flex";
-        }
-
-
-        updateMicrophoneButton();
-
-        updateCameraButton();
-
-
-        meetingInitialized =
-            true;
-
-
-        updateConnectionStatus(
-            "connected",
-            "Camera & microphone ready"
-        );
-
-
-        console.log(
-            "Camera and microphone are ready."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Media initialization error:",
-            error
-        );
-
-
-        if (localVideo) {
-
-            localVideo.srcObject =
-                null;
-
-
-            localVideo.style.display =
-                "none";
-        }
-
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                "flex";
-        }
-
-
-        microphoneEnabled =
-            false;
-
-
-        cameraEnabled =
-            false;
-
-
-        updateMicrophoneButton();
-
-        updateCameraButton();
-
-
-        updateConnectionStatus(
-            "error",
-            "Camera unavailable"
-        );
-
-
-        showToast(
-            "error",
-            getMediaErrorMessage(error)
-        );
-    }
-}
 
 
 /* =========================================================
-   PLAY LOCAL VIDEO
-========================================================= */
-
-async function playLocalVideo() {
-
-    if (!localVideo) {
-        return;
-    }
-
-
-    if (!localVideo.srcObject) {
-        return;
-    }
-
-
-    try {
-
-        localVideo.muted =
-            true;
-
-
-        localVideo.defaultMuted =
-            true;
-
-
-        localVideo.autoplay =
-            true;
-
-
-        localVideo.playsInline =
-            true;
-
-
-        await localVideo.play();
-
-
-        localVideo.style.display =
-            "block";
-
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                "none";
-        }
-
-
-        console.log(
-            "Local camera video is PLAYING."
-        );
-
-
-    } catch (error) {
-
-        console.warn(
-            "Local video play attempt failed:",
-            error
-        );
-    }
-}
-
-
-/* =========================================================
-   MEDIA ERROR MESSAGE
-========================================================= */
-
-function getMediaErrorMessage(error) {
-
-    if (!error) {
-
-        return (
-            "Camera or microphone unavailable."
-        );
-    }
-
-
-    switch (error.name) {
-
-        case "NotAllowedError":
-
-            return (
-                "Camera/microphone permission was denied. " +
-                "Allow camera and microphone access in Chrome."
-            );
-
-
-        case "NotFoundError":
-
-            return (
-                "Camera or microphone was not found."
-            );
-
-
-        case "NotReadableError":
-
-            return (
-                "Camera or microphone is already being used " +
-                "by another application."
-            );
-
-
-        case "OverconstrainedError":
-
-            return (
-                "Camera does not support the requested settings."
-            );
-
-
-        case "SecurityError":
-
-            return (
-                "Browser security prevented camera access."
-            );
-
-
-        case "AbortError":
-
-            return (
-                "Camera initialization was interrupted."
-            );
-
-
-        default:
-
-            return (
-                "Unable to access camera or microphone."
-            );
-    }
-}
-
-
-/* =========================================================
-   8. JOIN SOCKET.IO ROOM
-========================================================= */
-
-function joinMeetingRoom() {
-
-    if (!socket) {
-
-        console.error(
-            "Cannot join meeting: socket unavailable."
-        );
-
-
-        return;
-    }
-
-
-    if (!socket.connected) {
-
-        console.warn(
-            "Cannot join meeting: socket not connected."
-        );
-
-
-        return;
-    }
-
-
-    if (!meetingId) {
-
-        console.error(
-            "Cannot join meeting: meeting ID missing."
-        );
-
-
-        return;
-    }
-
-
-    if (socketRoomJoined) {
-
-        console.log(
-            "Already joined Socket.IO room."
-        );
-
-
-        return;
-    }
-
-
-    console.log(
-        "================================="
-    );
-
-
-    console.log(
-        "JOINING SOCKET.IO ROOM"
-    );
-
-
-    console.log(
-        "Meeting:",
-        meetingId
-    );
-
-
-    console.log(
-        "User:",
-        userName
-    );
-
-
-    console.log(
-        "Socket:",
-        socket.id
-    );
-
-
-    console.log(
-        "================================="
-    );
-
-
-    socket.emit(
-        "join-meeting",
-        {
-
-            meeting_id:
-                meetingId,
-
-            name:
-                userName
-        }
-    );
-
-
-    socketRoomJoined =
-        true;
-}
-
-
-/* =========================================================
-   9. CREATE PEER CONNECTION
-========================================================= */
-
-function createPeerConnection(
-    remoteSocketId,
-    remoteName = "Participant"
-) {
-
-    if (
-        peerConnections[
-            remoteSocketId
-        ]
-    ) {
-
-        return peerConnections[
-            remoteSocketId
-        ];
-    }
-
-
-    console.log(
-        "Creating WebRTC peer:",
-        remoteName,
-        remoteSocketId
-    );
-
-
-    const peerConnection =
-        new RTCPeerConnection(
-            rtcConfiguration
-        );
-
-
-    peerConnections[
-        remoteSocketId
-    ] =
-        peerConnection;
-
-
-    participants[
-        remoteSocketId
-    ] =
-        remoteName;
-
-
-    remoteStreams[
-        remoteSocketId
-    ] =
-        new MediaStream();
-
-
-    pendingIceCandidates[
-        remoteSocketId
-    ] =
-        pendingIceCandidates[
-            remoteSocketId
-        ] || [];
-
-
-    /* =====================================================
-       ADD LOCAL CAMERA + MICROPHONE / SCREEN
-
-       IMPORTANT:
-       If screen sharing is already active when a new
-       participant joins, the new peer receives the
-       screen track instead of the camera track.
-    ===================================================== */
-
-    if (localStream) {
-
-        /*
-        Add microphone separately.
-        */
-
-        const audioTracks =
-            localStream.getAudioTracks();
-
-
-        audioTracks.forEach(
-            function (track) {
-
-                try {
-
-                    peerConnection.addTrack(
-                        track,
-                        localStream
-                    );
-
-
-                    console.log(
-                        "Local audio track added:",
-                        track.kind
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        "Unable to add local audio track:",
-                        error
-                    );
-                }
-            }
-        );
-
-
-        /*
-        Determine whether the outgoing video should
-        be the camera or the currently shared screen.
-        */
-
-        const outgoingVideoTrack =
-            getOutgoingVideoTrack();
-
-
-        if (outgoingVideoTrack) {
-
-            try {
-
-                const videoStream =
-                    screenStream ||
-                    localStream;
-
-
-                peerConnection.addTrack(
-                    outgoingVideoTrack,
-                    videoStream
-                );
-
-
-                console.log(
-                    "Outgoing video track added:",
-                    outgoingVideoTrack.kind,
-
-                    screenStream
-                        ? "(SCREEN)"
-                        : "(CAMERA)"
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Unable to add outgoing video track:",
-                    error
-                );
-            }
-        }
-    }
-
-
-    /* =====================================================
-       REMOTE TRACK
-    ===================================================== */
-
-    peerConnection.ontrack =
-        function (event) {
-
-            console.log(
-                "REMOTE TRACK:",
-                remoteSocketId,
-                event.track.kind
-            );
-
-
-            let stream =
-                remoteStreams[
-                    remoteSocketId
-                ];
-
-
-            if (!stream) {
-
-                stream =
-                    new MediaStream();
-
-
-                remoteStreams[
-                    remoteSocketId
-                ] =
-                    stream;
-            }
-
-
-            const alreadyAdded =
-                stream
-                    .getTracks()
-                    .some(
-                        track =>
-                            track.id ===
-                            event.track.id
-                    );
-
-
-            if (!alreadyAdded) {
-
-                stream.addTrack(
-                    event.track
-                );
-            }
-
-
-            createRemoteVideo(
-                remoteSocketId,
-                remoteName,
-                stream
-            );
-
-
-            event.track.onended =
-                function () {
-
-                    console.log(
-                        "Remote track ended:",
-                        remoteSocketId,
-                        event.track.kind
-                    );
-                };
-        };
-
-
-    /* =====================================================
-       ICE CANDIDATE
-    ===================================================== */
-
-    peerConnection.onicecandidate =
-        function (event) {
-
-            if (
-                !event.candidate ||
-                !socket ||
-                !socket.connected
-            ) {
-
-                return;
-            }
-
-
-            socket.emit(
-                "ice-candidate",
-                {
-
-                    target:
-                        remoteSocketId,
-
-                    candidate:
-                        event.candidate
-                }
-            );
-        };
-
-
-    /* =====================================================
-       CONNECTION STATE
-    ===================================================== */
-
-    peerConnection.onconnectionstatechange =
-        function () {
-
-            const state =
-                peerConnection.connectionState;
-
-
-            console.log(
-                `WebRTC ${remoteName}:`,
-                state
-            );
-
-
-            if (
-                state === "connected"
-            ) {
-
-                updateConnectionStatus(
-                    "connected",
-                    "Connected"
-                );
-
-
-                showToast(
-                    "success",
-                    `${remoteName} connected.`
-                );
-            }
-
-
-            if (
-                state === "connecting"
-            ) {
-
-                updateConnectionStatus(
-                    "connecting",
-                    "Connecting..."
-                );
-            }
-
-
-            if (
-                state === "failed"
-            ) {
-
-                console.error(
-                    "WebRTC connection failed:",
-                    remoteSocketId
-                );
-
-
-                try {
-
-                    peerConnection.restartIce();
-
-                } catch (error) {
-
-                    console.warn(
-                        "ICE restart unavailable:",
-                        error
-                    );
-                }
-            }
-
-
-            if (
-                state === "disconnected"
-            ) {
-
-                setTimeout(
-                    function () {
-
-                        const current =
-                            peerConnections[
-                                remoteSocketId
-                            ];
-
-
-                        if (
-                            current &&
-                            (
-                                current.connectionState ===
-                                "disconnected" ||
-
-                                current.connectionState ===
-                                "failed"
-                            )
-                        ) {
-
-                            removeRemoteParticipant(
-                                remoteSocketId
-                            );
-                        }
-
-                    },
-                    5000
-                );
-            }
-
-
-            if (
-                state === "closed"
-            ) {
-
-                removeRemoteParticipant(
-                    remoteSocketId
-                );
-            }
-        };
-
-
-    /* =====================================================
-       ICE CONNECTION STATE
-    ===================================================== */
-
-    peerConnection
-        .oniceconnectionstatechange =
-        function () {
-
-            console.log(
-                "ICE:",
-                remoteSocketId,
-                peerConnection
-                    .iceConnectionState
-            );
-        };
-
-
-    /* =====================================================
-       ICE GATHERING STATE
-    ===================================================== */
-
-    peerConnection
-        .onicegatheringstatechange =
-        function () {
-
-            console.log(
-                "ICE gathering:",
-                remoteSocketId,
-                peerConnection
-                    .iceGatheringState
-            );
-        };
-
-
-    return peerConnection;
-}
-
-
-/* =========================================================
-   10. ICE QUEUE
-========================================================= */
-
-function queueIceCandidate(
-    socketId,
-    candidate
-) {
-
-    if (
-        !pendingIceCandidates[
-            socketId
-        ]
-    ) {
-
-        pendingIceCandidates[
-            socketId
-        ] = [];
-    }
-
-
-    pendingIceCandidates[
-        socketId
-    ].push(
-        candidate
-    );
-}
-
-
-/* =========================================================
-   FLUSH ICE CANDIDATES
-========================================================= */
-
-async function flushPendingIceCandidates(
-    socketId
-) {
-
-    const peerConnection =
-        peerConnections[
-            socketId
-        ];
-
-
-    if (!peerConnection) {
-        return;
-    }
-
-
-    if (
-        !peerConnection.remoteDescription
-    ) {
-
-        return;
-    }
-
-
-    const candidates =
-        pendingIceCandidates[
-            socketId
-        ] || [];
-
-
-    for (
-        const candidate of candidates
-    ) {
-
-        try {
-
-            await peerConnection
-                .addIceCandidate(
-                    new RTCIceCandidate(
-                        candidate
-                    )
-                );
-
-
-        } catch (error) {
-
-            console.error(
-                "Queued ICE candidate error:",
-                error
-            );
-        }
-    }
-
-
-    pendingIceCandidates[
-        socketId
-    ] = [];
-}
-
-
-/* =========================================================
-   11. CREATE REMOTE VIDEO
-========================================================= */
-
-function createRemoteVideo(
-    socketId,
-    name,
-    stream
-) {
-
-    if (!remoteVideos) {
-
-        console.error(
-            "#remoteVideos not found."
-        );
-
-
-        return;
-    }
-
-
-    let card =
-        document.getElementById(
-            `remote-${socketId}`
-        );
-
-
-    /* =====================================================
-       CARD ALREADY EXISTS
-    ===================================================== */
-
-    if (card) {
-
-        const video =
-            card.querySelector(
-                "video"
-            );
-
-
-        if (video) {
-
-            video.autoplay =
-                true;
-
-
-            video.playsInline =
-                true;
-
-
-            video.controls =
-                false;
-
-
-            video.muted =
-                false;
-
-
-            video.volume =
-                1;
-
-
-            video.srcObject =
-                stream;
-
-
-            video.play().catch(
-                function (error) {
-
-                    console.warn(
-                        "Remote video playback:",
-                        error
-                    );
-                }
-            );
-        }
-
-
-        if (emptyState) {
-
-            emptyState.style.display =
-                "none";
-        }
-
-
-        return;
-    }
-
-
-    /* =====================================================
-       CREATE CARD
-    ===================================================== */
-
-    card =
-        document.createElement(
-            "div"
-        );
-            card.className =
-        "video-card remote-video-card";
-
-
-    card.id =
-        `remote-${socketId}`;
-
-
-    /* =====================================================
-       VIDEO
-    ===================================================== */
-
-    const video =
-        document.createElement(
-            "video"
-        );
-
-
-    video.autoplay =
-        true;
-
-
-    video.playsInline =
-        true;
-
-
-    video.controls =
-        false;
-
-
-    video.muted =
-        false;
-
-
-    video.volume =
-        1;
-
-
-    video.setAttribute(
-        "autoplay",
-        ""
-    );
-
-
-    video.setAttribute(
-        "playsinline",
-        ""
-    );
-
-
-    video.srcObject =
-        stream;
-
-
-    /* =====================================================
-       NAME
-    ===================================================== */
-
-    const label =
-        document.createElement(
-            "div"
-        );
-
-
-    label.className =
-        "video-name";
-
-
-    label.textContent =
-        name;
-
-
-    /* =====================================================
-       ADD TO DOM
-    ===================================================== */
-
-    card.appendChild(
-        video
-    );
-
-
-    card.appendChild(
-        label
-    );
-
-
-    remoteVideos.appendChild(
-        card
-    );
-
-
-    if (emptyState) {
-
-        emptyState.style.display =
-            "none";
-    }
-
-
-    /* =====================================================
-       PLAY REMOTE VIDEO
-    ===================================================== */
-
-    video.play().then(
-        function () {
-
-            console.log(
-                "Remote video playing:",
-                name
-            );
-        }
-    ).catch(
-        function (error) {
-
-            console.warn(
-                "Remote autoplay blocked:",
-                error
-            );
-
-
-            const resumePlayback =
-                function () {
-
-                    video.play().catch(
-                        function () {}
-                    );
-                };
-
-
-            document.addEventListener(
-                "click",
-                resumePlayback,
-                {
-                    once: true
-                }
-            );
-        }
-    );
-
-
-    video.addEventListener(
-        "loadedmetadata",
-        function () {
-
-            console.log(
-                "Remote video metadata loaded:",
-                name,
-                video.videoWidth,
-                video.videoHeight
-            );
-
-
-            video.play().catch(
-                function () {}
-            );
-        }
-    );
-
-
-    updateParticipantCount();
-
-
-    console.log(
-        "Remote participant video created:",
-        name
-    );
-}
-
-
-/* =========================================================
-   12. REMOVE REMOTE PARTICIPANT
-========================================================= */
-
-function removeRemoteParticipant(
-    socketId
-) {
-
-    console.log(
-        "Removing participant:",
-        socketId
-    );
-
-
-    const card =
-        document.getElementById(
-            `remote-${socketId}`
-        );
-
-
-    if (card) {
-
-        const video =
-            card.querySelector(
-                "video"
-            );
-
-
-        if (video) {
-
-            try {
-                video.pause();
-            } catch (error) {}
-
-
-            video.srcObject =
-                null;
-        }
-
-
-        card.remove();
-    }
-
-
-    const peerConnection =
-        peerConnections[
-            socketId
-        ];
-
-
-    if (peerConnection) {
-
-        try {
-
-            peerConnection.ontrack =
-                null;
-
-
-            peerConnection.onicecandidate =
-                null;
-
-
-            peerConnection.close();
-
-
-        } catch (error) {
-
-            console.error(
-                "Peer close error:",
-                error
-            );
-        }
-    }
-
-
-    delete peerConnections[
-        socketId
-    ];
-
-
-    delete participants[
-        socketId
-    ];
-
-
-    delete pendingIceCandidates[
-        socketId
-    ];
-
-
-    delete remoteStreams[
-        socketId
-    ];
-
-
-    if (
-        Object.keys(
-            peerConnections
-        ).length === 0
-    ) {
-
-        if (emptyState) {
-
-            emptyState.style.display =
-                "flex";
-        }
-    }
-
-
-    updateParticipantCount();
-}
-
-
-/* =========================================================
-   13. MICROPHONE
-========================================================= */
-
-if (micBtn) {
-
-    micBtn.addEventListener(
-        "click",
-        toggleMicrophone
-    );
-}
-
-
-function toggleMicrophone() {
-
-    if (!localStream) {
-
-        showToast(
-            "error",
-            "Microphone is unavailable."
-        );
-
-
-        return;
-    }
-
-
-    const tracks =
-        localStream.getAudioTracks();
-
-
-    if (tracks.length === 0) {
-
-        showToast(
-            "error",
-            "No microphone found."
-        );
-
-
-        return;
-    }
-
-
-    microphoneEnabled =
-        !microphoneEnabled;
-
-
-    tracks.forEach(
-        function (track) {
-
-            track.enabled =
-                microphoneEnabled;
-        }
-    );
-
-
-    updateMicrophoneButton();
-
-
-    showToast(
-        "info",
-        microphoneEnabled
-            ? "Microphone turned on."
-            : "Microphone muted."
-    );
-}
-
-
-/* =========================================================
-   MICROPHONE UI
-========================================================= */
-
-function updateMicrophoneButton() {
-
-    if (!micBtn) {
-        return;
-    }
-
-
-    const icon =
-        micBtn.querySelector(
-            ".control-icon"
-        );
-
-
-    if (microphoneEnabled) {
-
-        micBtn.classList.add(
-            "active"
-        );
-
-
-        micBtn.classList.remove(
-            "off"
-        );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "🎤";
-        }
-
-
-        micBtn.title =
-            "Mute microphone";
-
-
-    } else {
-
-        micBtn.classList.remove(
-            "active"
-        );
-
-
-        micBtn.classList.add(
-            "off"
-        );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "🔇";
-        }
-
-
-        micBtn.title =
-            "Unmute microphone";
-    }
-}
-
-
-/* =========================================================
-   14. CAMERA
-========================================================= */
-
-if (cameraBtn) {
-
-    cameraBtn.addEventListener(
-        "click",
-        toggleCamera
-    );
-}
-
-
-function toggleCamera() {
-
-    if (!localStream) {
-
-        showToast(
-            "error",
-            "Camera is unavailable."
-        );
-
-
-        return;
-    }
-
-
-    const tracks =
-        localStream.getVideoTracks();
-
-
-    if (tracks.length === 0) {
-
-        showToast(
-            "error",
-            "No camera found."
-        );
-
-
-        return;
-    }
-
-
-    cameraEnabled =
-        !cameraEnabled;
-
-
-    tracks.forEach(
-        function (track) {
-
-            track.enabled =
-                cameraEnabled;
-        }
-    );
-
-
-    /*
-    If screen sharing is active, do not replace
-    the outgoing screen track. The camera track is
-    only being enabled/disabled for restoration later.
-    */
-
-    if (screenStream) {
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                "none";
-        }
-
-    } else {
-
-        if (cameraEnabled) {
-
-            if (localVideo) {
-
-                localVideo.srcObject =
-                    localStream;
-
-
-                localVideo.muted =
-                    true;
-
-
-                localVideo.defaultMuted =
-                    true;
-
-
-                localVideo.autoplay =
-                    true;
-
-
-                localVideo.playsInline =
-                    true;
-
-
-                localVideo.style.display =
-                    "block";
-
-
-                localVideo.play().catch(
-                    function () {}
-                );
-            }
-
-
-            if (localPlaceholder) {
-
-                localPlaceholder.style.display =
-                    "none";
-            }
-
-
-        } else {
-
-            if (localVideo) {
-
-                localVideo.style.display =
-                    "none";
-            }
-
-
-            if (localPlaceholder) {
-
-                localPlaceholder.style.display =
-                    "flex";
-            }
-        }
-    }
-
-
-    updateCameraButton();
-
-
-    showToast(
-        "info",
-        cameraEnabled
-            ? "Camera turned on."
-            : "Camera turned off."
-    );
-}
-
-
-/* =========================================================
-   CAMERA UI
-========================================================= */
-
-function updateCameraButton() {
-
-    if (!cameraBtn) {
-        return;
-    }
-
-
-    const icon =
-        cameraBtn.querySelector(
-            ".control-icon"
-        );
-
-
-    if (cameraEnabled) {
-
-        cameraBtn.classList.add(
-            "active"
-        );
-
-
-        cameraBtn.classList.remove(
-            "off"
-        );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "📹";
-        }
-
-
-        cameraBtn.title =
-            "Turn camera off";
-
-
-    } else {
-
-        cameraBtn.classList.remove(
-            "active"
-        );
-
-
-        cameraBtn.classList.add(
-            "off"
-        );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "🚫";
-        }
-
-
-        cameraBtn.title =
-            "Turn camera on";
-    }
-}
-
-
-/* =========================================================
-   15. SCREEN SHARE
-
-   FIXED WEBRTC SCREEN-SHARING FLOW
-
-   - Existing peer connections use replaceTrack().
-   - New peer connections automatically use screenStream.
-   - Browser native "Stop sharing" restores camera.
-   - Camera/microphone WebRTC structure remains unchanged.
-========================================================= */
-
-if (screenShareBtn) {
-
-    screenShareBtn.addEventListener(
-        "click",
-        toggleScreenShare
-    );
-}
-
-
-/* =========================================================
-   GET CURRENT OUTGOING VIDEO TRACK
-========================================================= */
-
-function getOutgoingVideoTrack() {
-
-    /*
-    If screen sharing is active,
-    return the screen video track.
-    */
-
-    if (screenStream) {
-
-        const screenTrack =
-            screenStream.getVideoTracks()[0];
-
-
-        if (
-            screenTrack &&
-            screenTrack.readyState !==
-            "ended"
-        ) {
-
-            return screenTrack;
-        }
-    }
-
-
-    /*
-    Otherwise return the camera track.
-    */
-
-    return (
-        localStream
-            ?.getVideoTracks()
-            ?.find(
-                function (track) {
-
-                    return (
-                        track.readyState !==
-                        "ended"
-                    );
-                }
-            ) || null
-    );
-}
-
-
-/* =========================================================
-   GET VIDEO SENDER
-========================================================= */
-
-function getVideoSender(
-    peerConnection
-) {
-
-    if (!peerConnection) {
-        return null;
-    }
-
-
-    return (
-        peerConnection
-            .getSenders()
-            .find(
-                function (sender) {
-
-                    return (
-                        sender.track &&
-                        sender.track.kind ===
-                        "video"
-                    );
-                }
-            ) || null
-    );
-}
-
-
-/* =========================================================
-   REPLACE VIDEO TRACK FOR ALL EXISTING PEERS
-========================================================= */
-
-async function replaceVideoTrackForAllPeers(
-    videoTrack
-) {
-
-    if (!videoTrack) {
-        return;
-    }
-
-
-    const peerIds =
-        Object.keys(
-            peerConnections
-        );
-
-
-    console.log(
-        "Replacing outgoing video track for",
-        peerIds.length,
-        "peer(s)."
-    );
-
-
-    for (
-        const socketId of peerIds
-    ) {
-
-        const peerConnection =
-            peerConnections[
-                socketId
-            ];
-
-
-        if (!peerConnection) {
-            continue;
-        }
-
-
-        const sender =
-            getVideoSender(
-                peerConnection
-            );
-
-
-        if (!sender) {
-
-            console.warn(
-                "No video sender found for peer:",
-                socketId
-            );
-
-
-            continue;
-        }
-
-
-        try {
-
-            await sender.replaceTrack(
-                videoTrack
-            );
-
-
-            console.log(
-                "Video track replaced for peer:",
-                socketId
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "replaceTrack failed for peer:",
-                socketId,
-                error
-            );
-        }
-    }
-}
-
-
-/* =========================================================
-   LOCAL VIDEO PREVIEW
-========================================================= */
-
-function setLocalVideoStream(
-    stream,
-    showVideo = true
-) {
-
-    if (!localVideo) {
-        return;
-    }
-
-
-    localVideo.srcObject =
-        stream || null;
-
-
-    localVideo.muted =
-        true;
-
-
-    localVideo.defaultMuted =
-        true;
-
-
-    localVideo.autoplay =
-        true;
-
-
-    localVideo.playsInline =
-        true;
-
-
-    if (showVideo) {
-
-        localVideo.style.display =
-            "block";
-
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                "none";
-        }
-
-
-        localVideo.play().catch(
-            function (error) {
-
-                console.warn(
-                    "Local preview playback failed:",
-                    error
-                );
-            }
-        );
-
-
-    } else {
-
-        localVideo.style.display =
-            "none";
-
-
-        if (localPlaceholder) {
-
-            localPlaceholder.style.display =
-                "flex";
-        }
-    }
-}
-
-
-/* =========================================================
-   START SCREEN SHARING
-========================================================= */
-
-async function startScreenSharing() {
-
-    if (screenStream) {
-
-        console.log(
-            "Screen sharing is already active."
-        );
-
-
-        return;
-    }
-
-
-    if (
-        !navigator.mediaDevices ||
-        !navigator.mediaDevices.getDisplayMedia
-    ) {
-
-        showToast(
-            "error",
-            "Screen sharing is not supported by this browser."
-        );
-
-
-        return;
-    }
-
-
-    try {
-
-        console.log(
-            "Starting screen sharing..."
-        );
-
-
-        screenStream =
-            await navigator.mediaDevices
-                .getDisplayMedia({
-
-                    video: {
-
-                        frameRate: {
-                            ideal: 30,
-                            max: 30
-                        }
-                    },
-
-                    audio: false
-                });
-
-
-        const screenTrack =
-            screenStream.getVideoTracks()[0];
-
-
-        if (!screenTrack) {
-
-            throw new Error(
-                "No screen video track was returned."
-            );
-        }
-
-
-        /*
-        Browser's native "Stop sharing" button.
-        */
-
-        screenTrack.onended =
-            function () {
-
-                console.log(
-                    "Browser stopped screen sharing."
-                );
-
-
-                stopScreenSharing(
-                    true
-                );
-            };
-
-
-        /*
-        Show screen locally.
-        */
-
-        setLocalVideoStream(
-            screenStream,
-            true
-        );
-
-
-        /*
-        Replace camera track with screen track
-        for every existing WebRTC peer.
-        */
-
-        await replaceVideoTrackForAllPeers(
-            screenTrack
-        );
-
-
-        /*
-        Update button.
-        */
-
-        updateScreenShareButton(
-            true
-        );
-
-
-        showToast(
-            "success",
-            "Screen sharing started."
-        );
-
-
-        console.log(
-            "Screen sharing started successfully."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Screen sharing failed:",
-            error
-        );
-
-
-        screenStream =
-            null;
-
-
-        updateScreenShareButton(
-            false
-        );
-
-
-        if (
-            error &&
-            (
-                error.name ===
-                "NotAllowedError" ||
-
-                error.name ===
-                "AbortError"
-            )
-        ) {
-
-            showToast(
-                "info",
-                "Screen sharing was cancelled."
-            );
-
-
-            /*
-            Restore camera preview.
-            */
-
-            if (localStream) {
-
-                setLocalVideoStream(
-                    localStream,
-                    cameraEnabled
-                );
-            }
-
-
-            return;
-        }
-
-
-        showToast(
-            "error",
-            "Unable to start screen sharing."
-        );
-    }
-}
-
-
-/* =========================================================
-   STOP SCREEN SHARING
-========================================================= */
-
-async function stopScreenSharing(
-    fromBrowser = false
-) {
-
-    if (!screenStream) {
-
-        updateScreenShareButton(
-            false
-        );
-
-
-        if (localStream) {
-
-            setLocalVideoStream(
-                localStream,
-                cameraEnabled
-            );
-        }
-
-
-        return;
-    }
-
-
-    console.log(
-        "Stopping screen sharing..."
-    );
-
-
-    const cameraTrack =
-        localStream
-            ?.getVideoTracks()
-            ?.find(
-                function (track) {
-
-                    return (
-                        track.readyState !==
-                        "ended"
-                    );
-                }
-            );
-
-
-    /*
-    Stop the screen tracks.
-    */
-
-    screenStream
-        .getTracks()
-        .forEach(
-            function (track) {
-
-                try {
-                    track.stop();
-                } catch (error) {}
-            }
-        );
-
-
-    screenStream =
-        null;
-
-
-    /*
-    Restore camera track to every peer.
-    */
-
-    if (cameraTrack) {
-
-        await replaceVideoTrackForAllPeers(
-            cameraTrack
-        );
-    }
-
-
-    /*
-    Restore local camera preview.
-    */
-
-    if (localStream) {
-
-        setLocalVideoStream(
-            localStream,
-            cameraEnabled
-        );
-    }
-
-
-    updateScreenShareButton(
-        false
-    );
-
-
-    if (!fromBrowser) {
-
-        showToast(
-            "info",
-            "Screen sharing stopped."
-        );
-    }
-
-
-    console.log(
-        "Screen sharing stopped."
-    );
-}
-
-
-/* =========================================================
-   TOGGLE SCREEN SHARING
-========================================================= */
-
-async function toggleScreenShare() {
-
-    if (hasLeftMeeting) {
-        return;
-    }
-
-
-    if (screenStream) {
-
-        await stopScreenSharing();
-
-        return;
-    }
-
-
-    await startScreenSharing();
-}
-
-
-/* =========================================================
-   SCREEN SHARE BUTTON UI
-========================================================= */
-
-function updateScreenShareButton(
-    sharing
-) {
-
-    if (!screenShareBtn) {
-        return;
-    }
-
-
-    if (sharing) {
-
-        screenShareBtn.classList.add(
-            "active"
-        );
-
-
-        screenShareBtn.classList.remove(
-            "off"
-        );
-
-
-        screenShareBtn.title =
-            "Stop sharing screen";
-
-
-        const icon =
-            screenShareBtn.querySelector(
-                ".control-icon"
-            );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "🛑";
-        }
-
-
-    } else {
-
-        screenShareBtn.classList.remove(
-            "active"
-        );
-
-
-        screenShareBtn.classList.remove(
-            "off"
-        );
-
-
-        screenShareBtn.title =
-            "Share screen";
-
-
-        const icon =
-            screenShareBtn.querySelector(
-                ".control-icon"
-            );
-
-
-        if (icon) {
-
-            icon.textContent =
-                "🖥️";
-        }
-    }
-}
-/* =========================================================
-   16. PARTICIPANT COUNT
+   28. PARTICIPANT COUNT
 ========================================================= */
 
 function updateParticipantCount() {
 
-    const remoteCount =
-        Object.keys(
-            participants
-        ).length;
-
-
-    const total =
-        remoteCount + 1;
-
-
-    if (participantCount) {
-
-        participantCount.textContent =
-            total;
-    }
-
-
-    updateParticipantsList();
-}
-
-
-/* =========================================================
-   PARTICIPANT LIST
-========================================================= */
-
-function updateParticipantsList() {
-
-    if (!participantsList) {
-        return;
-    }
-
-
-    participantsList.innerHTML =
-        "";
-
-
     /*
-    Add current user.
+    Use unique normalized names.
+
+    This prevents duplicate Socket.IO connections
+    from producing duplicate visible participants.
     */
 
-    addParticipantToList(
-        userName,
-        "You"
-    );
+    const uniqueNames =
+        new Set();
 
 
-    /*
-    Add remote participants.
-    */
+    const currentName =
+        normalizeParticipantName(
+            userName ||
+            "Participant"
+        );
+
+
+    if (currentName) {
+
+        uniqueNames.add(
+            currentName
+        );
+    }
+
 
     Object.values(
         participants
     ).forEach(
         function (name) {
 
-            addParticipantToList(
-                name,
-                "Connected"
-            );
-        }
-    );
-}
-
-
-/* =========================================================
-   ADD PARTICIPANT TO LIST
-========================================================= */
-
-function addParticipantToList(
-    name,
-    status
-) {
-
-    if (!participantsList) {
-        return;
-    }
-
-
-    const item =
-        document.createElement(
-            "div"
-        );
-
-
-    item.className =
-        "participant-item";
-
-
-    const avatar =
-        document.createElement(
-            "div"
-        );
-
-
-    avatar.className =
-        "participant-small-avatar";
-
-
-    avatar.textContent =
-        (name || "P")
-            .charAt(0)
-            .toUpperCase();
-
-
-    const details =
-        document.createElement(
-            "div"
-        );
-
-
-    details.className =
-        "participant-details";
-
-
-    const strong =
-        document.createElement(
-            "strong"
-        );
-
-
-    strong.textContent =
-        name ||
-        "Participant";
-
-
-    const span =
-        document.createElement(
-            "span"
-        );
-
-
-    span.textContent =
-        status ||
-        "Connected";
-
-
-    details.appendChild(
-        strong
-    );
-
-
-    details.appendChild(
-        span
-    );
-
-
-    item.appendChild(
-        avatar
-    );
-
-
-    item.appendChild(
-        details
-    );
-
-
-    participantsList.appendChild(
-        item
-    );
-}
-
-
-/* =========================================================
-   17. CHAT
-========================================================= */
-
-if (chatForm) {
-
-    chatForm.addEventListener(
-        "submit",
-        function (event) {
-
-            event.preventDefault();
-
-
-            const message =
-                chatInput?.value?.trim();
-
-
-            if (!message) {
-                return;
-            }
-
-
-            /*
-            Do not send chat when this tab has
-            already been disconnected because
-            another tab joined the same meeting.
-            */
-
-            if (
-                duplicateSessionLost ||
-                hasLeftMeeting
-            ) {
-
-                showToast(
-                    "error",
-                    "This meeting session is no longer active."
+            const normalizedName =
+                normalizeParticipantName(
+                    name
                 );
 
 
-                return;
-            }
-
-
             if (
-                !socket ||
-                !socket.connected
+                normalizedName
             ) {
 
-                showToast(
-                    "error",
-                    "Chat connection unavailable."
+                uniqueNames.add(
+                    normalizedName
                 );
-
-
-                return;
-            }
-
-
-            socket.emit(
-                "chat-message",
-                {
-
-                    meeting_id:
-                        meetingId,
-
-                    name:
-                        userName,
-
-                    message:
-                        message
-                }
-            );
-
-
-            /*
-            Show our own message immediately.
-            */
-
-            addChatMessage(
-                userName,
-                message
-            );
-
-
-            if (chatInput) {
-
-                chatInput.value =
-                    "";
             }
         }
     );
-}
 
 
-/* =========================================================
-   ADD CHAT MESSAGE
-========================================================= */
+    if (participantCount) {
 
-function addChatMessage(
-    name,
-    message
-) {
-
-    if (!chatMessages) {
-        return;
-    }
-
-
-    if (!message) {
-        return;
-    }
-
-
-    const messageItem =
-        document.createElement(
-            "div"
-        );
-
-
-    messageItem.className =
-        "chat-message";
-
-
-    const nameElement =
-        document.createElement(
-            "strong"
-        );
-
-
-    nameElement.textContent =
-        name ||
-        "Participant";
-
-
-    const textElement =
-        document.createElement(
-            "span"
-        );
-
-
-    textElement.textContent =
-        message;
-
-
-    messageItem.appendChild(
-        nameElement
-    );
-
-
-    messageItem.appendChild(
-        textElement
-    );
-
-
-    chatMessages.appendChild(
-        messageItem
-    );
-
-
-    /*
-    Always scroll to the latest message.
-    */
-
-    chatMessages.scrollTop =
-        chatMessages.scrollHeight;
-}
-
-
-/* =========================================================
-   18. SIDEBAR
-========================================================= */
-
-function openSidebar(
-    section = "chat"
-) {
-
-    if (!meetingSidebar) {
-        return;
-    }
-
-
-    meetingSidebar.classList.add(
-        "open"
-    );
-
-
-    meetingSidebar.classList.remove(
-        "hidden"
-    );
-
-
-    if (
-        section ===
-        "participants"
-    ) {
-
-        showParticipantsPanel();
-
-    } else {
-
-        showChatPanel();
-    }
-}
-
-
-/* =========================================================
-   CLOSE SIDEBAR
-========================================================= */
-
-function closeSidebar() {
-
-    if (!meetingSidebar) {
-        return;
-    }
-
-
-    meetingSidebar.classList.remove(
-        "open"
-    );
-
-
-    meetingSidebar.classList.add(
-        "hidden"
-    );
-}
-
-
-/* =========================================================
-   SHOW CHAT PANEL
-========================================================= */
-
-function showChatPanel() {
-
-    const chatPanel =
-        document.getElementById(
-            "chatPanel"
-        );
-
-
-    const participantsPanel =
-        document.getElementById(
-            "participantsPanel"
-        );
-
-
-    if (chatPanel) {
-
-        chatPanel.style.display =
-            "block";
-    }
-
-
-    if (participantsPanel) {
-
-        participantsPanel.style.display =
-            "none";
-    }
-
-
-    openSidebarWithoutAnimation();
-}
-
-
-/* =========================================================
-   SHOW PARTICIPANTS PANEL
-========================================================= */
-
-function showParticipantsPanel() {
-
-    const chatPanel =
-        document.getElementById(
-            "chatPanel"
-        );
-
-
-    const participantsPanel =
-        document.getElementById(
-            "participantsPanel"
-        );
-
-
-    if (chatPanel) {
-
-        chatPanel.style.display =
-            "none";
-    }
-
-
-    if (participantsPanel) {
-
-        participantsPanel.style.display =
-            "block";
+        participantCount.textContent =
+            uniqueNames.size;
     }
 
 
     updateParticipantsList();
-
-
-    openSidebarWithoutAnimation();
 }
 
 
 /* =========================================================
-   OPEN SIDEBAR
-========================================================= */
-
-function openSidebarWithoutAnimation() {
-
-    if (!meetingSidebar) {
-        return;
-    }
-
-
-    meetingSidebar.classList.add(
-        "open"
-    );
-
-
-    meetingSidebar.classList.remove(
-        "hidden"
-    );
-}
-
-
-/* =========================================================
-   CHAT BUTTONS
-========================================================= */
-
-if (chatBtn) {
-
-    chatBtn.addEventListener(
-        "click",
-        function () {
-
-            showChatPanel();
-        }
-    );
-}
-
-
-if (meetingChatBtn) {
-
-    meetingChatBtn.addEventListener(
-        "click",
-        function () {
-
-            showChatPanel();
-        }
-    );
-}
-
-
-/* =========================================================
-   PARTICIPANT BUTTONS
-========================================================= */
-
-if (participantsBtn) {
-
-    participantsBtn.addEventListener(
-        "click",
-        function () {
-
-            showParticipantsPanel();
-        }
-    );
-}
-
-
-if (meetingParticipantsBtn) {
-
-    meetingParticipantsBtn.addEventListener(
-        "click",
-        function () {
-
-            showParticipantsPanel();
-        }
-    );
-}
-
-
-/* =========================================================
-   SIDEBAR CLOSE BUTTON
-========================================================= */
-
-if (sidebarClose) {
-
-    sidebarClose.addEventListener(
-        "click",
-        function () {
-
-            closeSidebar();
-        }
-    );
-}
-
-
-/* =========================================================
-   19. TOAST
+   29. TOAST
 ========================================================= */
 
 function showToast(
@@ -4967,9 +4891,9 @@ function showToast(
     if (!meetingToast) {
 
         console.log(
-            `[${type}] ${message}`
+            `[${type}]`,
+            message
         );
-
 
         return;
     }
@@ -4984,17 +4908,21 @@ function showToast(
 
     if (toastIcon) {
 
-        if (type === "success") {
+        if (
+            type ===
+            "success"
+        ) {
 
             toastIcon.textContent =
                 "✓";
 
-
-        } else if (type === "error") {
+        } else if (
+            type ===
+            "error"
+        ) {
 
             toastIcon.textContent =
                 "✕";
-
 
         } else {
 
@@ -5041,7 +4969,7 @@ function showToast(
 
 
 /* =========================================================
-   20. CONNECTION STATUS
+   30. CONNECTION STATUS
 ========================================================= */
 
 function updateConnectionStatus(
@@ -5072,9 +5000,8 @@ function updateConnectionStatus(
     }
 }
 
-
 /* =========================================================
-   21. CLOSE ALL PEER CONNECTIONS
+   31. CLOSE ALL PEER CONNECTIONS
 ========================================================= */
 
 function closeAllPeerConnections() {
@@ -5084,14 +5011,18 @@ function closeAllPeerConnections() {
     );
 
 
+    /*
+    Close every peer connection.
+    */
+
     Object.keys(
         peerConnections
     ).forEach(
-        function (socketId) {
+        function (remoteSocketId) {
 
             const peerConnection =
                 peerConnections[
-                    socketId
+                    remoteSocketId
                 ];
 
 
@@ -5105,24 +5036,20 @@ function closeAllPeerConnections() {
                 /*
                 Remove handlers before closing.
                 This prevents cleanup events from
-                creating unwanted new UI states.
+                creating unwanted UI states.
                 */
 
                 peerConnection.ontrack =
                     null;
 
-
                 peerConnection.onicecandidate =
                     null;
-
 
                 peerConnection.onconnectionstatechange =
                     null;
 
-
                 peerConnection.oniceconnectionstatechange =
                     null;
-
 
                 peerConnection.onicegatheringstatechange =
                     null;
@@ -5149,10 +5076,10 @@ function closeAllPeerConnections() {
     Object.keys(
         peerConnections
     ).forEach(
-        function (socketId) {
+        function (remoteSocketId) {
 
             delete peerConnections[
-                socketId
+                remoteSocketId
             ];
         }
     );
@@ -5165,10 +5092,10 @@ function closeAllPeerConnections() {
     Object.keys(
         participants
     ).forEach(
-        function (socketId) {
+        function (remoteSocketId) {
 
             delete participants[
-                socketId
+                remoteSocketId
             ];
         }
     );
@@ -5181,26 +5108,49 @@ function closeAllPeerConnections() {
     Object.keys(
         pendingIceCandidates
     ).forEach(
-        function (socketId) {
+        function (remoteSocketId) {
 
             delete pendingIceCandidates[
-                socketId
+                remoteSocketId
             ];
         }
     );
 
 
     /*
-    Clear remote streams.
+    Stop remote streams.
     */
 
     Object.keys(
         remoteStreams
     ).forEach(
-        function (socketId) {
+        function (remoteSocketId) {
+
+            const stream =
+                remoteStreams[
+                    remoteSocketId
+                ];
+
+
+            if (stream) {
+
+                stream
+                    .getTracks()
+                    .forEach(
+                        function (track) {
+
+                            try {
+
+                                track.stop();
+
+                            } catch (error) {}
+                        }
+                    );
+            }
+
 
             delete remoteStreams[
-                socketId
+                remoteSocketId
             ];
         }
     );
@@ -5229,7 +5179,7 @@ function closeAllPeerConnections() {
 
 
 /* =========================================================
-   22. STOP LOCAL MEDIA
+   32. STOP LOCAL MEDIA
 ========================================================= */
 
 function stopLocalMedia() {
@@ -5311,7 +5261,9 @@ function stopLocalMedia() {
     if (localVideo) {
 
         try {
+
             localVideo.pause();
+
         } catch (error) {}
 
 
@@ -5355,7 +5307,7 @@ function stopLocalMedia() {
 
 
 /* =========================================================
-   23. LEAVE MEETING
+   33. LEAVE MEETING
 ========================================================= */
 
 function leaveMeeting() {
@@ -5375,7 +5327,7 @@ function leaveMeeting() {
 
 
     /*
-    Tell the server that we are leaving.
+    Tell server that we are leaving.
     */
 
     if (
@@ -5401,6 +5353,34 @@ function leaveMeeting() {
                 error
             );
         }
+    }
+
+
+    /*
+    Stop screen sharing first.
+    */
+
+    if (screenStream) {
+
+        try {
+
+            screenStream
+                .getTracks()
+                .forEach(
+                    function (track) {
+
+                        track.onended =
+                            null;
+
+                        track.stop();
+                    }
+                );
+
+        } catch (error) {}
+
+
+        screenStream =
+            null;
     }
 
 
@@ -5439,8 +5419,7 @@ function leaveMeeting() {
 
 
     /*
-    IMPORTANT DUPLICATE-SESSION FIX:
-    Release our tab's session lock.
+    Release duplicate-session lock.
     */
 
     releaseDuplicateSessionLock();
@@ -5462,7 +5441,7 @@ function leaveMeeting() {
 
 
 /* =========================================================
-   LEAVE BUTTONS
+   34. LEAVE BUTTONS
 ========================================================= */
 
 if (leaveMeetingBtn) {
@@ -5484,7 +5463,7 @@ if (leaveMeetingBtn2) {
 
 
 /* =========================================================
-   24. BEFORE UNLOAD
+   35. BEFORE UNLOAD
 ========================================================= */
 
 window.addEventListener(
@@ -5496,14 +5475,15 @@ window.addEventListener(
         is leaving.
 
         IMPORTANT:
-        Use sendBeacon-style behavior through
-        Socket.IO if it is still connected.
+        Do not redirect here. The browser is
+        already unloading.
         */
 
         if (
             socket &&
             socket.connected &&
-            meetingId
+            meetingId &&
+            !hasLeftMeeting
         ) {
 
             try {
@@ -5542,7 +5522,7 @@ window.addEventListener(
 
 
         /*
-        Release the duplicate-session lock.
+        Release duplicate-session lock.
         */
 
         releaseDuplicateSessionLock();
@@ -5551,7 +5531,7 @@ window.addEventListener(
 
 
 /* =========================================================
-   25. PAGE VISIBILITY
+   36. PAGE VISIBILITY
 ========================================================= */
 
 document.addEventListener(
@@ -5591,7 +5571,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   26. INITIALIZE MEETING PAGE
+   37. INITIALIZE MEETSPACE PAGE
 ========================================================= */
 
 async function initializeMeetSpacePage() {
@@ -5599,6 +5579,10 @@ async function initializeMeetSpacePage() {
     if (meetingInitialized) {
         return;
     }
+
+
+    meetingInitialized =
+        true;
 
 
     console.log(
@@ -5653,14 +5637,31 @@ async function initializeMeetSpacePage() {
 
 
     /*
-    Update participant count.
+    Initial participant display.
     */
 
     updateParticipantCount();
 
 
     /*
+    Initial button states.
+    */
+
+    updateMicrophoneButton();
+
+    updateCameraButton();
+
+    updateScreenShareButton(
+        false
+    );
+
+
+    /*
     Start Socket.IO.
+
+    Socket.IO will initialize the local
+    media after connection and then join
+    the meeting room.
     */
 
     initializeSocket();
@@ -5668,7 +5669,7 @@ async function initializeMeetSpacePage() {
 
 
 /* =========================================================
-   27. INITIAL PAGE LOAD
+   38. INITIAL PAGE LOAD
 ========================================================= */
 
 if (
@@ -5680,6 +5681,7 @@ if (
         "DOMContentLoaded",
         initializeMeetSpacePage
     );
+
 
 } else {
 
