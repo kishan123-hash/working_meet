@@ -1792,31 +1792,232 @@ function registerSocketEvents() {
     );
 
 
-    /* =====================================================
-       PARTICIPANT COUNT
-    ===================================================== */
+/* =========================================================
+   PARTICIPANT COUNT
+========================================================= */
 
-    socket.on(
-        "participant-count",
-        function (data) {
+function updateParticipantCount() {
 
-            console.log(
-                "Server participant count:",
-                data?.count
+    /*
+    Use unique participant names for the displayed count.
+
+    This prevents the same person from being counted
+    multiple times when more than one Socket.IO connection
+    exists for the same display name.
+    */
+
+    const uniqueParticipants =
+        new Set();
+
+
+    /*
+    Always include the current user.
+    */
+
+    const currentUser =
+        String(
+            userName || "Participant"
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (currentUser) {
+
+        uniqueParticipants.add(
+            currentUser
+        );
+    }
+
+
+    /*
+    Add remote participants only once.
+    */
+
+    Object.values(
+        participants
+    ).forEach(
+        function (name) {
+
+            const normalizedName =
+                String(
+                    name || "Participant"
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            if (normalizedName) {
+
+                uniqueParticipants.add(
+                    normalizedName
+                );
+            }
+        }
+    );
+
+
+    const total =
+        uniqueParticipants.size;
+
+
+    if (participantCount) {
+
+        participantCount.textContent =
+            total;
+    }
+
+
+    updateParticipantsList();
+}
+
+
+/* =========================================================
+   PARTICIPANT LIST
+========================================================= */
+
+function updateParticipantsList() {
+
+    if (!participantsList) {
+        return;
+    }
+
+
+    /*
+    Clear the old list first.
+    */
+
+    participantsList.innerHTML =
+        "";
+
+
+    /*
+    Keep track of names already displayed.
+
+    This is the important duplicate fix.
+    */
+
+    const displayedNames =
+        new Set();
+
+
+    /*
+    Normalize names so these are considered
+    the same participant:
+
+        Kishan
+        kishan
+        Kishan 
+    */
+
+    function normalizeParticipantName(
+        name
+    ) {
+
+        return String(
+            name || "Participant"
+        )
+            .trim()
+            .toLowerCase();
+    }
+
+
+    /*
+    Add CURRENT USER.
+
+    The current user should always appear exactly once.
+    */
+
+    const currentName =
+        userName ||
+        "Participant";
+
+
+    const currentKey =
+        normalizeParticipantName(
+            currentName
+        );
+
+
+    if (!displayedNames.has(
+        currentKey
+    )) {
+
+        displayedNames.add(
+            currentKey
+        );
+
+
+        addParticipantToList(
+            currentName,
+            "You"
+        );
+    }
+
+
+    /*
+    Add REMOTE participants.
+
+    If the same name exists under multiple Socket.IO
+    IDs, only the first one is displayed.
+    */
+
+    Object.values(
+        participants
+    ).forEach(
+        function (name) {
+
+            const participantName =
+                name ||
+                "Participant";
+
+
+            const participantKey =
+                normalizeParticipantName(
+                    participantName
+                );
+
+
+            /*
+            IMPORTANT:
+
+            Do not display the current user again
+            if another Socket.IO connection belonging
+            to the same user appears.
+            */
+
+            if (
+                participantKey ===
+                currentKey
+            ) {
+
+                return;
+            }
+
+
+            /*
+            Skip duplicate names.
+            */
+
+            if (
+                displayedNames.has(
+                    participantKey
+                )
+            ) {
+
+                return;
+            }
+
+
+            displayedNames.add(
+                participantKey
             );
 
 
-            if (
-                typeof data?.count ===
-                "number"
-            ) {
-
-                if (participantCount) {
-
-                    participantCount.textContent =
-                        data.count;
-                }
-            }
+            addParticipantToList(
+                participantName,
+                "Connected"
+            );
         }
     );
 }
