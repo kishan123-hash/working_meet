@@ -6781,38 +6781,19 @@ function isChatPanelOpen() {
 
 
     /*
-    Support the existing UI without forcing a
-    particular CSS implementation.
+    The existing HTML starts the sidebar with
+    the "hidden" class.
+
+    The "open" class is the actual state used
+    by the existing CSS to display the sidebar.
+
+    Do not use computed display/visibility here
+    because the sidebar uses transform-based
+    opening and closing.
     */
 
-    if (
-        meetingSidebar.classList.contains(
-            "open"
-        ) ||
-        meetingSidebar.classList.contains(
-            "active"
-        ) ||
-        meetingSidebar.classList.contains(
-            "show"
-        )
-    ) {
-
-        return true;
-
-    }
-
-
-    const style =
-        window.getComputedStyle(
-            meetingSidebar
-        );
-
-
-    return (
-        style.display !==
-            "none" &&
-        style.visibility !==
-            "hidden"
+    return meetingSidebar.classList.contains(
+        "open"
     );
 
 }
@@ -6901,9 +6882,25 @@ function openChatPanel() {
 
 
     /*
-    Keep the existing sidebar UI.
+    IMPORTANT:
 
-    We only use classes that already exist.
+    meeting_room.html starts the sidebar with:
+
+        class="meeting-sidebar hidden"
+
+    The hidden class has pointer-events:none.
+
+    Remove it when opening so the chat input,
+    buttons and close button can receive mouse clicks.
+    */
+
+    meetingSidebar.classList.remove(
+        "hidden"
+    );
+
+
+    /*
+    Keep the existing sidebar UI.
     */
 
     meetingSidebar.classList.add(
@@ -6924,6 +6921,13 @@ function openChatPanel() {
     markChatAsRead();
 
 
+    /*
+    Put the cursor directly into the chat input.
+
+    This allows the user to start typing immediately
+    after opening Chat.
+    */
+
     if (
         chatInput
     ) {
@@ -6935,7 +6939,14 @@ function openChatPanel() {
 
                     chatInput.focus();
 
-                } catch (error) {}
+                } catch (error) {
+
+                    console.warn(
+                        "Could not focus chat input:",
+                        error
+                    );
+
+                }
 
             },
             100
@@ -6944,7 +6955,6 @@ function openChatPanel() {
     }
 
 }
-
 
 /* =========================================================
    51. CLOSE CHAT / SIDEBAR
@@ -6961,6 +6971,10 @@ function closeMeetingSidebar() {
     }
 
 
+    /*
+    Remove all active/open states.
+    */
+
     meetingSidebar.classList.remove(
         "open"
     );
@@ -6975,8 +6989,39 @@ function closeMeetingSidebar() {
         "show"
     );
 
-}
 
+    /*
+    Restore the original hidden state.
+
+    This also disables pointer interaction with
+    the hidden sidebar while it is closed.
+    */
+
+    meetingSidebar.classList.add(
+        "hidden"
+    );
+
+
+    /*
+    Remove focus from the chat input so the
+    cursor does not remain active after closing.
+    */
+
+    if (
+        chatInput &&
+        document.activeElement ===
+            chatInput
+    ) {
+
+        try {
+
+            chatInput.blur();
+
+        } catch (error) {}
+
+    }
+
+}
 
 /* =========================================================
    52. TOGGLE CHAT
