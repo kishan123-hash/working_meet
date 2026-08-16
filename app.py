@@ -219,12 +219,15 @@ if (
         print("=" * 65)
         print("WARNING: ca.pem NOT FOUND")
         print("=" * 65)
+
         print(
             f"Expected location: {CA_CERT}"
         )
+
         print(
             "TiDB Cloud SSL connection may fail."
         )
+
         print("=" * 65)
         print()
 
@@ -241,6 +244,24 @@ db.init_app(
 # =========================================================
 # INITIALIZE SOCKET.IO
 # =========================================================
+#
+# Socket.IO is used for:
+# - Meeting signaling
+# - Participant events
+# - Chat
+# - Offers
+# - Answers
+# - ICE candidates
+#
+# WebRTC itself continues to handle:
+# - Camera
+# - Microphone
+# - Screen sharing
+#
+# The server uses threading mode on Render.
+# Therefore polling is kept as the Socket.IO transport
+# for maximum compatibility with the current deployment.
+# =========================================================
 
 socketio.init_app(
 
@@ -248,27 +269,38 @@ socketio.init_app(
 
     # Allow the deployed MeetSpace frontend to establish
     # the Socket.IO connection.
+
     cors_allowed_origins="*",
 
     # Threading is compatible with the current Flask app
     # and keeps the existing deployment setup stable.
+
     async_mode="threading",
 
-    # Start with polling and allow Socket.IO to upgrade
-    # to WebSocket when the Render environment supports it.
+    # Use polling for Socket.IO signaling.
+    #
+    # This does NOT disable WebRTC screen sharing,
+    # camera, microphone, or video.
+    #
+    # WebRTC media is separate from Socket.IO.
+
     transports=[
-        "polling",
-        "websocket"
+        "polling"
     ],
+
+    # Do not attempt a polling -> WebSocket upgrade
+    # when running the current threading configuration.
 
     allow_upgrades=False,
 
     # Keep the connection alive on cloud hosting.
+
     ping_interval=25,
 
     ping_timeout=60,
 
     # Useful while diagnosing Socket.IO connection issues.
+
     logger=True,
 
     engineio_logger=True
