@@ -259,6 +259,8 @@
 
         .video-area {
 
+            position: relative;
+
             flex: 1;
 
             min-height: 0;
@@ -267,25 +269,34 @@
 
             display: grid;
 
+            /*
+             * Every participant is a grid item.
+             *
+             * 2 people  -> 2 equal columns
+             * 3 people  -> 3 equal columns when space allows
+             * 4 people  -> 4 equal columns when space allows
+             * More     -> automatically wraps into equal rows/columns
+             */
             grid-template-columns:
                 repeat(
                     auto-fit,
                     minmax(
-                        300px,
+                        280px,
                         1fr
                     )
                 );
 
-            grid-auto-rows: minmax(
-                250px,
-                1fr
-            );
+            grid-auto-rows:
+                minmax(
+                    250px,
+                    1fr
+                );
 
             gap: 15px;
 
             overflow-y: auto;
 
-            align-content: start;
+            align-content: stretch;
         }
 
 
@@ -297,7 +308,11 @@
 
             position: relative;
 
-            min-height: 250px;
+            min-height: 0;
+
+            width: 100%;
+
+            height: 100%;
 
             background:
                 #0f172a;
@@ -336,9 +351,13 @@
 
             height: 100%;
 
-            min-height: 250px;
+            min-height: 0;
 
-            object-fit: cover;
+            /*
+             * Keep the complete camera frame visible.
+             * This is especially important for portrait phone cameras.
+             */
+            object-fit: contain;
 
             display: block;
 
@@ -427,6 +446,12 @@
         .remote-video-card {
 
             position: relative;
+
+            width: 100%;
+
+            height: 100%;
+
+            min-height: 0;
         }
 
 
@@ -473,6 +498,19 @@
             min-height: 250px;
 
             display: flex;
+
+            /*
+             * Empty state is not a participant tile.
+             * It sits over the video area until another
+             * participant joins.
+             */
+            position: absolute;
+
+            inset: 20px;
+
+            z-index: 4;
+
+            pointer-events: none;
 
             align-items: center;
 
@@ -876,6 +914,68 @@
         }
 
 
+
+        /* Dynamically-created remote video containers */
+        .remote-video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            background: #0f172a;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .remote-video-container video {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            object-fit: contain;
+            display: block;
+            background: #020617;
+        }
+
+        .remote-video-container.maximized {
+            position: fixed !important;
+            top: 85px;
+            right: 20px;
+            bottom: 105px;
+            left: 20px;
+            width: auto !important;
+            height: auto !important;
+            min-height: 0 !important;
+            aspect-ratio: auto !important;
+            z-index: 1000;
+            border-radius: 18px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.70);
+        }
+
+        .remote-video-container.maximized video {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            object-fit: contain;
+            background: #020617;
+        }
+
+
+        @media (min-width: 701px) and (max-width: 1100px) {
+
+            .video-area {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+            }
+
+        }
+
         /* =====================================================
            CHAT + PARTICIPANTS SIDEBAR
         ====================================================== */
@@ -1190,6 +1290,9 @@
 
                 padding: 10px;
 
+                /*
+                 * Phones use one equal tile per participant.
+                 */
                 grid-template-columns:
                     1fr;
 
@@ -1198,6 +1301,33 @@
                         220px,
                         1fr
                     );
+
+                align-content: stretch;
+
+                gap: 10px;
+            }
+
+            .video-card,
+            .remote-video-card,
+            .remote-video-container {
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+            }
+
+            .video-card video,
+            .remote-video-card video,
+            .remote-video-container video {
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+                object-fit: contain;
+                background: #020617;
+            }
+
+            .empty-state {
+                inset: 10px;
+                min-height: 0;
             }
 
 
@@ -1731,7 +1861,7 @@
                 return;
             }
 
-            const CARD_SELECTOR = ".video-card, .remote-video-card";
+            const CARD_SELECTOR = ".video-card, .remote-video-card, .remote-video-container";
 
             function addMaximizeButton(card) {
                 if (!card || card.querySelector(".maximize-btn")) {
