@@ -377,10 +377,19 @@ let unreadChatCount =
     0;
 
 
+/*
+Temporary record of messages sent by this client.
+
+This prevents a server echo from displaying
+the same message twice while still allowing
+the message to appear immediately.
+*/
+const pendingLocalChatMessages =
+    new Map();
+
+
 let toastTimeout =
     null;
-
-
 /* =========================================================
    DUPLICATE SESSION PROTECTION
 ========================================================= */
@@ -6231,9 +6240,7 @@ function sendChatMessage() {
     if (
         !chatInput
     ) {
-
         return;
-
     }
 
 
@@ -6247,9 +6254,7 @@ function sendChatMessage() {
     if (
         !message
     ) {
-
         return;
-
     }
 
 
@@ -6263,9 +6268,7 @@ function sendChatMessage() {
             "You are not connected to the meeting."
         );
 
-
         return;
-
     }
 
 
@@ -6273,11 +6276,51 @@ function sendChatMessage() {
         hasLeftMeeting ||
         duplicateSessionLost
     ) {
-
         return;
-
     }
 
+
+    /*
+    Remember this message temporarily.
+
+    If Flask-SocketIO sends the message back to
+    this same client, the receiving function will
+    recognize it and will NOT display it twice.
+    */
+
+    const localMessageKey =
+        `${userName}::${message}`;
+
+
+    pendingLocalChatMessages.set(
+        localMessageKey,
+        Date.now()
+    );
+
+
+    /*
+    Display the message immediately.
+
+    This makes the chat feel instant even if the
+    server takes a moment to broadcast it.
+    */
+
+    appendChatMessage(
+        userName,
+        message,
+        true,
+        {
+            timestamp:
+                new Date().toISOString(),
+            local:
+                true
+        }
+    );
+
+
+    /*
+    Send the message to Flask-SocketIO.
+    */
 
     const payload = {
 
@@ -6301,10 +6344,6 @@ function sendChatMessage() {
 
     try {
 
-        /*
-        This is the primary event name.
-        */
-
         socket.emit(
             "chat-message",
             payload
@@ -6312,24 +6351,36 @@ function sendChatMessage() {
 
 
         /*
-        Clear the input immediately.
+        Clear the input after successful emit.
         */
 
         chatInput.value =
             "";
 
 
-        /*
-        The server normally broadcasts the message
-        back to everyone, including the sender.
-
-        Do NOT add it locally here, otherwise the
-        sender can see the message twice.
-        */
+        chatInput.focus();
 
 
         console.log(
-            "Chat message sent."
+            "Chat message sent:",
+            message
+        );
+
+
+        /*
+        Remove the temporary duplicate
+        protection after 10 seconds.
+        */
+
+        setTimeout(
+            function () {
+
+                pendingLocalChatMessages.delete(
+                    localMessageKey
+                );
+
+            },
+            10000
         );
 
 
@@ -6338,6 +6389,16 @@ function sendChatMessage() {
         console.error(
             "Failed to send chat message:",
             error
+        );
+
+
+        /*
+        If sending fails, remove the
+        temporary local record.
+        */
+
+        pendingLocalChatMessages.delete(
+            localMessageKey
         );
 
 
