@@ -20,14 +20,6 @@ Features:
 - Camera ON/OFF
 - Microphone ON/OFF
 
-IMPORTANT:
-Socket.IO client is loaded from Flask-SocketIO:
-
-/socket.io/socket.io.js
-
-Do NOT use:
-- /static/js/socket.io.min.js
-- cdn.socket.io
 =========================================================
 */
 
@@ -40,7 +32,11 @@ const meetingApp =
     document.getElementById("meetingApp");
 
 if (!meetingApp) {
-    console.error("MeetSpace: #meetingApp not found.");
+
+    console.error(
+        "MeetSpace: #meetingApp not found."
+    );
+
 }
 
 const meetingId =
@@ -50,12 +46,32 @@ const userName =
     meetingApp?.dataset?.userName ||
     "Participant";
 
-console.log("========================================");
-console.log("        MEETSPACE MEETING CLIENT");
-console.log("========================================");
-console.log("Meeting ID:", meetingId);
-console.log("User:", userName);
-console.log("========================================");
+
+console.log(
+    "========================================"
+);
+
+console.log(
+    "        MEETSPACE MEETING CLIENT"
+);
+
+console.log(
+    "========================================"
+);
+
+console.log(
+    "Meeting ID:",
+    meetingId
+);
+
+console.log(
+    "User:",
+    userName
+);
+
+console.log(
+    "========================================"
+);
 
 
 /* =========================================================
@@ -63,16 +79,24 @@ console.log("========================================");
 ========================================================= */
 
 const localVideo =
-    document.getElementById("localVideo");
+    document.getElementById(
+        "localVideo"
+    );
 
 const localPlaceholder =
-    document.getElementById("localPlaceholder");
+    document.getElementById(
+        "localPlaceholder"
+    );
 
 const remoteVideos =
-    document.getElementById("remoteVideos");
+    document.getElementById(
+        "remoteVideos"
+    );
 
 const emptyState =
-    document.getElementById("emptyState");
+    document.getElementById(
+        "emptyState"
+    );
 
 
 /* =========================================================
@@ -80,19 +104,29 @@ const emptyState =
 ========================================================= */
 
 const micBtn =
-    document.getElementById("micBtn");
+    document.getElementById(
+        "micBtn"
+    );
 
 const cameraBtn =
-    document.getElementById("cameraBtn");
+    document.getElementById(
+        "cameraBtn"
+    );
 
 const screenShareBtn =
-    document.getElementById("screenShareBtn");
+    document.getElementById(
+        "screenShareBtn"
+    );
 
 const leaveMeetingBtn =
-    document.getElementById("leaveMeetingBtn");
+    document.getElementById(
+        "leaveMeetingBtn"
+    );
 
 const leaveMeetingBtn2 =
-    document.getElementById("leaveMeetingBtn2");
+    document.getElementById(
+        "leaveMeetingBtn2"
+    );
 
 
 /* =========================================================
@@ -100,10 +134,14 @@ const leaveMeetingBtn2 =
 ========================================================= */
 
 const connectionStatus =
-    document.getElementById("connectionStatus");
+    document.getElementById(
+        "connectionStatus"
+    );
 
 const connectionText =
-    document.getElementById("connectionText");
+    document.getElementById(
+        "connectionText"
+    );
 
 
 /* =========================================================
@@ -111,10 +149,14 @@ const connectionText =
 ========================================================= */
 
 const participantCount =
-    document.getElementById("participantCount");
+    document.getElementById(
+        "participantCount"
+    );
 
 const participantsList =
-    document.getElementById("participantsList");
+    document.getElementById(
+        "participantsList"
+    );
 
 
 /* =========================================================
@@ -122,13 +164,19 @@ const participantsList =
 ========================================================= */
 
 const chatForm =
-    document.getElementById("chatForm");
+    document.getElementById(
+        "chatForm"
+    );
 
 const chatInput =
-    document.getElementById("chatInput");
+    document.getElementById(
+        "chatInput"
+    );
 
 const chatMessages =
-    document.getElementById("chatMessages");
+    document.getElementById(
+        "chatMessages"
+    );
 
 
 /* =========================================================
@@ -136,16 +184,24 @@ const chatMessages =
 ========================================================= */
 
 const meetingSidebar =
-    document.getElementById("meetingSidebar");
+    document.getElementById(
+        "meetingSidebar"
+    );
 
 const chatBtn =
-    document.getElementById("chatBtn");
+    document.getElementById(
+        "chatBtn"
+    );
 
 const meetingChatBtn =
-    document.getElementById("meetingChatBtn");
+    document.getElementById(
+        "meetingChatBtn"
+    );
 
 const participantsBtn =
-    document.getElementById("participantsBtn");
+    document.getElementById(
+        "participantsBtn"
+    );
 
 const meetingParticipantsBtn =
     document.getElementById(
@@ -153,7 +209,9 @@ const meetingParticipantsBtn =
     );
 
 const sidebarClose =
-    document.getElementById("sidebarClose");
+    document.getElementById(
+        "sidebarClose"
+    );
 
 
 /* =========================================================
@@ -161,80 +219,102 @@ const sidebarClose =
 ========================================================= */
 
 const meetingToast =
-    document.getElementById("meetingToast");
+    document.getElementById(
+        "meetingToast"
+    );
 
 const toastMessage =
-    document.getElementById("toastMessage");
+    document.getElementById(
+        "toastMessage"
+    );
 
 const toastIcon =
-    document.getElementById("toastIcon");
+    document.getElementById(
+        "toastIcon"
+    );
 
 
 /* =========================================================
    3. WEBRTC VARIABLES
 ========================================================= */
 
-let localStream = null;
+let localStream =
+    null;
 
-let screenStream = null;
+let screenStream =
+    null;
 
-let socket = null;
+let socket =
+    null;
 
 
 /*
 One RTCPeerConnection per remote participant.
 */
 
-const peerConnections = {};
+const peerConnections =
+    {};
 
 
 /*
 Participant names indexed by Socket.IO SID.
 */
 
-const participants = {};
+const participants =
+    {};
 
 
 /*
 Pending ICE candidates.
 */
 
-const pendingIceCandidates = {};
+const pendingIceCandidates =
+    {};
 
 
 /*
 Remote MediaStreams.
 */
 
-const remoteStreams = {};
+const remoteStreams =
+    {};
 
 
 /* =========================================================
    LOCAL MEDIA STATE
 ========================================================= */
 
-let microphoneEnabled = true;
+let microphoneEnabled =
+    true;
 
-let cameraEnabled = true;
+let cameraEnabled =
+    true;
 
 
 /* =========================================================
    INITIALIZATION FLAGS
 ========================================================= */
 
-let meetingInitialized = false;
+let meetingInitialized =
+    false;
 
-let socketRoomJoined = false;
+let socketRoomJoined =
+    false;
 
-let hasLeftMeeting = false;
+let hasLeftMeeting =
+    false;
 
-let socketInitialized = false;
+let socketInitialized =
+    false;
 
-let mediaInitializationStarted = false;
+let mediaInitializationStarted =
+    false;
 
-let socketEventsRegistered = false;
+let socketEventsRegistered =
+    false;
 
-let socketScriptLoading = false;
+let socketScriptLoading =
+    false;
 
 
 /* =========================================================
@@ -242,22 +322,31 @@ let socketScriptLoading = false;
 ========================================================= */
 
 const duplicateSessionToken =
-    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}`;
 
-let duplicateSessionChannel = null;
+let duplicateSessionChannel =
+    null;
 
-let duplicateSessionHeartbeat = null;
+let duplicateSessionHeartbeat =
+    null;
 
-let duplicateSessionStarted = false;
+let duplicateSessionStarted =
+    false;
 
-let duplicateSessionLost = false;
+let duplicateSessionLost =
+    false;
 
 
 function getDuplicateSessionKey() {
 
     if (!meetingId) {
+
         return null;
+
     }
+
 
     const safeUserName =
         String(
@@ -267,11 +356,13 @@ function getDuplicateSessionKey() {
             .trim()
             .toLowerCase();
 
+
     return (
         `meetspace-active-session:` +
         `${meetingId}:` +
         `${safeUserName}`
     );
+
 }
 
 
@@ -281,12 +372,17 @@ function forceCloseDuplicateSession() {
         duplicateSessionLost ||
         hasLeftMeeting
     ) {
+
         return;
+
     }
 
-    duplicateSessionLost = true;
 
-    hasLeftMeeting = true;
+    duplicateSessionLost =
+        true;
+
+    hasLeftMeeting =
+        true;
 
 
     console.warn(
@@ -294,7 +390,9 @@ function forceCloseDuplicateSession() {
     );
 
 
-    if (duplicateSessionHeartbeat) {
+    if (
+        duplicateSessionHeartbeat
+    ) {
 
         clearInterval(
             duplicateSessionHeartbeat
@@ -302,6 +400,7 @@ function forceCloseDuplicateSession() {
 
         duplicateSessionHeartbeat =
             null;
+
     }
 
 
@@ -329,20 +428,28 @@ function forceCloseDuplicateSession() {
                 localStorage.removeItem(
                     lockKey
                 );
+
             }
+
         }
 
     } catch (error) {}
 
 
-    if (duplicateSessionChannel) {
+    if (
+        duplicateSessionChannel
+    ) {
 
         try {
+
             duplicateSessionChannel.close();
+
         } catch (error) {}
+
 
         duplicateSessionChannel =
             null;
+
     }
 
 
@@ -367,8 +474,11 @@ function forceCloseDuplicateSession() {
     if (socket) {
 
         try {
+
             socket.disconnect();
+
         } catch (error) {}
+
     }
 
 
@@ -382,17 +492,19 @@ function forceCloseDuplicateSession() {
         "error",
         "This meeting was opened in another tab. This tab has been disconnected."
     );
+
 }
-
-
 function initializeDuplicateSessionProtection() {
 
     if (
         duplicateSessionStarted ||
         !meetingId
     ) {
+
         return;
+
     }
+
 
     duplicateSessionStarted =
         true;
@@ -403,7 +515,9 @@ function initializeDuplicateSessionProtection() {
 
 
     if (!lockKey) {
+
         return;
+
     }
 
 
@@ -444,7 +558,9 @@ function initializeDuplicateSessionProtection() {
                     ) {
 
                         forceCloseDuplicateSession();
+
                     }
+
                 };
 
 
@@ -452,7 +568,9 @@ function initializeDuplicateSessionProtection() {
 
             duplicateSessionChannel =
                 null;
+
         }
+
     }
 
 
@@ -472,6 +590,7 @@ function initializeDuplicateSessionProtection() {
 
                 timestamp:
                     Date.now()
+
             })
         );
 
@@ -490,7 +609,9 @@ function initializeDuplicateSessionProtection() {
                         lockKey ||
                     !event.newValue
                 ) {
+
                     return;
+
                 }
 
 
@@ -509,9 +630,11 @@ function initializeDuplicateSessionProtection() {
                     ) {
 
                         forceCloseDuplicateSession();
+
                     }
 
                 } catch (error) {}
+
             }
         );
 
@@ -543,6 +666,7 @@ function initializeDuplicateSessionProtection() {
                             forceCloseDuplicateSession();
 
                             return;
+
                         }
 
 
@@ -555,10 +679,13 @@ function initializeDuplicateSessionProtection() {
 
                                 timestamp:
                                     Date.now()
+
                             })
                         );
 
+
                     } catch (error) {}
+
                 },
                 2000
             );
@@ -568,7 +695,9 @@ function initializeDuplicateSessionProtection() {
         Announce this tab.
         */
 
-        if (duplicateSessionChannel) {
+        if (
+            duplicateSessionChannel
+        ) {
 
             duplicateSessionChannel.postMessage({
 
@@ -580,8 +709,11 @@ function initializeDuplicateSessionProtection() {
 
                 userKey:
                     lockKey
+
             });
+
         }
+
 
     } catch (error) {
 
@@ -589,18 +721,30 @@ function initializeDuplicateSessionProtection() {
             "Duplicate session protection unavailable:",
             error
         );
+
     }
+
 }
 
 
+/* =========================================================
+   RELEASE DUPLICATE SESSION LOCK
+========================================================= */
+
 function releaseDuplicateSessionLock() {
 
-    if (!duplicateSessionStarted) {
+    if (
+        !duplicateSessionStarted
+    ) {
+
         return;
+
     }
 
 
-    if (duplicateSessionHeartbeat) {
+    if (
+        duplicateSessionHeartbeat
+    ) {
 
         clearInterval(
             duplicateSessionHeartbeat
@@ -608,6 +752,7 @@ function releaseDuplicateSessionLock() {
 
         duplicateSessionHeartbeat =
             null;
+
     }
 
 
@@ -615,9 +760,9 @@ function releaseDuplicateSessionLock() {
         getDuplicateSessionKey();
 
 
-    try {
+    if (lockKey) {
 
-        if (lockKey) {
+        try {
 
             const currentLock =
                 JSON.parse(
@@ -635,13 +780,17 @@ function releaseDuplicateSessionLock() {
                 localStorage.removeItem(
                     lockKey
                 );
+
             }
-        }
 
-    } catch (error) {}
+        } catch (error) {}
+
+    }
 
 
-    if (duplicateSessionChannel) {
+    if (
+        duplicateSessionChannel
+    ) {
 
         try {
 
@@ -655,33 +804,142 @@ function releaseDuplicateSessionLock() {
 
                 userKey:
                     lockKey
+
             });
+
+        } catch (error) {}
+
+
+        try {
 
             duplicateSessionChannel.close();
 
         } catch (error) {}
 
+
         duplicateSessionChannel =
             null;
+
     }
 
 
     duplicateSessionStarted =
         false;
+
 }
 
 
 /* =========================================================
-   4. SOCKET.IO SCRIPT LOADING
+   LOCAL MEDIA CLEANUP
+========================================================= */
+
+function stopLocalMedia() {
+
+    if (screenStream) {
+
+        screenStream
+            .getTracks()
+            .forEach(function (track) {
+
+                try {
+
+                    track.stop();
+
+                } catch (error) {
+
+                    console.warn(
+                        "Could not stop screen track:",
+                        error
+                    );
+
+                }
+
+            });
+
+        screenStream =
+            null;
+
+    }
+
+
+    if (localStream) {
+
+        localStream
+            .getTracks()
+            .forEach(function (track) {
+
+                try {
+
+                    track.stop();
+
+                } catch (error) {
+
+                    console.warn(
+                        "Could not stop local track:",
+                        error
+                    );
+
+                }
+
+            });
+
+        localStream =
+            null;
+
+    }
+
+
+    microphoneEnabled =
+        false;
+
+
+    cameraEnabled =
+        false;
+
+
+    if (localVideo) {
+
+        localVideo.srcObject =
+            null;
+
+
+        localVideo.style.display =
+            "none";
+
+    }
+
+
+    if (localPlaceholder) {
+
+        localPlaceholder.style.display =
+            "flex";
+
+    }
+
+
+    updateMicrophoneButton();
+
+    updateCameraButton();
+
+    updateScreenShareButton(
+        false
+    );
+
+}
+/* =========================================================
+   5. SOCKET.IO SCRIPT LOADING
 ========================================================= */
 
 function loadSocketIO() {
 
     return new Promise(
-        function (resolve, reject) {
+        function (
+            resolve,
+            reject
+        ) {
 
             /*
-            Socket.IO already available.
+            Socket.IO is already available.
             */
 
             if (
@@ -690,12 +948,14 @@ function loadSocketIO() {
             ) {
 
                 console.log(
-                    "Socket.IO client already loaded."
+                    "Socket.IO client already available."
                 );
+
 
                 resolve();
 
                 return;
+
             }
 
 
@@ -703,7 +963,9 @@ function loadSocketIO() {
             Prevent duplicate script loading.
             */
 
-            if (socketScriptLoading) {
+            if (
+                socketScriptLoading
+            ) {
 
                 const waitForSocket =
                     setInterval(
@@ -717,6 +979,11 @@ function loadSocketIO() {
                                 clearInterval(
                                     waitForSocket
                                 );
+
+
+                                socketScriptLoading =
+                                    false;
+
 
                                 resolve();
 
@@ -734,23 +1001,31 @@ function loadSocketIO() {
                             waitForSocket
                         );
 
+
                         if (
                             typeof window.io !==
                             "function"
                         ) {
+
+                            socketScriptLoading =
+                                false;
+
 
                             reject(
                                 new Error(
                                     "Socket.IO client failed to load."
                                 )
                             );
+
                         }
 
                     },
                     10000
                 );
 
+
                 return;
+
             }
 
 
@@ -758,10 +1033,14 @@ function loadSocketIO() {
                 true;
 
 
-            console.log(
-                "Loading Flask Socket.IO client..."
-            );
+            /*
+            Your meeting_room.html loads
+            Flask-SocketIO's client from:
 
+            /socket.io/socket.io.js
+
+            If it has already loaded, use it.
+            */
 
             const existingScript =
                 document.querySelector(
@@ -769,7 +1048,9 @@ function loadSocketIO() {
                 );
 
 
-            if (existingScript) {
+            if (
+                existingScript
+            ) {
 
                 const waitForExistingScript =
                     setInterval(
@@ -784,8 +1065,10 @@ function loadSocketIO() {
                                     waitForExistingScript
                                 );
 
+
                                 socketScriptLoading =
                                     false;
+
 
                                 resolve();
 
@@ -803,33 +1086,46 @@ function loadSocketIO() {
                             waitForExistingScript
                         );
 
-                        socketScriptLoading =
-                            false;
-
 
                         if (
                             typeof window.io ===
                             "function"
                         ) {
 
+                            socketScriptLoading =
+                                false;
+
+
                             resolve();
 
                         } else {
+
+                            socketScriptLoading =
+                                false;
+
 
                             reject(
                                 new Error(
                                     "Existing Socket.IO script did not load."
                                 )
                             );
+
                         }
 
                     },
                     10000
                 );
 
+
                 return;
+
             }
 
+
+            /*
+            Load Flask-SocketIO client if the
+            HTML did not load it.
+            */
 
             const script =
                 document.createElement(
@@ -861,16 +1157,19 @@ function loadSocketIO() {
                             "Flask Socket.IO client loaded successfully."
                         );
 
+
                         resolve();
 
                     } else {
 
                         reject(
                             new Error(
-                                "Socket.IO script loaded but io() is unavailable."
+                                "Socket.IO loaded but io() is unavailable."
                             )
                         );
+
                     }
+
                 };
 
 
@@ -906,24 +1205,13 @@ function loadSocketIO() {
                     );
 
 
-                    updateConnectionStatus(
-                        "error",
-                        "Socket.IO unavailable"
-                    );
-
-
-                    showToast(
-                        "error",
-                        "Unable to load Socket.IO client from Flask."
-                    );
-
-
                     reject(
                         error ||
                         new Error(
-                            "Socket.IO client failed to load."
+                            "Unable to load Socket.IO client."
                         )
                     );
+
                 };
 
 
@@ -933,22 +1221,27 @@ function loadSocketIO() {
 
         }
     );
+
 }
 
 
 /* =========================================================
-   5. CREATE SOCKET CONNECTION
+   6. CREATE SOCKET
 ========================================================= */
 
 function createSocket() {
 
-    if (socket) {
+    if (
+        socket
+    ) {
 
         console.log(
             "Socket already exists."
         );
 
+
         return;
+
     }
 
 
@@ -969,6 +1262,7 @@ function createSocket() {
 
 
         return;
+
     }
 
 
@@ -978,13 +1272,6 @@ function createSocket() {
             "Creating Socket.IO connection..."
         );
 
-
-        /*
-        Use same origin as Flask.
-
-        This is important because your Flask server
-        is hosting both the web page and Socket.IO.
-        */
 
         socket =
             window.io(
@@ -1040,23 +1327,33 @@ function createSocket() {
             "error",
             "Socket.IO unavailable"
         );
+
     }
+
 }
 
 
 /* =========================================================
-   6. SOCKET EVENTS
+   7. REGISTER SOCKET EVENTS
 ========================================================= */
 
 function registerSocketEvents() {
 
-    if (!socket) {
+    if (
+        !socket
+    ) {
+
         return;
+
     }
 
 
-    if (socketEventsRegistered) {
+    if (
+        socketEventsRegistered
+    ) {
+
         return;
+
     }
 
 
@@ -1065,7 +1362,7 @@ function registerSocketEvents() {
 
 
     /* =====================================================
-       CONNECT
+       SOCKET CONNECT
     ===================================================== */
 
     socket.on(
@@ -1120,14 +1417,15 @@ function registerSocketEvents() {
 
 
             /*
-            Camera and microphone first.
+            Initialize camera and microphone.
             */
 
             await initializeMeeting();
 
 
             /*
-            Then join the Socket.IO room.
+            Join the meeting room only after
+            Socket.IO connection is ready.
             */
 
             joinMeetingRoom();
@@ -1154,6 +1452,13 @@ function registerSocketEvents() {
                 "error",
                 "Server connection failed"
             );
+
+
+            showToast(
+                "error",
+                "Unable to connect to meeting server."
+            );
+
         }
     );
 
@@ -1162,7 +1467,9 @@ function registerSocketEvents() {
        RECONNECT ATTEMPT
     ===================================================== */
 
-    if (socket.io) {
+    if (
+        socket.io
+    ) {
 
         socket.io.on(
             "reconnect_attempt",
@@ -1182,6 +1489,7 @@ function registerSocketEvents() {
                     "connecting",
                     "Reconnecting..."
                 );
+
             }
         );
 
@@ -1202,14 +1510,18 @@ function registerSocketEvents() {
 
                 if (
                     !hasLeftMeeting &&
+                    !duplicateSessionLost &&
                     socket &&
                     socket.connected
                 ) {
 
                     joinMeetingRoom();
+
                 }
+
             }
         );
+
     }
 
 
@@ -1231,13 +1543,17 @@ function registerSocketEvents() {
                 false;
 
 
-            if (!hasLeftMeeting) {
+            if (
+                !hasLeftMeeting
+            ) {
 
                 updateConnectionStatus(
                     "error",
                     "Disconnected"
                 );
+
             }
+
         }
     );
 
@@ -1253,6 +1569,23 @@ function registerSocketEvents() {
             console.log(
                 "Existing participants:",
                 data
+            );
+
+
+            /*
+            The backend sends this event after the
+            current user has successfully joined.
+
+            Therefore it also confirms the room join.
+            */
+
+            socketRoomJoined =
+                true;
+
+
+            updateConnectionStatus(
+                "connected",
+                "Connected"
             );
 
 
@@ -1281,7 +1614,8 @@ function registerSocketEvents() {
 
 
                 /*
-                Server may send plain SID.
+                Some server versions may send
+                the Socket.IO ID directly.
                 */
 
                 if (
@@ -1292,21 +1626,33 @@ function registerSocketEvents() {
                     remoteSocketId =
                         participant;
 
+
                     remoteName =
                         "Participant";
+
                 }
 
 
-                if (!remoteSocketId) {
+                if (
+                    !remoteSocketId
+                ) {
+
                     continue;
+
                 }
 
+
+                /*
+                Never create a connection to ourselves.
+                */
 
                 if (
                     remoteSocketId ===
                     socket.id
                 ) {
+
                     continue;
+
                 }
 
 
@@ -1316,6 +1662,17 @@ function registerSocketEvents() {
                     remoteName;
 
 
+                /*
+                IMPORTANT:
+
+                createPeerConnection() returns the
+                existing connection if one already
+                exists.
+
+                This prevents duplicate WebRTC
+                connections for the same participant.
+                */
+
                 const peerConnection =
                     createPeerConnection(
                         remoteSocketId,
@@ -1323,10 +1680,20 @@ function registerSocketEvents() {
                     );
 
 
+                if (
+                    !peerConnection
+                ) {
+
+                    continue;
+
+                }
+
+
                 try {
 
                     /*
-                    Existing participant gets an offer.
+                    Existing participant receives
+                    an offer from this participant.
                     */
 
                     const offer =
@@ -1338,6 +1705,7 @@ function registerSocketEvents() {
 
                                 offerToReceiveVideo:
                                     true
+
                             });
 
 
@@ -1360,6 +1728,7 @@ function registerSocketEvents() {
 
                             name:
                                 userName
+
                         }
                     );
 
@@ -1377,11 +1746,16 @@ function registerSocketEvents() {
                         "Offer creation failed:",
                         error
                     );
+
                 }
+
             }
 
 
+            updateParticipantsList();
+
             updateParticipantCount();
+
         }
     );
 
@@ -1412,8 +1786,12 @@ function registerSocketEvents() {
                 "Participant";
 
 
-            if (!remoteSocketId) {
+            if (
+                !remoteSocketId
+            ) {
+
                 return;
+
             }
 
 
@@ -1421,7 +1799,9 @@ function registerSocketEvents() {
                 remoteSocketId ===
                 socket.id
             ) {
+
                 return;
+
             }
 
 
@@ -1431,45 +1811,26 @@ function registerSocketEvents() {
                 remoteName;
 
 
+            /*
+            Create only one connection for
+            this Socket.IO participant.
+            */
+
             createPeerConnection(
                 remoteSocketId,
                 remoteName
             );
 
 
+            updateParticipantsList();
+
             updateParticipantCount();
 
-
-            /*
-            Avoid duplicate names in the UI.
-            */
-
-            const participantKey =
-                `${remoteSocketId}:${remoteName}`;
-
-
-            if (
-                displayedNames.has(
-                    participantKey
-                )
-            ) {
-                return;
-            }
-
-
-            displayedNames.add(
-                participantKey
-            );
-
-
-            addParticipantToList(
-                remoteName,
-                "Connected"
-            );
         }
     );
 
-        /* =====================================================
+
+    /* =====================================================
        USER LEFT
     ===================================================== */
 
@@ -1489,14 +1850,24 @@ function registerSocketEvents() {
                 data?.id;
 
 
-            if (!remoteSocketId) {
+            if (
+                !remoteSocketId
+            ) {
+
                 return;
+
             }
 
 
             removeRemoteParticipant(
                 remoteSocketId
             );
+
+
+            updateParticipantsList();
+
+            updateParticipantCount();
+
         }
     );
 
@@ -1515,13 +1886,22 @@ function registerSocketEvents() {
             );
 
 
-            /*
-            The server count is useful for connection
-            state, but the visible participant count is
-            calculated from our unique participant list.
-            */
+            if (
+                participantCount &&
+                typeof data?.count ===
+                    "number"
+            ) {
+
+                participantCount.textContent =
+                    String(
+                        data.count
+                    );
+
+            }
+
 
             updateParticipantCount();
+
         }
     );
 
@@ -1542,9 +1922,9 @@ function registerSocketEvents() {
 
             const remoteSocketId =
                 data?.sender ||
+                data?.from ||
                 data?.sid ||
-                data?.socket_id ||
-                data?.from;
+                data?.socket_id;
 
 
             const offer =
@@ -1562,11 +1942,8 @@ function registerSocketEvents() {
                 !offer
             ) {
 
-                console.warn(
-                    "Invalid offer received."
-                );
-
                 return;
+
             }
 
 
@@ -1574,7 +1951,9 @@ function registerSocketEvents() {
                 remoteSocketId ===
                 socket.id
             ) {
+
                 return;
+
             }
 
 
@@ -1591,6 +1970,15 @@ function registerSocketEvents() {
                 );
 
 
+            if (
+                !peerConnection
+            ) {
+
+                return;
+
+            }
+
+
             try {
 
                 await peerConnection
@@ -1600,11 +1988,6 @@ function registerSocketEvents() {
                         )
                     );
 
-
-                /*
-                Add ICE candidates that arrived
-                before the remote description.
-                */
 
                 await flushPendingIceCandidates(
                     remoteSocketId
@@ -1635,18 +2018,15 @@ function registerSocketEvents() {
 
                         name:
                             userName
+
                     }
                 );
 
 
                 console.log(
                     "ANSWER SENT ->",
-                    remoteName,
                     remoteSocketId
                 );
-
-
-                updateParticipantCount();
 
 
             } catch (error) {
@@ -1655,7 +2035,9 @@ function registerSocketEvents() {
                     "Offer handling failed:",
                     error
                 );
+
             }
+
         }
     );
 
@@ -1676,9 +2058,9 @@ function registerSocketEvents() {
 
             const remoteSocketId =
                 data?.sender ||
+                data?.from ||
                 data?.sid ||
-                data?.socket_id ||
-                data?.from;
+                data?.socket_id;
 
 
             const answer =
@@ -1690,11 +2072,8 @@ function registerSocketEvents() {
                 !answer
             ) {
 
-                console.warn(
-                    "Invalid answer received."
-                );
-
                 return;
+
             }
 
 
@@ -1704,14 +2083,12 @@ function registerSocketEvents() {
                 ];
 
 
-            if (!peerConnection) {
-
-                console.warn(
-                    "No peer connection for answer:",
-                    remoteSocketId
-                );
+            if (
+                !peerConnection
+            ) {
 
                 return;
+
             }
 
 
@@ -1730,19 +2107,15 @@ function registerSocketEvents() {
                 );
 
 
-                console.log(
-                    "Remote answer applied:",
-                    remoteSocketId
-                );
-
-
             } catch (error) {
 
                 console.error(
                     "Answer handling failed:",
                     error
                 );
+
             }
+
         }
     );
 
@@ -1755,11 +2128,17 @@ function registerSocketEvents() {
         "ice-candidate",
         async function (data) {
 
+            console.log(
+                "ICE CANDIDATE RECEIVED:",
+                data
+            );
+
+
             const remoteSocketId =
                 data?.sender ||
+                data?.from ||
                 data?.sid ||
-                data?.socket_id ||
-                data?.from;
+                data?.socket_id;
 
 
             const candidate =
@@ -1770,7 +2149,9 @@ function registerSocketEvents() {
                 !remoteSocketId ||
                 !candidate
             ) {
+
                 return;
+
             }
 
 
@@ -1781,43 +2162,12 @@ function registerSocketEvents() {
 
 
             /*
-            If the peer does not exist yet,
-            queue the candidate.
-            */
-
-            if (!peerConnection) {
-
-                if (
-                    !pendingIceCandidates[
-                        remoteSocketId
-                    ]
-                ) {
-
-                    pendingIceCandidates[
-                        remoteSocketId
-                    ] = [];
-                }
-
-
-                pendingIceCandidates[
-                    remoteSocketId
-                ].push(
-                    candidate
-                );
-
-
-                return;
-            }
-
-
-            /*
-            If remote description has not arrived,
-            queue the candidate.
+            If the peer connection hasn't been
+            created yet, queue the candidate.
             */
 
             if (
                 !peerConnection
-                    .remoteDescription
             ) {
 
                 if (
@@ -1828,7 +2178,9 @@ function registerSocketEvents() {
 
                     pendingIceCandidates[
                         remoteSocketId
-                    ] = [];
+                    ] =
+                        [];
+
                 }
 
 
@@ -1840,80 +2192,59 @@ function registerSocketEvents() {
 
 
                 return;
+
             }
 
 
             try {
 
-                await peerConnection
-                    .addIceCandidate(
-                        new RTCIceCandidate(
-                            candidate
-                        )
+                if (
+                    peerConnection.remoteDescription
+                ) {
+
+                    await peerConnection
+                        .addIceCandidate(
+                            new RTCIceCandidate(
+                                candidate
+                            )
+                        );
+
+                } else {
+
+                    if (
+                        !pendingIceCandidates[
+                            remoteSocketId
+                        ]
+                    ) {
+
+                        pendingIceCandidates[
+                            remoteSocketId
+                        ] =
+                            [];
+
+                    }
+
+
+                    pendingIceCandidates[
+                        remoteSocketId
+                    ].push(
+                        candidate
                     );
 
+                }
 
             } catch (error) {
 
-                console.warn(
-                    "ICE candidate failed:",
+                console.error(
+                    "ICE candidate handling failed:",
                     error
                 );
+
             }
+
         }
     );
-
-
-    /* =====================================================
-       DUPLICATE SESSION
-    ===================================================== */
-
-    socket.on(
-        "duplicate-session",
-        function (data) {
-
-            console.warn(
-                "Duplicate session received:",
-                data
-            );
-
-
-            forceCloseDuplicateSession();
-        }
-    );
-
-
-    socket.on(
-        "duplicate-login",
-        function (data) {
-
-            console.warn(
-                "Duplicate login/session received:",
-                data
-            );
-
-
-            forceCloseDuplicateSession();
-        }
-    );
-
-
-    socket.on(
-        "session-replaced",
-        function (data) {
-
-            console.warn(
-                "Session replaced:",
-                data
-            );
-
-
-            forceCloseDuplicateSession();
-        }
-    );
-
-
-    /* =====================================================
+        /* =====================================================
        CHAT MESSAGE
     ===================================================== */
 
@@ -1938,20 +2269,23 @@ function registerSocketEvents() {
                 "";
 
 
-            if (!message) {
+            if (
+                !message
+            ) {
+
                 return;
+
             }
 
 
             /*
-            IMPORTANT:
-
-            Do NOT display our own message immediately
-            inside the submit handler.
-
             The server broadcasts the message back
-            to the meeting room and this listener
-            displays it exactly once.
+            to everyone in the meeting.
+
+            We add it here only once.
+
+            This prevents the sender from seeing
+            a duplicate chat message.
             */
 
             addChatMessage(
@@ -1961,8 +2295,7 @@ function registerSocketEvents() {
 
 
             /*
-            If chat sidebar is closed, show unread
-            count for messages received.
+            If chat is closed, update unread count.
             */
 
             if (
@@ -1973,7 +2306,9 @@ function registerSocketEvents() {
             ) {
 
                 increaseUnreadChatCount();
+
             }
+
         }
     );
 
@@ -2001,6 +2336,7 @@ function registerSocketEvents() {
                 "error",
                 message
             );
+
         }
     );
 
@@ -2024,12 +2360,13 @@ function registerSocketEvents() {
                 data?.message ||
                 "Unable to process meeting request."
             );
+
         }
     );
 
 
     /* =====================================================
-       SOCKET READY
+       ROOM JOINED
     ===================================================== */
 
     socket.on(
@@ -2053,14 +2390,14 @@ function registerSocketEvents() {
 
 
             updateParticipantCount();
+
         }
     );
 
 
-    /*
-    Some backend versions may use "joined-room"
-    instead of "room-joined".
-    */
+    /* =====================================================
+       JOINED ROOM
+    ===================================================== */
 
     socket.on(
         "joined-room",
@@ -2083,13 +2420,14 @@ function registerSocketEvents() {
 
 
             updateParticipantCount();
+
         }
     );
 
 
-    /*
-    Generic meeting-connected event.
-    */
+    /* =====================================================
+       MEETING CONNECTED
+    ===================================================== */
 
     socket.on(
         "meeting-connected",
@@ -2112,13 +2450,15 @@ function registerSocketEvents() {
 
 
             updateParticipantCount();
+
         }
     );
+
 }
 
 
 /* =========================================================
-   7. JOIN MEETING ROOM
+   8. JOIN MEETING ROOM
 ========================================================= */
 
 function joinMeetingRoom() {
@@ -2133,6 +2473,7 @@ function joinMeetingRoom() {
         );
 
         return;
+
     }
 
 
@@ -2144,12 +2485,15 @@ function joinMeetingRoom() {
             "Cannot join meeting: meeting ID missing."
         );
 
+
         showToast(
             "error",
             "Meeting ID is missing."
         );
 
+
         return;
+
     }
 
 
@@ -2157,7 +2501,9 @@ function joinMeetingRoom() {
         duplicateSessionLost ||
         hasLeftMeeting
     ) {
+
         return;
+
     }
 
 
@@ -2165,13 +2511,16 @@ function joinMeetingRoom() {
     Prevent duplicate join events.
     */
 
-    if (socketRoomJoined) {
+    if (
+        socketRoomJoined
+    ) {
 
         console.log(
             "Already joined meeting room."
         );
 
         return;
+
     }
 
 
@@ -2196,20 +2545,15 @@ function joinMeetingRoom() {
 
             name:
                 userName
+
         }
     );
 
-
-    /*
-    We don't immediately mark socketRoomJoined
-    here because the server still needs to confirm
-    the room join.
-    */
 }
 
 
 /* =========================================================
-   8. INITIALIZE SOCKET
+   9. INITIALIZE SOCKET
 ========================================================= */
 
 async function initializeSocket() {
@@ -2217,7 +2561,9 @@ async function initializeSocket() {
     if (
         socketInitialized
     ) {
+
         return;
+
     }
 
 
@@ -2225,7 +2571,9 @@ async function initializeSocket() {
         duplicateSessionLost ||
         hasLeftMeeting
     ) {
+
         return;
+
     }
 
 
@@ -2246,7 +2594,9 @@ async function initializeSocket() {
             socketInitialized =
                 false;
 
+
             return;
+
         }
 
 
@@ -2275,12 +2625,14 @@ async function initializeSocket() {
             "error",
             "Unable to connect to meeting server."
         );
+
     }
+
 }
 
 
 /* =========================================================
-   9. INITIALIZE MEETING MEDIA
+   10. INITIALIZE MEETING MEDIA
 ========================================================= */
 
 async function initializeMeeting() {
@@ -2288,7 +2640,9 @@ async function initializeMeeting() {
     if (
         mediaInitializationStarted
     ) {
+
         return;
+
     }
 
 
@@ -2296,7 +2650,9 @@ async function initializeMeeting() {
         duplicateSessionLost ||
         hasLeftMeeting
     ) {
+
         return;
+
     }
 
 
@@ -2304,16 +2660,32 @@ async function initializeMeeting() {
         true;
 
 
-    console.log(
-        "Initializing local media..."
-    );
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
+
+        console.error(
+            "MediaDevices API unavailable."
+        );
+
+
+        showToast(
+            "error",
+            "Camera and microphone are not supported."
+        );
+
+
+        mediaInitializationStarted =
+            false;
+
+
+        return;
+
+    }
 
 
     try {
-
-        /*
-        Request camera + microphone.
-        */
 
         localStream =
             await navigator.mediaDevices
@@ -2333,6 +2705,7 @@ async function initializeMeeting() {
                             ideal: 30,
                             max: 30
                         }
+
                     },
 
                     audio: {
@@ -2345,7 +2718,9 @@ async function initializeMeeting() {
 
                         autoGainControl:
                             true
+
                     }
+
                 });
 
 
@@ -2408,7 +2783,9 @@ async function initializeMeeting() {
 
                             autoGainControl:
                                 true
+
                         }
+
                     });
 
 
@@ -2462,13 +2839,16 @@ async function initializeMeeting() {
                 "error",
                 "Camera and microphone access was denied."
             );
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   10. LOCAL VIDEO STREAM
+   11. LOCAL VIDEO STREAM
 ========================================================= */
 
 function setLocalVideoStream(
@@ -2476,8 +2856,12 @@ function setLocalVideoStream(
     showVideo = true
 ) {
 
-    if (!localVideo) {
+    if (
+        !localVideo
+    ) {
+
         return;
+
     }
 
 
@@ -2494,10 +2878,13 @@ function setLocalVideoStream(
             "block";
 
 
-        if (localPlaceholder) {
+        if (
+            localPlaceholder
+        ) {
 
             localPlaceholder.style.display =
                 "none";
+
         }
 
 
@@ -2522,8 +2909,10 @@ function setLocalVideoStream(
                         "Local video autoplay blocked:",
                         error
                     );
+
                 }
             );
+
         }
 
 
@@ -2533,17 +2922,22 @@ function setLocalVideoStream(
             "none";
 
 
-        if (localPlaceholder) {
+        if (
+            localPlaceholder
+        ) {
 
             localPlaceholder.style.display =
                 "flex";
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   11. CREATE WEBRTC PEER CONNECTION
+   12. CREATE WEBRTC PEER CONNECTION
 ========================================================= */
 
 function createPeerConnection(
@@ -2551,16 +2945,21 @@ function createPeerConnection(
     remoteName = "Participant"
 ) {
 
-    if (!remoteSocketId) {
+    if (
+        !remoteSocketId
+    ) {
+
         return null;
+
     }
 
 
     /*
     IMPORTANT DUPLICATE CONNECTION PROTECTION:
 
-    If a connection already exists for this Socket.IO
-    participant, return the existing connection.
+    If a connection already exists for this
+    Socket.IO participant, return the existing
+    connection.
 
     This prevents accidental creation of multiple
     RTCPeerConnections for the same remote socket.
@@ -2575,6 +2974,7 @@ function createPeerConnection(
         return peerConnections[
             remoteSocketId
         ];
+
     }
 
 
@@ -2601,6 +3001,7 @@ function createPeerConnection(
                 }
 
             ]
+
         });
 
 
@@ -2620,7 +3021,9 @@ function createPeerConnection(
     Add local tracks.
     */
 
-    if (localStream) {
+    if (
+        localStream
+    ) {
 
         localStream
             .getTracks()
@@ -2640,9 +3043,12 @@ function createPeerConnection(
                             "Could not add local track:",
                             error
                         );
+
                     }
+
                 }
             );
+
     }
 
 
@@ -2658,7 +3064,9 @@ function createPeerConnection(
                 !socket ||
                 !socket.connected
             ) {
+
                 return;
+
             }
 
 
@@ -2671,8 +3079,10 @@ function createPeerConnection(
 
                     candidate:
                         event.candidate
+
                 }
             );
+
         };
 
 
@@ -2696,7 +3106,9 @@ function createPeerConnection(
                 ];
 
 
-            if (!remoteStream) {
+            if (
+                !remoteStream
+            ) {
 
                 remoteStream =
                     new MediaStream();
@@ -2706,6 +3118,7 @@ function createPeerConnection(
                     remoteSocketId
                 ] =
                     remoteStream;
+
             }
 
 
@@ -2723,15 +3136,19 @@ function createPeerConnection(
                                 track.id ===
                                 event.track.id
                             );
+
                         }
                     );
 
 
-            if (!alreadyAdded) {
+            if (
+                !alreadyAdded
+            ) {
 
                 remoteStream.addTrack(
                     event.track
                 );
+
             }
 
 
@@ -2742,11 +3159,6 @@ function createPeerConnection(
             );
 
 
-            /*
-            Some browsers fire the event
-            before the stream is completely ready.
-            */
-
             event.track.onended =
                 function () {
 
@@ -2755,7 +3167,9 @@ function createPeerConnection(
                         remoteSocketId,
                         event.track.kind
                     );
+
                 };
+
         };
 
 
@@ -2783,6 +3197,7 @@ function createPeerConnection(
             ) {
 
                 updateParticipantCount();
+
             }
 
 
@@ -2797,10 +3212,6 @@ function createPeerConnection(
                 );
 
 
-                /*
-                Attempt ICE restart.
-                */
-
                 try {
 
                     if (
@@ -2809,9 +3220,11 @@ function createPeerConnection(
                     ) {
 
                         peerConnection.restartIce();
+
                     }
 
                 } catch (error) {}
+
             }
 
 
@@ -2823,7 +3236,9 @@ function createPeerConnection(
                 removeRemoteParticipant(
                     remoteSocketId
                 );
+
             }
+
         };
 
 
@@ -2856,7 +3271,9 @@ function createPeerConnection(
                     peerConnection.restartIce();
 
                 } catch (error) {}
+
             }
+
         };
 
 
@@ -2873,6 +3290,7 @@ function createPeerConnection(
                 peerConnection
                     .iceGatheringState
             );
+
         };
 
 
@@ -2880,11 +3298,10 @@ function createPeerConnection(
 
 
     return peerConnection;
+
 }
-
-
 /* =========================================================
-   12. CREATE / UPDATE REMOTE VIDEO
+   13. CREATE / UPDATE REMOTE VIDEO
 ========================================================= */
 
 function createOrUpdateRemoteVideo(
@@ -2897,6 +3314,7 @@ function createOrUpdateRemoteVideo(
         !remoteVideos ||
         !remoteSocketId
     ) {
+
         return;
     }
 
@@ -2984,13 +3402,38 @@ function createOrUpdateRemoteVideo(
             container.querySelector(
                 "video"
             );
+
+
+        const nameLabel =
+            container.querySelector(
+                ".video-name"
+            );
+
+
+        if (
+            nameLabel
+        ) {
+
+            nameLabel.textContent =
+                remoteName ||
+                "Participant";
+
+        }
+
     }
 
 
     if (!video) {
+
         return;
     }
 
+
+    /*
+    Only replace srcObject when necessary.
+    This prevents unnecessary video
+    element resets and flickering.
+    */
 
     if (
         video.srcObject !==
@@ -2999,11 +3442,46 @@ function createOrUpdateRemoteVideo(
 
         video.srcObject =
             stream;
+
     }
+
+
+    video.autoplay =
+        true;
+
+
+    video.playsInline =
+        true;
 
 
     video.muted =
         false;
+
+
+    /*
+    IMPORTANT:
+
+    contain prevents the remote camera from
+    being automatically cropped/zoomed.
+
+    This is especially useful when participants
+    have different camera aspect ratios.
+    */
+
+    video.style.objectFit =
+        "contain";
+
+
+    video.style.width =
+        "100%";
+
+
+    video.style.height =
+        "100%";
+
+
+    video.style.backgroundColor =
+        "#000";
 
 
     /*
@@ -3027,21 +3505,30 @@ function createOrUpdateRemoteVideo(
                     "Remote video autoplay blocked:",
                     error
                 );
+
             }
         );
+
     }
 
 
-    if (emptyState) {
+    if (
+        emptyState
+    ) {
 
         emptyState.style.display =
             "none";
+
     }
+
+
+    updateVideoLayout();
+
 }
 
 
 /* =========================================================
-   13. FLUSH PENDING ICE
+   14. FLUSH PENDING ICE CANDIDATES
 ========================================================= */
 
 async function flushPendingIceCandidates(
@@ -3054,7 +3541,10 @@ async function flushPendingIceCandidates(
         ];
 
 
-    if (!peerConnection) {
+    if (
+        !peerConnection
+    ) {
+
         return;
     }
 
@@ -3069,24 +3559,27 @@ async function flushPendingIceCandidates(
         !queue ||
         !queue.length
     ) {
+
         return;
     }
 
 
     /*
-    Only add candidates after remote
-    description is available.
+    Candidates can only be added after
+    the remote description exists.
     */
 
     if (
-        !peerConnection
-            .remoteDescription
+        !peerConnection.remoteDescription
     ) {
+
         return;
     }
 
 
-    while (queue.length) {
+    while (
+        queue.length
+    ) {
 
         const candidate =
             queue.shift();
@@ -3101,31 +3594,38 @@ async function flushPendingIceCandidates(
                     )
                 );
 
+
         } catch (error) {
 
             console.warn(
                 "Queued ICE candidate failed:",
                 error
             );
+
         }
+
     }
 
 
     delete pendingIceCandidates[
         remoteSocketId
     ];
+
 }
 
 
 /* =========================================================
-   14. REMOVE REMOTE PARTICIPANT
+   15. REMOVE REMOTE PARTICIPANT
 ========================================================= */
 
 function removeRemoteParticipant(
     remoteSocketId
 ) {
 
-    if (!remoteSocketId) {
+    if (
+        !remoteSocketId
+    ) {
+
         return;
     }
 
@@ -3146,23 +3646,42 @@ function removeRemoteParticipant(
         ];
 
 
-    if (peerConnection) {
+    if (
+        peerConnection
+    ) {
 
         try {
+
+            /*
+            Remove event handlers first.
+
+            This prevents cleanup events from
+            triggering additional unwanted
+            participant updates.
+            */
 
             peerConnection.ontrack =
                 null;
 
+
             peerConnection.onicecandidate =
                 null;
+
 
             peerConnection.onconnectionstatechange =
                 null;
 
+
             peerConnection.oniceconnectionstatechange =
                 null;
 
+
+            peerConnection.onicegatheringstatechange =
+                null;
+
+
             peerConnection.close();
+
 
         } catch (error) {
 
@@ -3170,12 +3689,14 @@ function removeRemoteParticipant(
                 "Peer close error:",
                 error
             );
+
         }
 
 
         delete peerConnections[
             remoteSocketId
         ];
+
     }
 
 
@@ -3203,7 +3724,9 @@ function removeRemoteParticipant(
         ];
 
 
-    if (remoteStream) {
+    if (
+        remoteStream
+    ) {
 
         remoteStream
             .getTracks()
@@ -3211,8 +3734,11 @@ function removeRemoteParticipant(
                 function (track) {
 
                     try {
+
                         track.stop();
+
                     } catch (error) {}
+
                 }
             );
 
@@ -3220,11 +3746,12 @@ function removeRemoteParticipant(
         delete remoteStreams[
             remoteSocketId
         ];
+
     }
 
 
     /*
-    Remove video card.
+    Remove the remote video card.
     */
 
     const container =
@@ -3233,15 +3760,18 @@ function removeRemoteParticipant(
         );
 
 
-    if (container) {
+    if (
+        container
+    ) {
 
         container.remove();
+
     }
 
 
     /*
-    Show empty state if there are
-    no remote participants.
+    Show empty state when no remote
+    participants remain.
     */
 
     if (
@@ -3253,20 +3783,29 @@ function removeRemoteParticipant(
 
         emptyState.style.display =
             "flex";
+
     }
 
 
+    updateParticipantsList();
+
     updateParticipantCount();
+
+    updateVideoLayout();
+
 }
 
 
 /* =========================================================
-   15. MICROPHONE BUTTON
+   16. MICROPHONE BUTTON
 ========================================================= */
 
 function updateMicrophoneButton() {
 
-    if (!micBtn) {
+    if (
+        !micBtn
+    ) {
+
         return;
     }
 
@@ -3277,7 +3816,9 @@ function updateMicrophoneButton() {
         );
 
 
-    if (microphoneEnabled) {
+    if (
+        microphoneEnabled
+    ) {
 
         micBtn.classList.remove(
             "off"
@@ -3293,10 +3834,13 @@ function updateMicrophoneButton() {
             "Mute microphone";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "🎤";
+
         }
 
 
@@ -3316,17 +3860,22 @@ function updateMicrophoneButton() {
             "Unmute microphone";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "🔇";
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   16. TOGGLE MICROPHONE
+   17. TOGGLE MICROPHONE
 ========================================================= */
 
 function toggleMicrophone() {
@@ -3335,18 +3884,23 @@ function toggleMicrophone() {
         hasLeftMeeting ||
         duplicateSessionLost
     ) {
+
         return;
     }
 
 
-    if (!localStream) {
+    if (
+        !localStream
+    ) {
 
         showToast(
             "error",
             "Microphone is not available."
         );
 
+
         return;
+
     }
 
 
@@ -3354,14 +3908,18 @@ function toggleMicrophone() {
         localStream.getAudioTracks();
 
 
-    if (!audioTracks.length) {
+    if (
+        !audioTracks.length
+    ) {
 
         showToast(
             "error",
             "No microphone track found."
         );
 
+
         return;
+
     }
 
 
@@ -3374,6 +3932,7 @@ function toggleMicrophone() {
 
             track.enabled =
                 microphoneEnabled;
+
         }
     );
 
@@ -3387,16 +3946,20 @@ function toggleMicrophone() {
             ? "Microphone unmuted."
             : "Microphone muted."
     );
+
 }
 
 
 /* =========================================================
-   17. CAMERA BUTTON
+   18. CAMERA BUTTON
 ========================================================= */
 
 function updateCameraButton() {
 
-    if (!cameraBtn) {
+    if (
+        !cameraBtn
+    ) {
+
         return;
     }
 
@@ -3407,7 +3970,9 @@ function updateCameraButton() {
         );
 
 
-    if (cameraEnabled) {
+    if (
+        cameraEnabled
+    ) {
 
         cameraBtn.classList.remove(
             "off"
@@ -3423,10 +3988,13 @@ function updateCameraButton() {
             "Turn camera off";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "📹";
+
         }
 
 
@@ -3446,17 +4014,22 @@ function updateCameraButton() {
             "Turn camera on";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "📷";
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   18. TOGGLE CAMERA
+   19. TOGGLE CAMERA
 ========================================================= */
 
 function toggleCamera() {
@@ -3465,18 +4038,23 @@ function toggleCamera() {
         hasLeftMeeting ||
         duplicateSessionLost
     ) {
+
         return;
     }
 
 
-    if (!localStream) {
+    if (
+        !localStream
+    ) {
 
         showToast(
             "error",
             "Camera is not available."
         );
 
+
         return;
+
     }
 
 
@@ -3484,14 +4062,18 @@ function toggleCamera() {
         localStream.getVideoTracks();
 
 
-    if (!videoTracks.length) {
+    if (
+        !videoTracks.length
+    ) {
 
         showToast(
             "error",
             "No camera track found."
         );
 
+
         return;
+
     }
 
 
@@ -3504,15 +4086,18 @@ function toggleCamera() {
 
             track.enabled =
                 cameraEnabled;
+
         }
     );
 
 
     /*
-    Keep local placeholder in sync.
+    Keep local preview synchronized.
     */
 
-    if (cameraEnabled) {
+    if (
+        cameraEnabled
+    ) {
 
         setLocalVideoStream(
             localStream,
@@ -3525,6 +4110,7 @@ function toggleCamera() {
             localStream,
             false
         );
+
     }
 
 
@@ -3537,39 +4123,48 @@ function toggleCamera() {
             ? "Camera turned on."
             : "Camera turned off."
     );
+
 }
 
 
 /* =========================================================
-   19. BUTTON EVENTS
+   20. CAMERA / MICROPHONE BUTTON EVENTS
 ========================================================= */
 
-if (micBtn) {
+if (
+    micBtn
+) {
 
     micBtn.addEventListener(
         "click",
         toggleMicrophone
     );
+
 }
 
 
-if (cameraBtn) {
+if (
+    cameraBtn
+) {
 
     cameraBtn.addEventListener(
         "click",
         toggleCamera
     );
-}
 
+}
 /* =========================================================
-   20. SCREEN SHARE
+   21. SCREEN SHARE BUTTON
 ========================================================= */
 
 function updateScreenShareButton(
     sharing
 ) {
 
-    if (!screenShareBtn) {
+    if (
+        !screenShareBtn
+    ) {
+
         return;
     }
 
@@ -3580,7 +4175,9 @@ function updateScreenShareButton(
         );
 
 
-    if (sharing) {
+    if (
+        sharing
+    ) {
 
         screenShareBtn.classList.add(
             "active"
@@ -3591,10 +4188,13 @@ function updateScreenShareButton(
             "Stop screen sharing";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "🛑";
+
         }
 
 
@@ -3606,20 +4206,25 @@ function updateScreenShareButton(
 
 
         screenShareBtn.title =
-            "Share screen";
+            "Share your screen";
 
 
-        if (icon) {
+        if (
+            icon
+        ) {
 
             icon.textContent =
                 "🖥️";
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   21. START SCREEN SHARE
+   START SCREEN SHARE
 ========================================================= */
 
 async function startScreenShare() {
@@ -3628,6 +4233,7 @@ async function startScreenShare() {
         hasLeftMeeting ||
         duplicateSessionLost
     ) {
+
         return;
     }
 
@@ -3642,16 +4248,12 @@ async function startScreenShare() {
             "Screen sharing is not supported by this browser."
         );
 
+
         return;
     }
 
 
     try {
-
-        console.log(
-            "Starting screen share..."
-        );
-
 
         screenStream =
             await navigator.mediaDevices
@@ -3661,10 +4263,12 @@ async function startScreenShare() {
 
                         cursor:
                             "always"
+
                     },
 
                     audio:
                         false
+
                 });
 
 
@@ -3672,24 +4276,32 @@ async function startScreenShare() {
             screenStream.getVideoTracks()[0];
 
 
-        if (!screenTrack) {
+        if (
+            !screenTrack
+        ) {
 
-            throw new Error(
-                "No screen video track received."
+            showToast(
+                "error",
+                "Unable to get screen video."
             );
+
+
+            screenStream =
+                null;
+
+
+            return;
         }
 
 
         /*
-        Replace the camera video track in every
-        existing peer connection.
+        Replace camera video track in every
+        existing WebRTC connection.
         */
 
         for (
-            const remoteSocketId
-            of Object.keys(
+            const remoteSocketId in
                 peerConnections
-            )
         ) {
 
             const peerConnection =
@@ -3698,14 +4310,17 @@ async function startScreenShare() {
                 ];
 
 
-            if (!peerConnection) {
+            if (
+                !peerConnection
+            ) {
+
                 continue;
+
             }
 
 
             const senders =
-                peerConnection
-                    .getSenders();
+                peerConnection.getSenders();
 
 
             const videoSender =
@@ -3717,11 +4332,14 @@ async function startScreenShare() {
                             sender.track.kind ===
                                 "video"
                         );
+
                     }
                 );
 
 
-            if (videoSender) {
+            if (
+                videoSender
+            ) {
 
                 try {
 
@@ -3730,23 +4348,29 @@ async function startScreenShare() {
                             screenTrack
                         );
 
+
                 } catch (error) {
 
                     console.warn(
-                        "Could not replace video track:",
+                        "Could not replace camera track:",
                         remoteSocketId,
                         error
                     );
+
                 }
+
             }
+
         }
 
 
         /*
-        Show the shared screen locally.
+        Show shared screen locally.
         */
 
-        if (localVideo) {
+        if (
+            localVideo
+        ) {
 
             localVideo.srcObject =
                 screenStream;
@@ -3756,15 +4380,22 @@ async function startScreenShare() {
                 "block";
 
 
-            if (localPlaceholder) {
+            if (
+                localPlaceholder
+            ) {
 
                 localPlaceholder.style.display =
                     "none";
+
             }
 
 
             localVideo.muted =
                 true;
+
+
+            localVideo.style.objectFit =
+                "contain";
 
 
             const playPromise =
@@ -3778,9 +4409,18 @@ async function startScreenShare() {
             ) {
 
                 playPromise.catch(
-                    function () {}
+                    function (error) {
+
+                        console.warn(
+                            "Screen share playback blocked:",
+                            error
+                        );
+
+                    }
                 );
+
             }
+
         }
 
 
@@ -3790,20 +4430,21 @@ async function startScreenShare() {
 
 
         showToast(
-            "success",
+            "info",
             "Screen sharing started."
         );
 
 
         /*
-        Automatically stop when the browser's
-        "Stop sharing" button is pressed.
+        Browser fires onended when the user
+        presses "Stop sharing".
         */
 
         screenTrack.onended =
             function () {
 
                 stopScreenShare();
+
             };
 
 
@@ -3826,13 +4467,14 @@ async function startScreenShare() {
 
         if (
             error?.name ===
-            "NotAllowedError"
+                "NotAllowedError"
         ) {
 
             showToast(
                 "info",
-                "Screen sharing cancelled."
+                "Screen sharing was cancelled."
             );
+
 
         } else {
 
@@ -3840,51 +4482,153 @@ async function startScreenShare() {
                 "error",
                 "Unable to start screen sharing."
             );
+
         }
+
     }
+
 }
 
 
 /* =========================================================
-   22. STOP SCREEN SHARE
+   STOP SCREEN SHARE
 ========================================================= */
 
 async function stopScreenShare() {
 
-    if (!screenStream) {
+    if (
+        !screenStream
+    ) {
 
         updateScreenShareButton(
             false
         );
 
+
         return;
+
     }
 
 
     console.log(
-        "Stopping screen share..."
+        "Stopping screen sharing..."
+    );
+
+
+    const screenTracks =
+        screenStream.getTracks();
+
+
+    screenTracks.forEach(
+        function (track) {
+
+            try {
+
+                track.stop();
+
+            } catch (error) {}
+
+        }
     );
 
 
     /*
-    Stop screen tracks.
+    Restore camera track.
     */
 
-    screenStream
-        .getTracks()
-        .forEach(
-            function (track) {
+    let cameraTrack =
+        null;
 
-                try {
 
-                    track.onended =
-                        null;
+    if (
+        localStream
+    ) {
 
-                    track.stop();
+        const cameraTracks =
+            localStream.getVideoTracks();
 
-                } catch (error) {}
+
+        if (
+            cameraTracks.length &&
+            cameraEnabled
+        ) {
+
+            cameraTrack =
+                cameraTracks[0];
+
+        }
+
+    }
+
+
+    /*
+    Replace screen track with camera track.
+    */
+
+    for (
+        const remoteSocketId in
+            peerConnections
+    ) {
+
+        const peerConnection =
+            peerConnections[
+                remoteSocketId
+            ];
+
+
+        if (
+            !peerConnection
+        ) {
+
+            continue;
+
+        }
+
+
+        const senders =
+            peerConnection.getSenders();
+
+
+        const videoSender =
+            senders.find(
+                function (sender) {
+
+                    return (
+                        sender.track &&
+                        sender.track.kind ===
+                            "video"
+                    );
+
+                }
+            );
+
+
+        if (
+            videoSender &&
+            cameraTrack
+        ) {
+
+            try {
+
+                await videoSender
+                    .replaceTrack(
+                        cameraTrack
+                    );
+
+
+            } catch (error) {
+
+                console.warn(
+                    "Could not restore camera track:",
+                    remoteSocketId,
+                    error
+                );
+
             }
-        );
+
+        }
+
+    }
 
 
     screenStream =
@@ -3892,101 +4636,27 @@ async function stopScreenShare() {
 
 
     /*
-    Restore camera track.
+    Restore local camera preview.
     */
 
-    const cameraTrack =
-        localStream
-            ?.getVideoTracks()
-            ?.find(
-                function (track) {
-
-                    return track.readyState !==
-                        "ended";
-                }
-            );
-
-
-    if (cameraTrack) {
-
-        cameraTrack.enabled =
-            cameraEnabled;
-
-
-        for (
-            const remoteSocketId
-            of Object.keys(
-                peerConnections
-            )
-        ) {
-
-            const peerConnection =
-                peerConnections[
-                    remoteSocketId
-                ];
-
-
-            if (!peerConnection) {
-                continue;
-            }
-
-
-            const senders =
-                peerConnection
-                    .getSenders();
-
-
-            const videoSender =
-                senders.find(
-                    function (sender) {
-
-                        return (
-                            sender.track &&
-                            sender.track.kind ===
-                                "video"
-                        );
-                    }
-                );
-
-
-            if (videoSender) {
-
-                try {
-
-                    await videoSender
-                        .replaceTrack(
-                            cameraTrack
-                        );
-
-                } catch (error) {
-
-                    console.warn(
-                        "Could not restore camera track:",
-                        remoteSocketId,
-                        error
-                    );
-                }
-            }
-        }
-
+    if (
+        localStream &&
+        cameraEnabled
+    ) {
 
         setLocalVideoStream(
             localStream,
-            cameraEnabled
+            true
         );
 
 
     } else {
 
-        /*
-        If camera is unavailable,
-        keep the placeholder visible.
-        */
-
         setLocalVideoStream(
-            null,
+            localStream,
             false
         );
+
     }
 
 
@@ -3999,34 +4669,413 @@ async function stopScreenShare() {
         "info",
         "Screen sharing stopped."
     );
+
 }
 
 
-if (screenShareBtn) {
+/* =========================================================
+   SCREEN SHARE BUTTON EVENT
+========================================================= */
+
+if (
+    screenShareBtn
+) {
 
     screenShareBtn.addEventListener(
         "click",
         function () {
 
-            if (screenStream) {
+            if (
+                screenStream
+            ) {
 
                 stopScreenShare();
 
             } else {
 
                 startScreenShare();
+
             }
+
         }
     );
+
 }
 
 
 /* =========================================================
-   23. CHAT HELPERS
+   22. PARTICIPANT COUNT
 ========================================================= */
 
-let unreadChatCount = 0;
+function updateParticipantCount() {
 
+    if (
+        !participantCount
+    ) {
+
+        return;
+    }
+
+
+    /*
+    Count unique active Socket.IO IDs.
+
+    This is important because the same person must
+    never increase the count more than once.
+    */
+
+    const uniqueSocketIds =
+        new Set();
+
+
+    Object.keys(
+        peerConnections
+    ).forEach(
+        function (remoteSocketId) {
+
+            const peerConnection =
+                peerConnections[
+                    remoteSocketId
+                ];
+
+
+            if (
+                peerConnection &&
+                peerConnection.connectionState !==
+                    "closed"
+            ) {
+
+                uniqueSocketIds.add(
+                    remoteSocketId
+                );
+
+            }
+
+        }
+    );
+
+
+    /*
+    Include the current/local participant.
+    */
+
+    const totalParticipants =
+        uniqueSocketIds.size + 1;
+
+
+    participantCount.textContent =
+        String(
+            totalParticipants
+        );
+
+
+    /*
+    Update empty-state visibility.
+    */
+
+    if (
+        emptyState &&
+        remoteVideos
+    ) {
+
+        if (
+            uniqueSocketIds.size ===
+                0
+        ) {
+
+            emptyState.style.display =
+                "flex";
+
+
+        } else {
+
+            emptyState.style.display =
+                "none";
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   23. UPDATE PARTICIPANTS LIST
+========================================================= */
+
+function updateParticipantsList() {
+
+    if (
+        !participantsList
+    ) {
+
+        return;
+    }
+
+
+    /*
+    Always rebuild the list.
+
+    This prevents old participant entries from
+    remaining after someone leaves or reconnects.
+    */
+
+    participantsList.innerHTML =
+        "";
+
+
+    /*
+    Add local participant first.
+    */
+
+    addParticipantToList(
+        userName ||
+            "You",
+        "You"
+    );
+
+
+    /*
+    Keep track of Socket.IO IDs already added.
+    */
+
+    const addedSocketIds =
+        new Set();
+
+
+    Object.keys(
+        participants
+    ).forEach(
+        function (remoteSocketId) {
+
+            /*
+            Never add the same Socket.IO ID twice.
+            */
+
+            if (
+                addedSocketIds.has(
+                    remoteSocketId
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const peerConnection =
+                peerConnections[
+                    remoteSocketId
+                ];
+
+
+            /*
+            Do not show a participant if the
+            WebRTC connection has already closed.
+            */
+
+            if (
+                !peerConnection ||
+                peerConnection.connectionState ===
+                    "closed"
+            ) {
+
+                return;
+
+            }
+
+
+            addedSocketIds.add(
+                remoteSocketId
+            );
+
+
+            addParticipantToList(
+                participants[
+                    remoteSocketId
+                ] ||
+                    "Participant",
+                "Connected"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ADD PARTICIPANT TO LIST
+========================================================= */
+
+function addParticipantToList(
+    name,
+    status = "Connected"
+) {
+
+    if (
+        !participantsList
+    ) {
+
+        return;
+    }
+
+
+    const safeName =
+        String(
+            name ||
+            "Participant"
+        ).trim();
+
+
+    /*
+    Do not create a second visible entry
+    for the same displayed participant name.
+
+    Socket.IO ID remains the real identity,
+    while this is an additional UI safeguard.
+    */
+
+    const existingItems =
+        participantsList.querySelectorAll(
+            ".participant-item"
+        );
+
+
+    for (
+        const item of existingItems
+    ) {
+
+        const nameElement =
+            item.querySelector(
+                ".participant-name"
+            );
+
+
+        if (
+            nameElement &&
+            nameElement.textContent
+                .trim()
+                .toLowerCase() ===
+                safeName
+                    .toLowerCase()
+        ) {
+
+            return;
+
+        }
+
+    }
+
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "participant-item";
+
+
+    const avatar =
+        document.createElement(
+            "div"
+        );
+
+
+    avatar.className =
+        "participant-avatar";
+
+
+    avatar.textContent =
+        safeName
+            .charAt(0)
+            .toUpperCase() ||
+        "P";
+
+
+    const info =
+        document.createElement(
+            "div"
+        );
+
+
+    info.className =
+        "participant-info";
+
+
+    const nameElement =
+        document.createElement(
+            "div"
+        );
+
+
+    nameElement.className =
+        "participant-name";
+
+
+    /*
+    Use textContent instead of innerHTML.
+
+    This prevents HTML from being injected
+    through a participant name.
+    */
+
+    nameElement.textContent =
+        safeName;
+
+
+    const statusElement =
+        document.createElement(
+            "div"
+        );
+
+
+    statusElement.className =
+        "participant-status";
+
+
+    statusElement.textContent =
+        status;
+
+
+    info.appendChild(
+        nameElement
+    );
+
+
+    info.appendChild(
+        statusElement
+    );
+
+
+    item.appendChild(
+        avatar
+    );
+
+
+    item.appendChild(
+        info
+    );
+
+
+    participantsList.appendChild(
+        item
+    );
+
+}
+/* =========================================================
+   24. CHAT VARIABLES
+========================================================= */
+
+let unreadChatCount =
+    0;
+
+
+/* =========================================================
+   INCREASE UNREAD CHAT COUNT
+========================================================= */
 
 function increaseUnreadChatCount() {
 
@@ -4035,8 +5084,13 @@ function increaseUnreadChatCount() {
 
 
     updateUnreadChatBadge();
+
 }
 
+
+/* =========================================================
+   CLEAR UNREAD CHAT COUNT
+========================================================= */
 
 function clearUnreadChatCount() {
 
@@ -4045,56 +5099,98 @@ function clearUnreadChatCount() {
 
 
     updateUnreadChatBadge();
+
 }
 
 
+/* =========================================================
+   UPDATE CHAT BADGE
+========================================================= */
+
 function updateUnreadChatBadge() {
 
-    const badge =
+    /*
+    Try the existing unread badge first.
+    */
+
+    let badge =
         document.getElementById(
-            "chatUnreadBadge"
+            "chatUnreadCount"
         );
 
 
-    if (!badge) {
-        return;
+    /*
+    If your HTML doesn't already contain one,
+    create it on the chat button.
+    */
+
+    if (
+        !badge &&
+        chatBtn
+    ) {
+
+        badge =
+            document.createElement(
+                "span"
+            );
+
+
+        badge.id =
+            "chatUnreadCount";
+
+
+        badge.className =
+            "chat-unread-count";
+
+
+        chatBtn.appendChild(
+            badge
+        );
+
     }
 
 
     if (
-        unreadChatCount >
-        0
+        !badge
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        unreadChatCount > 0
     ) {
 
         badge.textContent =
-            unreadChatCount >
-            99
+            unreadChatCount > 99
                 ? "99+"
                 : String(
                     unreadChatCount
                 );
 
 
-        badge.classList.add(
-            "show"
-        );
+        badge.style.display =
+            "inline-flex";
 
 
     } else {
 
         badge.textContent =
-            "0";
+            "";
 
 
-        badge.classList.remove(
-            "show"
-        );
+        badge.style.display =
+            "none";
+
     }
+
 }
 
 
 /* =========================================================
-   24. ADD CHAT MESSAGE
+   25. ADD CHAT MESSAGE
 ========================================================= */
 
 function addChatMessage(
@@ -4102,8 +5198,12 @@ function addChatMessage(
     message
 ) {
 
-    if (!chatMessages) {
+    if (
+        !chatMessages
+    ) {
+
         return;
+
     }
 
 
@@ -4121,24 +5221,89 @@ function addChatMessage(
         ).trim();
 
 
-    if (!cleanMessage) {
+    if (
+        !cleanMessage
+    ) {
+
         return;
+
     }
 
 
     /*
-    Remove empty-state message.
+    Duplicate-message protection.
+
+    The server normally broadcasts each message once,
+    but this extra check prevents accidental duplicate
+    rendering if the same Socket.IO event arrives twice.
     */
 
-    const emptyMessage =
-        chatMessages.querySelector(
-            ".sidebar-empty"
+    const existingMessages =
+        chatMessages.querySelectorAll(
+            ".chat-message"
         );
 
 
-    if (emptyMessage) {
+    for (
+        const existingMessage
+            of existingMessages
+    ) {
 
-        emptyMessage.remove();
+        const existingName =
+            existingMessage.querySelector(
+                ".chat-message-name"
+            );
+
+
+        const existingText =
+            existingMessage.querySelector(
+                ".chat-message-text"
+            );
+
+
+        if (
+            existingName &&
+            existingText &&
+            existingName.textContent ===
+                cleanName &&
+            existingText.textContent ===
+                cleanMessage
+        ) {
+
+            /*
+            Do not blindly reject identical messages
+            because two separate messages can technically
+            have the same text.
+
+            Only reject when they were added within
+            a very short time window.
+            */
+
+            const previousTime =
+                Number(
+                    existingMessage.dataset
+                        .messageTime ||
+                    0
+                );
+
+
+            const now =
+                Date.now();
+
+
+            if (
+                previousTime &&
+                now -
+                    previousTime <
+                    800
+            ) {
+
+                return;
+
+            }
+
+        }
+
     }
 
 
@@ -4152,35 +5317,92 @@ function addChatMessage(
         "chat-message";
 
 
-    /*
-    IMPORTANT SECURITY FIX:
+    messageElement.dataset.messageTime =
+        String(
+            Date.now()
+        );
 
-    Use textContent instead of innerHTML
-    for user-provided chat text.
-    */
+
+    const header =
+        document.createElement(
+            "div"
+        );
+
+
+    header.className =
+        "chat-message-header";
+
 
     const nameElement =
         document.createElement(
-            "strong"
+            "span"
         );
+
+
+    nameElement.className =
+        "chat-message-name";
 
 
     nameElement.textContent =
         cleanName;
 
 
-    const textElement =
+    const timeElement =
         document.createElement(
             "span"
         );
 
 
+    timeElement.className =
+        "chat-message-time";
+
+
+    timeElement.textContent =
+        new Date().toLocaleTimeString(
+            [],
+            {
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
+            }
+        );
+
+
+    const textElement =
+        document.createElement(
+            "div"
+        );
+
+
+    textElement.className =
+        "chat-message-text";
+
+
+    /*
+    textContent is intentionally used here.
+
+    A user can send arbitrary chat text without
+    injecting HTML/JavaScript into the page.
+    */
+
     textElement.textContent =
         cleanMessage;
 
 
-    messageElement.appendChild(
+    header.appendChild(
         nameElement
+    );
+
+
+    header.appendChild(
+        timeElement
+    );
+
+
+    messageElement.appendChild(
+        header
     );
 
 
@@ -4195,19 +5417,123 @@ function addChatMessage(
 
 
     /*
-    Automatically scroll to newest message.
+    Keep the newest message visible.
     */
 
     chatMessages.scrollTop =
         chatMessages.scrollHeight;
+
 }
 
 
 /* =========================================================
-   25. CHAT FORM
+   26. SEND CHAT MESSAGE
 ========================================================= */
 
-if (chatForm) {
+function sendChatMessage(
+    message
+) {
+
+    const cleanMessage =
+        String(
+            message ||
+            ""
+        ).trim();
+
+
+    if (
+        !cleanMessage
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !socket ||
+        !socket.connected
+    ) {
+
+        showToast(
+            "error",
+            "Chat connection unavailable."
+        );
+
+
+        return;
+
+    }
+
+
+    if (
+        !socketRoomJoined
+    ) {
+
+        showToast(
+            "error",
+            "You are not connected to the meeting yet."
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+    IMPORTANT:
+
+    Do NOT call addChatMessage() here.
+
+    The server broadcasts the message back through
+    the "chat-message" event. That event adds it
+    to the UI exactly once.
+
+    This prevents the sender from seeing the same
+    message twice.
+    */
+
+    socket.emit(
+        "chat-message",
+        {
+
+            meeting_id:
+                meetingId,
+
+            message:
+                cleanMessage,
+
+            name:
+                userName
+
+        }
+    );
+
+
+    /*
+    Clear the input after sending.
+    */
+
+    if (
+        chatInput
+    ) {
+
+        chatInput.value =
+            "";
+
+    }
+
+}
+
+
+/* =========================================================
+   27. CHAT FORM
+========================================================= */
+
+if (
+    chatForm
+) {
 
     chatForm.addEventListener(
         "submit",
@@ -4216,96 +5542,96 @@ if (chatForm) {
             event.preventDefault();
 
 
+            if (
+                !chatInput
+            ) {
+
+                return;
+
+            }
+
+
             const message =
-                chatInput?.value?.trim();
-
-
-            if (!message) {
-                return;
-            }
+                chatInput.value.trim();
 
 
             if (
-                hasLeftMeeting ||
-                duplicateSessionLost
+                !message
             ) {
 
-                showToast(
-                    "error",
-                    "This meeting session is no longer active."
-                );
-
                 return;
+
             }
 
 
-            if (
-                !socket ||
-                !socket.connected
-            ) {
-
-                showToast(
-                    "error",
-                    "Chat connection unavailable."
-                );
-
-                return;
-            }
-
-
-            /*
-            IMPORTANT:
-
-            Do NOT call addChatMessage() here.
-
-            The server broadcasts the message back
-            through the "chat-message" Socket.IO event.
-
-            The socket listener displays it exactly once.
-            */
-
-            socket.emit(
-                "chat-message",
-                {
-
-                    meeting_id:
-                        meetingId,
-
-                    name:
-                        userName,
-
-                    message:
-                        message
-                }
+            sendChatMessage(
+                message
             );
 
-
-            if (chatInput) {
-
-                chatInput.value =
-                    "";
-            }
         }
     );
+
 }
 
 
 /* =========================================================
-   26. CHAT SIDEBAR
+   28. CHAT INPUT ENTER KEY
 ========================================================= */
 
-function openMeetingSidebar(
-    panel
+if (
+    chatInput
 ) {
 
-    if (!meetingSidebar) {
-        return;
-    }
+    chatInput.addEventListener(
+        "keydown",
+        function (event) {
+
+            /*
+            Enter sends the message.
+
+            Shift + Enter creates a new line.
+            */
+
+            if (
+                event.key ===
+                    "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
 
 
-    meetingSidebar.classList.remove(
-        "hidden"
+                if (
+                    chatForm
+                ) {
+
+                    chatForm.requestSubmit();
+
+                }
+
+            }
+
+        }
     );
+
+}
+
+
+/* =========================================================
+   29. SIDEBAR
+========================================================= */
+
+function openSidebar(
+    section = "chat"
+) {
+
+    if (
+        !meetingSidebar
+    ) {
+
+        return;
+
+    }
 
 
     meetingSidebar.classList.add(
@@ -4313,139 +5639,91 @@ function openMeetingSidebar(
     );
 
 
-    const chatPanel =
+    /*
+    Show requested section.
+    */
+
+    const chatSection =
         document.getElementById(
-            "chatPanel"
+            "chatSection"
         );
 
 
-    const participantsPanel =
+    const participantsSection =
         document.getElementById(
-            "participantsPanel"
-        );
-
-
-    const chatTab =
-        document.getElementById(
-            "meetingChatBtn"
-        );
-
-
-    const participantsTab =
-        document.getElementById(
-            "meetingParticipantsBtn"
+            "participantsSection"
         );
 
 
     if (
-        panel ===
-        "participants"
+        chatSection
     ) {
 
-        if (chatPanel) {
+        chatSection.style.display =
+            section === "chat"
+                ? "flex"
+                : "none";
 
-            chatPanel.classList.remove(
-                "active"
-            );
-        }
-
-
-        if (participantsPanel) {
-
-            participantsPanel.classList.add(
-                "active"
-            );
-        }
-
-
-        if (chatTab) {
-
-            chatTab.classList.remove(
-                "active"
-            );
-        }
-
-
-        if (participantsTab) {
-
-            participantsTab.classList.add(
-                "active"
-            );
-        }
-
-
-    } else {
-
-        if (chatPanel) {
-
-            chatPanel.classList.add(
-                "active"
-            );
-        }
-
-
-        if (participantsPanel) {
-
-            participantsPanel.classList.remove(
-                "active"
-            );
-        }
-
-
-        if (chatTab) {
-
-            chatTab.classList.add(
-                "active"
-            );
-        }
-
-
-        if (participantsTab) {
-
-            participantsTab.classList.remove(
-                "active"
-            );
-        }
     }
 
 
     if (
-        panel ===
+        participantsSection
+    ) {
+
+        participantsSection.style.display =
+            section === "participants"
+                ? "flex"
+                : "none";
+
+    }
+
+
+    /*
+    Clear unread chat count when
+    opening the chat panel.
+    */
+
+    if (
+        section ===
         "chat"
     ) {
 
         clearUnreadChatCount();
 
 
-        setTimeout(
-            function () {
+        if (
+            chatInput
+        ) {
 
-                if (chatInput) {
+            setTimeout(
+                function () {
 
                     chatInput.focus();
-                }
 
+                },
+                100
+            );
 
-                if (chatMessages) {
+        }
 
-                    chatMessages.scrollTop =
-                        chatMessages.scrollHeight;
-                }
-
-            },
-            100
-        );
     }
 
-
-    updateParticipantsList();
 }
 
 
-function closeMeetingSidebar() {
+/* =========================================================
+   CLOSE SIDEBAR
+========================================================= */
 
-    if (!meetingSidebar) {
+function closeSidebar() {
+
+    if (
+        !meetingSidebar
+    ) {
+
         return;
+
     }
 
 
@@ -4453,434 +5731,306 @@ function closeMeetingSidebar() {
         "open"
     );
 
-
-    /*
-    Keep hidden class for CSS
-    pointer-event behavior.
-    */
-
-    setTimeout(
-        function () {
-
-            if (
-                meetingSidebar &&
-                !meetingSidebar.classList.contains(
-                    "open"
-                )
-            ) {
-
-                meetingSidebar.classList.add(
-                    "hidden"
-                );
-            }
-
-        },
-        250
-    );
 }
+/* =========================================================
+   CHAT BUTTON
+========================================================= */
 
-
-if (chatBtn) {
+if (
+    chatBtn
+) {
 
     chatBtn.addEventListener(
         "click",
         function () {
 
-            openMeetingSidebar(
+            openSidebar(
                 "chat"
             );
+
         }
     );
+
 }
 
 
-if (meetingChatBtn) {
+if (
+    meetingChatBtn
+) {
 
     meetingChatBtn.addEventListener(
         "click",
         function () {
 
-            openMeetingSidebar(
+            openSidebar(
                 "chat"
             );
+
         }
     );
+
 }
 
 
-if (participantsBtn) {
+/* =========================================================
+   PARTICIPANTS BUTTON
+========================================================= */
+
+if (
+    participantsBtn
+) {
 
     participantsBtn.addEventListener(
         "click",
         function () {
 
-            openMeetingSidebar(
+            updateParticipantsList();
+
+
+            openSidebar(
                 "participants"
             );
+
         }
     );
+
 }
 
 
-if (meetingParticipantsBtn) {
+if (
+    meetingParticipantsBtn
+) {
 
     meetingParticipantsBtn.addEventListener(
         "click",
         function () {
 
-            openMeetingSidebar(
+            updateParticipantsList();
+
+
+            openSidebar(
                 "participants"
             );
+
         }
     );
+
 }
 
 
-if (sidebarClose) {
+/* =========================================================
+   SIDEBAR CLOSE BUTTON
+========================================================= */
+
+if (
+    sidebarClose
+) {
 
     sidebarClose.addEventListener(
         "click",
-        closeMeetingSidebar
+        closeSidebar
     );
+
 }
 
 
 /* =========================================================
-   27. PARTICIPANT LIST
+   ESCAPE KEY
 ========================================================= */
 
-/*
-Set used to prevent duplicate participant names
-from being displayed in the visible list.
-*/
-
-const displayedNames =
-    new Set();
-
-
-function normalizeParticipantName(
-    name
-) {
-
-    return String(
-        name ||
-        "Participant"
-    )
-        .trim()
-        .toLowerCase();
-}
-
-
-function addParticipantToList(
-    name,
-    status = "Connected"
-) {
-
-    if (!participantsList) {
-        return;
-    }
-
-
-    const cleanName =
-        String(
-            name ||
-            "Participant"
-        ).trim();
-
-
-    const normalizedName =
-        normalizeParticipantName(
-            cleanName
-        );
-
-
-    /*
-    Do not display the same person twice.
-    */
-
-    const existingItems =
-        participantsList.querySelectorAll(
-            ".participant-item"
-        );
-
-
-    for (
-        const item
-        of existingItems
-    ) {
-
-        const existingName =
-            item.dataset.participantName ||
-            "";
-
+document.addEventListener(
+    "keydown",
+    function (event) {
 
         if (
-            existingName ===
-            normalizedName
+            event.key ===
+            "Escape"
         ) {
 
-            return;
+            closeSidebar();
+
         }
+
     }
-
-
-    const item =
-        document.createElement(
-            "div"
-        );
-
-
-    item.className =
-        "participant-item";
-
-
-    item.dataset.participantName =
-        normalizedName;
-
-
-    const avatar =
-        document.createElement(
-            "div"
-        );
-
-
-    avatar.className =
-        "participant-small-avatar";
-
-
-    avatar.textContent =
-        cleanName
-            .charAt(0)
-            .toUpperCase() ||
-        "P";
-
-
-    const details =
-        document.createElement(
-            "div"
-        );
-
-
-    details.className =
-        "participant-details";
-
-
-    const nameElement =
-        document.createElement(
-            "strong"
-        );
-
-
-    nameElement.textContent =
-        cleanName;
-
-
-    const statusElement =
-        document.createElement(
-            "span"
-        );
-
-
-    statusElement.textContent =
-        status;
-
-
-    details.appendChild(
-        nameElement
-    );
-
-
-    details.appendChild(
-        statusElement
-    );
-
-
-    item.appendChild(
-        avatar
-    );
-
-
-    item.appendChild(
-        details
-    );
-
-
-    participantsList.appendChild(
-        item
-    );
-}
-
-
-function updateParticipantsList() {
-
-    if (!participantsList) {
-        return;
-    }
-
-
-    participantsList.innerHTML =
-        "";
-
-
-    displayedNames.clear();
-
-
-    /*
-    Always show current user first.
-    */
-
-    const currentName =
-        userName ||
-        "Participant";
-
-
-    const currentKey =
-        normalizeParticipantName(
-            currentName
-        );
-
-
-    displayedNames.add(
-        currentKey
-    );
-
-
-    addParticipantToList(
-        currentName,
-        "You"
-    );
-
-
-    /*
-    Add remote participants only once.
-    */
-
-    Object.values(
-        participants
-    ).forEach(
-        function (name) {
-
-            const participantName =
-                name ||
-                "Participant";
-
-
-            const participantKey =
-                normalizeParticipantName(
-                    participantName
-                );
-
-
-            /*
-            Prevent current user from being
-            added again under another Socket.IO ID.
-            */
-
-            if (
-                participantKey ===
-                currentKey
-            ) {
-
-                return;
-            }
-
-
-            /*
-            Prevent duplicate names.
-            */
-
-            if (
-                displayedNames.has(
-                    participantKey
-                )
-            ) {
-
-                return;
-            }
-
-
-            displayedNames.add(
-                participantKey
-            );
-
-
-            addParticipantToList(
-                participantName,
-                "Connected"
-            );
-        }
-    );
-}
+);
 
 
 /* =========================================================
-   28. PARTICIPANT COUNT
+   30. LEAVE MEETING
 ========================================================= */
 
-function updateParticipantCount() {
+function leaveMeeting() {
 
-    /*
-    Use unique normalized names.
+    if (
+        hasLeftMeeting
+    ) {
 
-    This prevents duplicate Socket.IO connections
-    from producing duplicate visible participants.
-    */
+        return;
 
-    const uniqueNames =
-        new Set();
-
-
-    const currentName =
-        normalizeParticipantName(
-            userName ||
-            "Participant"
-        );
-
-
-    if (currentName) {
-
-        uniqueNames.add(
-            currentName
-        );
     }
 
 
-    Object.values(
-        participants
-    ).forEach(
-        function (name) {
-
-            const normalizedName =
-                normalizeParticipantName(
-                    name
-                );
-
-
-            if (
-                normalizedName
-            ) {
-
-                uniqueNames.add(
-                    normalizedName
-                );
-            }
-        }
+    console.log(
+        "Leaving meeting..."
     );
 
 
-    if (participantCount) {
+    hasLeftMeeting =
+        true;
 
-        participantCount.textContent =
-            uniqueNames.size;
+
+    /*
+    Release duplicate-session lock.
+    */
+
+    releaseDuplicateSessionLock();
+
+
+    /*
+    Tell the server that this user is leaving.
+    */
+
+    if (
+        socket &&
+        socket.connected &&
+        meetingId
+    ) {
+
+        try {
+
+            socket.emit(
+                "leave-meeting",
+                {
+
+                    meeting_id:
+                        meetingId,
+
+                    name:
+                        userName
+
+                }
+            );
+
+
+        } catch (error) {
+
+            console.warn(
+                "Could not send leave event:",
+                error
+            );
+
+        }
+
     }
 
 
-    updateParticipantsList();
+    /*
+    Stop camera, microphone and screen sharing.
+    */
+
+    stopLocalMedia();
+
+
+    /*
+    Close all WebRTC connections.
+    */
+
+    closeAllPeerConnections();
+
+
+    /*
+    Disconnect Socket.IO.
+    */
+
+    if (
+        socket
+    ) {
+
+        try {
+
+            socket.disconnect();
+
+        } catch (error) {
+
+            console.warn(
+                "Socket disconnect error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    socketRoomJoined =
+        false;
+
+
+    updateConnectionStatus(
+        "disconnected",
+        "You left the meeting"
+    );
+
+
+    /*
+    Redirect after cleanup.
+    */
+
+    setTimeout(
+        function () {
+
+            window.location.href =
+                "/";
+
+        },
+        300
+    );
+
 }
 
 
 /* =========================================================
-   29. TOAST
+   31. LEAVE BUTTON EVENTS
+========================================================= */
+
+if (
+    leaveMeetingBtn
+) {
+
+    leaveMeetingBtn.addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            leaveMeeting();
+
+        }
+    );
+
+}
+
+
+if (
+    leaveMeetingBtn2
+) {
+
+    leaveMeetingBtn2.addEventListener(
+        "click",
+        function (event) {
+
+            event.preventDefault();
+
+            leaveMeeting();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   32. TOAST MESSAGE
 ========================================================= */
 
 function showToast(
@@ -4888,27 +6038,48 @@ function showToast(
     message
 ) {
 
-    if (!meetingToast) {
+    if (
+        !meetingToast
+    ) {
 
         console.log(
             `[${type}]`,
             message
         );
 
+
         return;
+
     }
 
 
-    if (toastMessage) {
+    if (
+        toastMessage
+    ) {
 
         toastMessage.textContent =
-            message;
+            String(
+                message ||
+                ""
+            );
+
     }
 
 
-    if (toastIcon) {
+    if (
+        toastIcon
+    ) {
 
         if (
+            type ===
+            "error"
+        ) {
+
+            toastIcon.textContent =
+                "⚠️";
+
+
+        } else if (
             type ===
             "success"
         ) {
@@ -4916,32 +6087,37 @@ function showToast(
             toastIcon.textContent =
                 "✓";
 
-        } else if (
-            type ===
-            "error"
-        ) {
-
-            toastIcon.textContent =
-                "✕";
 
         } else {
 
             toastIcon.textContent =
-                "ℹ";
+                "ℹ️";
+
         }
+
     }
 
 
     meetingToast.classList.remove(
-        "success",
         "error",
-        "info"
+        "success",
+        "info",
+        "show"
     );
 
 
     meetingToast.classList.add(
-        type
+        type ||
+        "info"
     );
+
+
+    /*
+    Force reflow so repeated toast
+    messages animate correctly.
+    */
+
+    void meetingToast.offsetWidth;
 
 
     meetingToast.classList.add(
@@ -4949,35 +6125,32 @@ function showToast(
     );
 
 
-    clearTimeout(
-        meetingToast._hideTimer
+    setTimeout(
+        function () {
+
+            meetingToast.classList.remove(
+                "show"
+            );
+
+        },
+        3000
     );
 
-
-    meetingToast._hideTimer =
-        setTimeout(
-            function () {
-
-                meetingToast.classList.remove(
-                    "show"
-                );
-
-            },
-            3000
-        );
 }
 
 
 /* =========================================================
-   30. CONNECTION STATUS
+   33. CONNECTION STATUS
 ========================================================= */
 
 function updateConnectionStatus(
-    type,
+    status,
     message
 ) {
 
-    if (connectionStatus) {
+    if (
+        connectionStatus
+    ) {
 
         connectionStatus.classList.remove(
             "connected",
@@ -4988,20 +6161,153 @@ function updateConnectionStatus(
 
 
         connectionStatus.classList.add(
-            type
+            status
         );
+
     }
 
 
-    if (connectionText) {
+    if (
+        connectionText
+    ) {
 
         connectionText.textContent =
-            message;
+            message ||
+            "";
+
     }
+
 }
 
+
 /* =========================================================
-   31. CLOSE ALL PEER CONNECTIONS
+   34. RESIZE / VIDEO LAYOUT
+========================================================= */
+
+function updateVideoLayout() {
+
+    if (
+        !remoteVideos
+    ) {
+
+        return;
+
+    }
+
+
+    const videoCards =
+        remoteVideos.querySelectorAll(
+            ".remote-video-container"
+        );
+
+
+    /*
+    Keep the layout responsive.
+
+    Do not change the actual camera stream.
+    */
+
+    videoCards.forEach(
+        function (container) {
+
+            const video =
+                container.querySelector(
+                    "video.remote-video"
+                );
+
+
+            if (
+                !video
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            IMPORTANT:
+
+            contain prevents the participant's
+            camera image from being cropped.
+
+            This fixes the automatic zoom/cropping
+            problem seen in the meeting room.
+            */
+
+            video.style.objectFit =
+                "contain";
+
+
+            video.style.width =
+                "100%";
+
+
+            video.style.height =
+                "100%";
+
+
+            video.style.backgroundColor =
+                "#000";
+
+
+            video.style.display =
+                "block";
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   WINDOW RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    function () {
+
+        updateVideoLayout();
+
+    }
+);
+
+
+/* =========================================================
+   OBSERVE REMOTE VIDEO CHANGES
+========================================================= */
+
+if (
+    remoteVideos
+) {
+
+    const videoObserver =
+        new MutationObserver(
+            function () {
+
+                updateVideoLayout();
+
+            }
+        );
+
+
+    videoObserver.observe(
+        remoteVideos,
+        {
+
+            childList:
+                true,
+
+            subtree:
+                true
+
+        }
+    );
+
+}
+/* =========================================================
+   35. CLOSE ALL PEER CONNECTIONS
 ========================================================= */
 
 function closeAllPeerConnections() {
@@ -5026,8 +6332,12 @@ function closeAllPeerConnections() {
                 ];
 
 
-            if (!peerConnection) {
+            if (
+                !peerConnection
+            ) {
+
                 return;
+
             }
 
 
@@ -5035,6 +6345,7 @@ function closeAllPeerConnections() {
 
                 /*
                 Remove handlers before closing.
+
                 This prevents cleanup events from
                 creating unwanted UI states.
                 */
@@ -5042,14 +6353,18 @@ function closeAllPeerConnections() {
                 peerConnection.ontrack =
                     null;
 
+
                 peerConnection.onicecandidate =
                     null;
+
 
                 peerConnection.onconnectionstatechange =
                     null;
 
+
                 peerConnection.oniceconnectionstatechange =
                     null;
+
 
                 peerConnection.onicegatheringstatechange =
                     null;
@@ -5064,7 +6379,9 @@ function closeAllPeerConnections() {
                     "Peer connection cleanup error:",
                     error
                 );
+
             }
+
         }
     );
 
@@ -5081,6 +6398,7 @@ function closeAllPeerConnections() {
             delete peerConnections[
                 remoteSocketId
             ];
+
         }
     );
 
@@ -5097,6 +6415,7 @@ function closeAllPeerConnections() {
             delete participants[
                 remoteSocketId
             ];
+
         }
     );
 
@@ -5113,6 +6432,7 @@ function closeAllPeerConnections() {
             delete pendingIceCandidates[
                 remoteSocketId
             ];
+
         }
     );
 
@@ -5132,7 +6452,9 @@ function closeAllPeerConnections() {
                 ];
 
 
-            if (stream) {
+            if (
+                stream
+            ) {
 
                 stream
                     .getTracks()
@@ -5144,14 +6466,17 @@ function closeAllPeerConnections() {
                                 track.stop();
 
                             } catch (error) {}
+
                         }
                     );
+
             }
 
 
             delete remoteStreams[
                 remoteSocketId
             ];
+
         }
     );
 
@@ -5160,424 +6485,73 @@ function closeAllPeerConnections() {
     Remove remote video cards.
     */
 
-    if (remoteVideos) {
+    if (
+        remoteVideos
+    ) {
 
         remoteVideos.innerHTML =
             "";
+
     }
 
 
-    if (emptyState) {
+    if (
+        emptyState
+    ) {
 
         emptyState.style.display =
             "flex";
+
     }
 
 
     updateParticipantCount();
+
 }
 
 
 /* =========================================================
-   32. STOP LOCAL MEDIA
+   36. MEETING INITIALIZATION
 ========================================================= */
 
-function stopLocalMedia() {
-
-    console.log(
-        "Stopping local media..."
-    );
-
-
-    /*
-    Stop screen-sharing tracks.
-    */
-
-    if (screenStream) {
-
-        screenStream
-            .getTracks()
-            .forEach(
-                function (track) {
-
-                    try {
-
-                        track.onended =
-                            null;
-
-                        track.stop();
-
-                    } catch (error) {
-
-                        console.warn(
-                            "Screen track cleanup error:",
-                            error
-                        );
-                    }
-                }
-            );
-
-
-        screenStream =
-            null;
-    }
-
-
-    /*
-    Stop camera + microphone tracks.
-    */
-
-    if (localStream) {
-
-        localStream
-            .getTracks()
-            .forEach(
-                function (track) {
-
-                    try {
-
-                        track.stop();
-
-                    } catch (error) {
-
-                        console.warn(
-                            "Local media cleanup error:",
-                            error
-                        );
-                    }
-                }
-            );
-
-
-        localStream =
-            null;
-    }
-
-
-    /*
-    Clear local video.
-    */
-
-    if (localVideo) {
-
-        try {
-
-            localVideo.pause();
-
-        } catch (error) {}
-
-
-        localVideo.srcObject =
-            null;
-
-
-        localVideo.style.display =
-            "none";
-    }
-
-
-    if (localPlaceholder) {
-
-        localPlaceholder.style.display =
-            "flex";
-    }
-
-
-    microphoneEnabled =
-        false;
-
-
-    cameraEnabled =
-        false;
-
-
-    updateMicrophoneButton();
-
-    updateCameraButton();
-
-    updateScreenShareButton(
-        false
-    );
-
-
-    console.log(
-        "Local media stopped."
-    );
-}
-
-
-/* =========================================================
-   33. LEAVE MEETING
-========================================================= */
-
-function leaveMeeting() {
-
-    if (hasLeftMeeting) {
-        return;
-    }
-
-
-    hasLeftMeeting =
-        true;
-
-
-    console.log(
-        "Leaving meeting..."
-    );
-
-
-    /*
-    Tell server that we are leaving.
-    */
+async function startMeetingApplication() {
 
     if (
-        socket &&
-        socket.connected
+        meetingInitialized
     ) {
 
-        try {
-
-            socket.emit(
-                "leave-meeting",
-                {
-
-                    meeting_id:
-                        meetingId
-                }
-            );
-
-        } catch (error) {
-
-            console.warn(
-                "Leave event failed:",
-                error
-            );
-        }
-    }
-
-
-    /*
-    Stop screen sharing first.
-    */
-
-    if (screenStream) {
-
-        try {
-
-            screenStream
-                .getTracks()
-                .forEach(
-                    function (track) {
-
-                        track.onended =
-                            null;
-
-                        track.stop();
-                    }
-                );
-
-        } catch (error) {}
-
-
-        screenStream =
-            null;
-    }
-
-
-    /*
-    Stop all local media.
-    */
-
-    stopLocalMedia();
-
-
-    /*
-    Close all WebRTC connections.
-    */
-
-    closeAllPeerConnections();
-
-
-    /*
-    Disconnect Socket.IO.
-    */
-
-    if (socket) {
-
-        try {
-
-            socket.disconnect();
-
-        } catch (error) {
-
-            console.warn(
-                "Socket disconnect error:",
-                error
-            );
-        }
-    }
-
-
-    /*
-    Release duplicate-session lock.
-    */
-
-    releaseDuplicateSessionLock();
-
-
-    updateConnectionStatus(
-        "disconnected",
-        "Meeting ended"
-    );
-
-
-    /*
-    Return to meeting page.
-    */
-
-    window.location.href =
-        "/meeting/";
-}
-
-
-/* =========================================================
-   34. LEAVE BUTTONS
-========================================================= */
-
-if (leaveMeetingBtn) {
-
-    leaveMeetingBtn.addEventListener(
-        "click",
-        leaveMeeting
-    );
-}
-
-
-if (leaveMeetingBtn2) {
-
-    leaveMeetingBtn2.addEventListener(
-        "click",
-        leaveMeeting
-    );
-}
-
-
-/* =========================================================
-   35. BEFORE UNLOAD
-========================================================= */
-
-window.addEventListener(
-    "beforeunload",
-    function () {
-
-        /*
-        Tell server that the participant
-        is leaving.
-
-        IMPORTANT:
-        Do not redirect here. The browser is
-        already unloading.
-        */
-
-        if (
-            socket &&
-            socket.connected &&
-            meetingId &&
-            !hasLeftMeeting
-        ) {
-
-            try {
-
-                socket.emit(
-                    "leave-meeting",
-                    {
-
-                        meeting_id:
-                            meetingId
-                    }
-                );
-
-            } catch (error) {
-
-                console.warn(
-                    "beforeunload leave failed:",
-                    error
-                );
-            }
-        }
-
-
-        /*
-        Stop microphone and camera.
-        */
-
-        stopLocalMedia();
-
-
-        /*
-        Close WebRTC.
-        */
-
-        closeAllPeerConnections();
-
-
-        /*
-        Release duplicate-session lock.
-        */
-
-        releaseDuplicateSessionLock();
-    }
-);
-
-
-/* =========================================================
-   36. PAGE VISIBILITY
-========================================================= */
-
-document.addEventListener(
-    "visibilitychange",
-    function () {
-
-        /*
-        IMPORTANT:
-
-        Do NOT leave the meeting merely because
-        the user switches browser tabs.
-
-        A user may legitimately switch tabs
-        while keeping the meeting active.
-
-        Duplicate-session protection handles
-        another meeting tab separately.
-        */
-
-        if (
-            document.visibilityState ===
-            "visible"
-        ) {
-
-            if (
-                localVideo &&
-                localVideo.srcObject
-            ) {
-
-                localVideo.play().catch(
-                    function () {}
-                );
-            }
-        }
-    }
-);
-
-
-/* =========================================================
-   37. INITIALIZE MEETSPACE PAGE
-========================================================= */
-
-async function initializeMeetSpacePage() {
-
-    if (meetingInitialized) {
         return;
+
+    }
+
+
+    if (
+        !meetingId
+    ) {
+
+        console.error(
+            "MeetSpace: Meeting ID is missing."
+        );
+
+
+        showToast(
+            "error",
+            "Meeting ID is missing."
+        );
+
+
+        return;
+
+    }
+
+
+    if (
+        duplicateSessionLost ||
+        hasLeftMeeting
+    ) {
+
+        return;
+
     }
 
 
@@ -5591,7 +6565,7 @@ async function initializeMeetSpacePage() {
 
 
     console.log(
-        "INITIALIZING MEETSPACE"
+        "STARTING MEETSPACE MEETING"
     );
 
 
@@ -5613,63 +6587,48 @@ async function initializeMeetSpacePage() {
 
 
     /*
-    IMPORTANT:
-
-    Start duplicate-session protection BEFORE
-    Socket.IO and WebRTC initialization.
-
-    This prevents a duplicate tab from creating
-    another microphone/camera connection.
+    Start duplicate-session protection
+    before connecting to the meeting.
     */
 
     initializeDuplicateSessionProtection();
 
 
-    if (duplicateSessionLost) {
-
-        console.warn(
-            "Duplicate meeting session detected. Initialization stopped."
-        );
-
+    if (
+        duplicateSessionLost
+    ) {
 
         return;
+
     }
-
-
-    /*
-    Initial participant display.
-    */
-
-    updateParticipantCount();
-
-
-    /*
-    Initial button states.
-    */
-
-    updateMicrophoneButton();
-
-    updateCameraButton();
-
-    updateScreenShareButton(
-        false
-    );
 
 
     /*
     Start Socket.IO.
 
-    Socket.IO will initialize the local
-    media after connection and then join
-    the meeting room.
+    initializeSocket() will:
+
+    1. Load Socket.IO
+    2. Create connection
+    3. Register events
+    4. Initialize camera/microphone
+    5. Join the meeting room
     */
 
-    initializeSocket();
+    await initializeSocket();
+
+
+    updateParticipantsList();
+
+    updateParticipantCount();
+
+    updateVideoLayout();
+
 }
 
 
 /* =========================================================
-   38. INITIAL PAGE LOAD
+   37. START APPLICATION
 ========================================================= */
 
 if (
@@ -5679,16 +6638,76 @@ if (
 
     document.addEventListener(
         "DOMContentLoaded",
-        initializeMeetSpacePage
+        function () {
+
+            startMeetingApplication();
+
+        }
     );
 
 
 } else {
 
-    initializeMeetSpacePage();
+    startMeetingApplication();
+
 }
 
 
 /* =========================================================
-   END OF MEETING.JS
+   38. PAGE CLEANUP
 ========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    function () {
+
+        /*
+        Don't emit unnecessary Socket.IO events
+        during a duplicate-session shutdown.
+        */
+
+        if (
+            !hasLeftMeeting
+        ) {
+
+            hasLeftMeeting =
+                true;
+
+        }
+
+
+        releaseDuplicateSessionLock();
+
+
+        /*
+        Stop local media immediately.
+        */
+
+        stopLocalMedia();
+
+
+        /*
+        Close WebRTC connections.
+        */
+
+        closeAllPeerConnections();
+
+
+        /*
+        Disconnect Socket.IO.
+        */
+
+        if (
+            socket
+        ) {
+
+            try {
+
+                socket.disconnect();
+
+            } catch (error) {}
+
+        }
+
+    }
+);
