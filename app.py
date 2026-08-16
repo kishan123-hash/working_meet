@@ -246,10 +246,16 @@ socketio.init_app(
 
     app,
 
+    # Allow the deployed MeetSpace frontend to establish
+    # the Socket.IO connection.
     cors_allowed_origins="*",
 
+    # Threading is compatible with the current Flask app
+    # and keeps the existing deployment setup stable.
     async_mode="threading",
 
+    # Start with polling and allow Socket.IO to upgrade
+    # to WebSocket when the Render environment supports it.
     transports=[
         "polling",
         "websocket"
@@ -257,6 +263,12 @@ socketio.init_app(
 
     allow_upgrades=True,
 
+    # Keep the connection alive on cloud hosting.
+    ping_interval=25,
+
+    ping_timeout=60,
+
+    # Useful while diagnosing Socket.IO connection issues.
     logger=True,
 
     engineio_logger=True
