@@ -3416,16 +3416,20 @@ function createOrUpdateRemoteVideo(
 
 
         /*
-        Save the stream on the video element.
-        */
+Save the stream on the video element.
+*/
 
-        video.srcObject =
-            stream;
+video.srcObject =
+    stream;
 
 
-        /*
-        Try to start playback.
-        */
+/*
+Start remote video as soon as
+the video element is ready.
+*/
+
+const startRemotePlayback =
+    function () {
 
         try {
 
@@ -3461,6 +3465,36 @@ function createOrUpdateRemoteVideo(
 
         }
 
+    };
+
+
+/*
+If the video is already ready,
+play immediately.
+*/
+
+if (
+    video.readyState >= 1
+) {
+
+    startRemotePlayback();
+
+} else {
+
+    /*
+    Wait until the remote video's
+    metadata is ready.
+    */
+
+    video.addEventListener(
+        "loadedmetadata",
+        startRemotePlayback,
+        {
+            once: true
+        }
+    );
+
+}
 
         /*
         A remote video may initially have no video track.
