@@ -464,7 +464,15 @@ const rtcConfiguration = {
         "max-bundle",
 
     rtcpMuxPolicy:
-        "require"
+        "require",
+
+    /*
+    Pre-gather ICE candidates.
+    This can reduce connection setup
+    time for newly joined participants.
+    */
+    iceCandidatePoolSize:
+        10
 
 };
 
