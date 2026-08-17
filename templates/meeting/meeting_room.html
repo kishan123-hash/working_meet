@@ -1376,6 +1376,395 @@
 
         }
 
+        /* =========================================================
+   EXTRA RESPONSIVE FIXES
+   Desktop UI remains unchanged
+========================================================= */
+
+/* Better viewport handling on modern phones */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+}
+
+#meetingApp {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+}
+
+
+/* =========================================================
+   TABLET
+   701px - 1100px
+========================================================= */
+
+@media (min-width: 701px) and (max-width: 1100px) {
+
+    .topbar {
+        padding: 0 18px;
+    }
+
+    .brand {
+        min-width: auto;
+        font-size: 20px;
+    }
+
+    .meeting-info {
+        flex: 1;
+    }
+
+    .video-area {
+        padding: 14px;
+        gap: 12px;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        grid-auto-rows:
+            minmax(220px, 1fr);
+    }
+
+    .controls {
+        height: 82px;
+        gap: 10px;
+    }
+
+    .control-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .screen-btn {
+        width: auto;
+        padding: 0 15px;
+    }
+
+    .meeting-sidebar {
+        width: min(360px, 45vw);
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   <= 700px
+========================================================= */
+
+@media (max-width: 700px) {
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #meetingApp {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+
+    /* ---------- TOP BAR ---------- */
+
+    .topbar {
+        height: 60px;
+        min-height: 60px;
+        padding: 0 10px;
+    }
+
+    .brand {
+        min-width: 0;
+        font-size: 17px;
+        gap: 8px;
+    }
+
+    .brand-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .brand span {
+        white-space: nowrap;
+    }
+
+    .meeting-info {
+        display: none;
+    }
+
+    .leave-top {
+        min-width: auto;
+        padding: 8px 11px;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+
+    /* ---------- VIDEO AREA ---------- */
+
+    .video-area {
+        padding: 8px;
+        gap: 8px;
+
+        grid-template-columns: 1fr;
+
+        grid-auto-rows:
+            minmax(180px, 1fr);
+
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .video-card,
+    .remote-video-card,
+    .remote-video-container {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        border-radius: 14px;
+    }
+
+    .video-card video,
+    .remote-video-card video,
+    .remote-video-container video {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        object-fit: contain;
+    }
+
+    .video-label,
+    .video-name {
+        left: 8px;
+        bottom: 8px;
+        padding: 6px 9px;
+        font-size: 11px;
+        max-width: calc(100% - 60px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .maximize-btn {
+        top: 8px;
+        right: 8px;
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+    }
+
+
+    /* ---------- CONTROLS ---------- */
+
+    .controls {
+        height: 80px;
+        min-height: 80px;
+
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 7px;
+        padding: 8px;
+
+        overflow: hidden;
+    }
+
+    .control-btn {
+        width: 44px;
+        height: 44px;
+
+        min-width: 44px;
+        min-height: 44px;
+
+        flex-shrink: 0;
+
+        font-size: 16px;
+    }
+
+    /* Make Share Screen circular on phone */
+    .screen-btn {
+        width: 44px;
+        height: 44px;
+
+        min-width: 44px;
+
+        padding: 0;
+
+        border-radius: 50%;
+    }
+
+    /* Hide "Share Screen" text on phone */
+    .screen-btn .control-label {
+        display: none;
+    }
+
+
+    /* ---------- MAXIMIZED VIDEO ---------- */
+
+    .video-card.maximized,
+    .remote-video-card.maximized,
+    .remote-video-container.maximized {
+        top: 70px;
+        right: 8px;
+        bottom: 88px;
+        left: 8px;
+
+        width: auto !important;
+        height: auto !important;
+
+        border-radius: 14px;
+    }
+
+    .video-card.maximized video,
+    .remote-video-card.maximized video,
+    .remote-video-container.maximized video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+
+    /* ---------- SIDEBAR ---------- */
+
+    .meeting-sidebar {
+        top: 60px;
+        bottom: 80px;
+
+        width: 100%;
+        max-width: 100%;
+
+        border-left: none;
+    }
+
+    .sidebar-header {
+        height: 56px;
+        min-height: 56px;
+        padding: 0 12px;
+    }
+
+    .sidebar-tabs {
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .sidebar-tab {
+        padding: 10px 6px;
+        font-size: 13px;
+    }
+
+    .chat-form {
+        padding: 10px;
+    }
+
+    .chat-input {
+        min-width: 0;
+        font-size: 14px;
+    }
+
+    .chat-send {
+        padding: 0 12px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   <= 380px
+========================================================= */
+
+@media (max-width: 380px) {
+
+    .topbar {
+        padding: 0 8px;
+    }
+
+    .brand {
+        font-size: 15px;
+    }
+
+    .brand-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+    }
+
+    .leave-top {
+        padding: 7px 9px;
+        font-size: 12px;
+    }
+
+    .controls {
+        gap: 5px;
+        padding: 6px;
+    }
+
+    .control-btn,
+    .screen-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        font-size: 15px;
+    }
+
+    .video-area {
+        padding: 6px;
+        gap: 6px;
+    }
+}
+
+
+/* =========================================================
+   PHONE LANDSCAPE
+========================================================= */
+
+@media (max-width: 700px) and (orientation: landscape) {
+
+    .topbar {
+        height: 52px;
+        min-height: 52px;
+    }
+
+    .video-area {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        grid-auto-rows:
+            minmax(150px, 1fr);
+    }
+
+    .controls {
+        height: 64px;
+        min-height: 64px;
+    }
+
+    .control-btn,
+    .screen-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+    }
+
+    .meeting-sidebar {
+        top: 52px;
+        bottom: 64px;
+    }
+}
+
     </style>
 
 </head>
