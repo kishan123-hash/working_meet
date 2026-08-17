@@ -843,12 +843,27 @@
 
             }
 
-            /* Logged-out actions move into the slide-down mobile menu. */
+            /* =================================================
+               LOGGED-OUT ACTIONS
+               Login + Get Started move into the mobile menu.
+               ================================================= */
 
             .navbar .nav-actions .nav-login,
             .navbar .nav-actions .nav-register {
 
                 display: none !important;
+
+            }
+
+
+            /* =================================================
+               LOGGED-IN ACTION
+               Logout remains visible on mobile.
+               ================================================= */
+
+            .navbar .nav-actions .nav-logout {
+
+                display: inline-flex !important;
 
             }
 
@@ -1042,38 +1057,292 @@
         }
 
 
-        /* MOBILE MENU - RESPONSIVE ADDITION ONLY */
-        .mobile-menu-toggle { display:none; width:42px; height:42px; min-width:42px; border:1px solid rgba(148,163,184,.18); border-radius:12px; background:rgba(15,23,42,.75); color:#e2e8f0; align-items:center; justify-content:center; cursor:pointer; font-size:20px; line-height:1; }
-        .mobile-menu-toggle .menu-close-icon { display:none; }
-        .mobile-menu { display:none; }
-        @media (max-width:700px) {
-            .mobile-menu-toggle { display:inline-flex; flex-shrink:0; }
-            .navbar .nav-container { position:relative; }
-            .mobile-menu { position:absolute; top:calc(100% + 8px); left:12px; right:12px; z-index:1100; padding:10px; border:1px solid rgba(148,163,184,.14); border-radius:18px; background:rgba(8,12,27,.97); box-shadow:0 20px 50px rgba(0,0,0,.35); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); opacity:0; visibility:hidden; transform:translateY(-8px); transition:opacity .2s ease,transform .2s ease,visibility .2s ease; }
-            .mobile-menu.is-open { display:block; opacity:1; visibility:visible; transform:translateY(0); }
-            .mobile-menu a { display:flex; align-items:center; width:100%; min-height:46px; padding:10px 13px; box-sizing:border-box; border-radius:12px; color:#cbd5e1; text-decoration:none; font-size:14px; font-weight:600; }
-            .mobile-menu a:active { background:rgba(99,102,241,.12); color:#fff; }
-            .mobile-menu-divider { height:1px; margin:8px 4px; background:rgba(148,163,184,.1); }
-            .mobile-menu .mobile-user { padding:10px 13px; color:#94a3b8; font-size:13px; font-weight:500; }
-            .mobile-menu .mobile-primary { margin-top:4px; justify-content:center; background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
-            body.mobile-menu-open { overflow:hidden; }
+        /* =================================================
+           MOBILE MENU - RESPONSIVE ONLY
+           ================================================= */
+
+        .mobile-menu-toggle {
+
+            display: none;
+
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+
+            border:
+                1px solid
+                rgba(148, 163, 184, 0.18);
+
+            border-radius: 12px;
+
+            background:
+                rgba(15, 23, 42, 0.75);
+
+            color: #e2e8f0;
+
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+
+            font-size: 20px;
+            line-height: 1;
+
+            padding: 0;
+
+            position: relative;
+
+            z-index: 1201;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
         }
-        @media (max-width:450px) {
+
+
+        .mobile-menu-toggle .menu-open-icon {
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
+        .mobile-menu-toggle .menu-close-icon {
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
+        .mobile-menu {
+
+            display: none;
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .navbar .nav-container {
+
+                position: relative;
+
+            }
+
+
+            /* Hamburger is shown ONLY when logged out,
+               because the button itself is rendered only
+               when no user session exists. */
+
+            .mobile-menu-toggle {
+
+                display: inline-flex !important;
+
+                flex-shrink: 0;
+
+            }
+
+
+            /* Slide-down mobile menu */
+
+            .mobile-menu {
+
+                display: block !important;
+
+                position: absolute;
+
+                top: calc(100% + 8px);
+
+                left: 12px;
+                right: 12px;
+
+                z-index: 1200;
+
+                padding: 10px;
+
+                border:
+                    1px solid
+                    rgba(148, 163, 184, 0.14);
+
+                border-radius: 18px;
+
+                background:
+                    rgba(8, 12, 27, 0.98);
+
+                box-shadow:
+                    0 20px 50px
+                    rgba(0, 0, 0, 0.40);
+
+                backdrop-filter:
+                    blur(18px);
+
+                -webkit-backdrop-filter:
+                    blur(18px);
+
+                opacity: 0;
+
+                visibility: hidden;
+
+                pointer-events: none;
+
+                transform:
+                    translateY(-12px);
+
+                transition:
+                    opacity 0.22s ease,
+                    transform 0.22s ease,
+                    visibility 0.22s ease;
+
+            }
+
+
+            .mobile-menu.is-open {
+
+                opacity: 1;
+
+                visibility: visible;
+
+                pointer-events: auto;
+
+                transform:
+                    translateY(0);
+
+            }
+
+
+            .mobile-menu a {
+
+                display: flex;
+
+                align-items: center;
+
+                width: 100%;
+
+                min-height: 46px;
+
+                padding:
+                    10px 13px;
+
+                box-sizing: border-box;
+
+                border-radius: 12px;
+
+                color: #cbd5e1;
+
+                text-decoration: none;
+
+                font-size: 14px;
+
+                font-weight: 600;
+
+                transition:
+                    background 0.18s ease,
+                    color 0.18s ease;
+
+            }
+
+
+            .mobile-menu a:hover {
+
+                background:
+                    rgba(99, 102, 241, 0.12);
+
+                color: #fff;
+
+            }
+
+
+            .mobile-menu a:active {
+
+                background:
+                    rgba(99, 102, 241, 0.18);
+
+                color: #fff;
+
+            }
+
+
+            .mobile-menu-divider {
+
+                height: 1px;
+
+                margin:
+                    8px 4px;
+
+                background:
+                    rgba(148, 163, 184, 0.10);
+
+            }
+
+
+            .mobile-menu .mobile-user {
+
+                padding:
+                    10px 13px;
+
+                color: #94a3b8;
+
+                font-size: 13px;
+
+                font-weight: 500;
+
+            }
+
+
+            .mobile-menu .mobile-primary {
+
+                margin-top: 4px;
+
+                justify-content: center;
+
+                background:
+                    linear-gradient(
+                        135deg,
+                        #2563eb,
+                        #7c3aed
+                    );
+
+                color: #fff;
+
+            }
+
+
+            body.mobile-menu-open {
+
+                overflow: hidden;
+
+            }
+
+        }
+
+
+        @media (max-width: 450px) {
 
             .mobile-menu-toggle {
 
                 width: 40px;
+
                 height: 40px;
+
                 min-width: 40px;
 
             }
 
+
             .mobile-menu {
 
                 left: 10px;
+
                 right: 10px;
 
             }
+
 
             .navbar .nav-user {
 
@@ -1192,7 +1461,7 @@
 
                     <a
                         href="{{ url_for('meeting.logout') }}"
-                        class="nav-button nav-login"
+                        class="nav-button nav-logout"
                     >
                         Logout
                     </a>
@@ -1501,28 +1770,242 @@
         );
 
 
-        /* MOBILE NAVIGATION - responsive only */
-        document.addEventListener("DOMContentLoaded", function () {
-            const toggle = document.getElementById("mobileMenuToggle");
-            const menu = document.getElementById("mobileMenu");
-            if (!toggle || !menu) return;
-            const setMenu = function(open) {
-                menu.classList.toggle("is-open", open);
-                menu.setAttribute("aria-hidden", open ? "false" : "true");
-                toggle.setAttribute("aria-expanded", open ? "true" : "false");
-                toggle.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
-                document.body.classList.toggle("mobile-menu-open", open);
-                const openIcon = toggle.querySelector(".menu-open-icon");
-                const closeIcon = toggle.querySelector(".menu-close-icon");
-                if (openIcon) openIcon.style.display = open ? "none" : "inline";
-                if (closeIcon) closeIcon.style.display = open ? "inline" : "none";
-            };
-            toggle.addEventListener("click", function () { setMenu(!menu.classList.contains("is-open")); });
-            menu.querySelectorAll("a").forEach(function(link) { link.addEventListener("click", function() { setMenu(false); }); });
-            document.addEventListener("click", function(event) { if (menu.classList.contains("is-open") && !menu.contains(event.target) && !toggle.contains(event.target)) setMenu(false); });
-            document.addEventListener("keydown", function(event) { if (event.key === "Escape") setMenu(false); });
-            window.addEventListener("resize", function() { if (window.innerWidth > 700) setMenu(false); });
-        });
+        /*
+        =================================================
+        MOBILE NAVIGATION
+        =================================================
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const toggle =
+                    document.getElementById(
+                        "mobileMenuToggle"
+                    );
+
+                const menu =
+                    document.getElementById(
+                        "mobileMenu"
+                    );
+
+
+                /*
+                    Logged-in users do not render the
+                    hamburger button, so there is nothing
+                    to initialize in that state.
+                */
+
+                if (!toggle || !menu) {
+
+                    return;
+
+                }
+
+
+                function setMenu(open) {
+
+                    menu.classList.toggle(
+                        "is-open",
+                        open
+                    );
+
+
+                    menu.setAttribute(
+                        "aria-hidden",
+                        open
+                            ? "false"
+                            : "true"
+                    );
+
+
+                    toggle.setAttribute(
+                        "aria-expanded",
+                        open
+                            ? "true"
+                            : "false"
+                    );
+
+
+                    toggle.setAttribute(
+                        "aria-label",
+                        open
+                            ? "Close navigation menu"
+                            : "Open navigation menu"
+                    );
+
+
+                    document.body.classList.toggle(
+                        "mobile-menu-open",
+                        open
+                    );
+
+
+                    const openIcon =
+                        toggle.querySelector(
+                            ".menu-open-icon"
+                        );
+
+
+                    const closeIcon =
+                        toggle.querySelector(
+                            ".menu-close-icon"
+                        );
+
+
+                    if (openIcon) {
+
+                        openIcon.style.display =
+                            open
+                                ? "none"
+                                : "inline-flex";
+
+                    }
+
+
+                    if (closeIcon) {
+
+                        closeIcon.style.display =
+                            open
+                                ? "inline-flex"
+                                : "none";
+
+                    }
+
+                }
+
+
+                /* Start closed */
+
+                setMenu(false);
+
+
+                /*
+                    HAMBURGER CLICK
+
+                    First click:
+                    closed -> open
+
+                    Second click:
+                    open -> closed
+                */
+
+                toggle.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        const isOpen =
+                            menu.classList.contains(
+                                "is-open"
+                            );
+
+
+                        setMenu(!isOpen);
+
+                    }
+                );
+
+
+                /*
+                    MENU LINK CLICK
+
+                    Close menu and allow the normal
+                    Flask link navigation to continue.
+                */
+
+                menu.querySelectorAll(
+                    "a"
+                ).forEach(
+                    function (link) {
+
+                        link.addEventListener(
+                            "click",
+                            function () {
+
+                                setMenu(false);
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                /*
+                    CLICK OUTSIDE
+                */
+
+                document.addEventListener(
+                    "click",
+                    function (event) {
+
+                        if (
+                            menu.classList.contains(
+                                "is-open"
+                            ) &&
+                            !menu.contains(
+                                event.target
+                            ) &&
+                            !toggle.contains(
+                                event.target
+                            )
+                        ) {
+
+                            setMenu(false);
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                    ESCAPE KEY
+                */
+
+                document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key === "Escape"
+                        ) {
+
+                            setMenu(false);
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                    RETURN TO DESKTOP
+                */
+
+                window.addEventListener(
+                    "resize",
+                    function () {
+
+                        if (
+                            window.innerWidth > 700
+                        ) {
+
+                            setMenu(false);
+
+                        }
+
+                    }
+                );
+
+            }
+        );
 
     </script>
 
