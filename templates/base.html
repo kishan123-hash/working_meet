@@ -843,10 +843,33 @@
 
             }
 
+            /* Logged-out actions move into the slide-down mobile menu. */
+
+            .navbar .nav-actions .nav-login,
+            .navbar .nav-actions .nav-register {
+
+                display: none !important;
+
+            }
+
 
             .navbar .nav-user {
 
-                display: none;
+                display: inline-flex;
+
+                align-items: center;
+
+                justify-content: center;
+
+                max-width: 150px;
+
+                overflow: hidden;
+
+                text-overflow: ellipsis;
+
+                font-size: 13px;
+
+                color: #cbd5e1;
 
             }
 
@@ -1035,7 +1058,32 @@
             .mobile-menu .mobile-primary { margin-top:4px; justify-content:center; background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
             body.mobile-menu-open { overflow:hidden; }
         }
-        @media (max-width:450px) { .mobile-menu-toggle { width:40px; height:40px; min-width:40px; } .mobile-menu { left:10px; right:10px; } }
+        @media (max-width:450px) {
+
+            .mobile-menu-toggle {
+
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+
+            }
+
+            .mobile-menu {
+
+                left: 10px;
+                right: 10px;
+
+            }
+
+            .navbar .nav-user {
+
+                max-width: 115px;
+
+                font-size: 12px;
+
+            }
+
+        }
 
     </style>
 
@@ -1107,11 +1155,21 @@
 
             <div class="nav-actions">
 
-                <!-- MOBILE MENU TOGGLE - hidden on desktop -->
-                <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open navigation menu" aria-expanded="false">
-                    <span class="menu-open-icon">☰</span>
-                    <span class="menu-close-icon">✕</span>
-                </button>
+                {% if not session.get("user_id") %}
+
+                    <!-- MOBILE MENU TOGGLE - hidden on desktop -->
+                    <button
+                        type="button"
+                        class="mobile-menu-toggle"
+                        id="mobileMenuToggle"
+                        aria-label="Open navigation menu"
+                        aria-expanded="false"
+                    >
+                        <span class="menu-open-icon">☰</span>
+                        <span class="menu-close-icon">✕</span>
+                    </button>
+
+                {% endif %}
 
 
                 {% if session.get("user_id") %}
@@ -1121,7 +1179,10 @@
                     <!-- LOGGED IN USER -->
                     <!-- ============================= -->
 
-                    <span class="nav-user">
+                    <span
+                        class="nav-user"
+                        title="{{ session.get('user_name', 'User') }}"
+                    >
 
                         Hello,
                         {{ session.get("user_name", "User") }}
