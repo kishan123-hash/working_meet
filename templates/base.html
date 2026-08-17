@@ -863,7 +863,7 @@
 
             .navbar .nav-actions .nav-logout {
 
-                display: inline-flex !important;
+                display: none !important;
 
             }
 
@@ -1584,6 +1584,10 @@
 
             <a href="{{ url_for('meeting.join_meeting') }}">
                 Join Meeting
+            </a>
+
+            <a href="{{ url_for('meeting.logout') }}">
+                Logout
             </a>
 
         {% else %}
