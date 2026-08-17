@@ -985,6 +985,34 @@
            VERY SMALL MOBILE
            ================================================= */
 
+
+            /* =================================================
+               MOBILE HAMBURGER - FAR RIGHT
+               ================================================= */
+
+            .navbar .nav-actions {
+                display: flex !important;
+                align-items: center !important;
+            }
+
+
+            .navbar .nav-actions .mobile-menu-toggle {
+                order: 3 !important;
+                margin-left: auto !important;
+                flex-shrink: 0 !important;
+            }
+
+
+            .navbar .nav-actions .nav-user {
+                order: 1 !important;
+            }
+
+
+            .navbar .nav-actions .nav-logout {
+                order: 2 !important;
+            }
+
+
         @media (max-width: 450px) {
 
             .navbar .nav-container {
@@ -1223,13 +1251,13 @@
 
             .mobile-menu.logged-in-mobile-menu {
 
-                left: auto;
+                left: auto !important;
 
-                right: 12px;
+                right: 10px !important;
 
                 width: 250px;
 
-                max-width: calc(100vw - 24px);
+                max-width: calc(100vw - 20px);
 
             }
 
@@ -1366,9 +1394,9 @@
 
             .mobile-menu.logged-in-mobile-menu {
 
-                left: auto;
+                left: auto !important;
 
-                right: 10px;
+                right: 10px !important;
 
                 width: 230px;
 
@@ -1853,6 +1881,92 @@
                 }
 
 
+                function positionLoggedInMenu() {
+
+                    if (
+                        !menu.classList.contains(
+                            "logged-in-mobile-menu"
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const rect =
+                        toggle.getBoundingClientRect();
+
+
+                    const viewportWidth =
+                        window.innerWidth;
+
+
+                    const menuWidth =
+                        Math.min(
+                            250,
+                            viewportWidth - 20
+                        );
+
+
+                    /*
+                        Align the RIGHT edge of the menu
+                        with the RIGHT edge of the
+                        hamburger button.
+
+                        This keeps the menu directly under
+                        the hamburger instead of sticking
+                        to the far-right side of the phone.
+                    */
+
+                    let left =
+                        rect.right -
+                        menuWidth;
+
+
+                    /*
+                        Keep the menu inside the screen.
+                    */
+
+                    if (left < 10) {
+
+                        left = 10;
+
+                    }
+
+
+                    if (
+                        left + menuWidth >
+                        viewportWidth - 10
+                    ) {
+
+                        left =
+                            viewportWidth -
+                            menuWidth -
+                            10;
+
+                    }
+
+
+                    menu.style.width =
+                        menuWidth + "px";
+
+
+                    menu.style.left =
+                        "auto";
+
+
+                    menu.style.right =
+                        "10px";
+
+
+                    menu.style.top =
+                        (rect.bottom + 8) +
+                        "px";
+
+                }
+
+
                 function setMenu(open) {
 
                     menu.classList.toggle(
@@ -1919,6 +2033,25 @@
                             open
                                 ? "inline-flex"
                                 : "none";
+
+                    }
+
+
+                    /*
+                        Position ONLY the logged-in menu
+                        after opening so it sits directly
+                        below the hamburger.
+                    */
+
+                    if (open) {
+
+                        requestAnimationFrame(
+                            function () {
+
+                                positionLoggedInMenu();
+
+                            }
+                        );
 
                     }
 
@@ -2048,8 +2181,44 @@
 
                             setMenu(false);
 
+                        } else if (
+                            menu.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            positionLoggedInMenu();
+
                         }
 
+                    }
+                );
+
+
+                /*
+                    Keep the logged-in menu aligned with
+                    the hamburger while the page is being
+                    scrolled.
+                */
+
+                window.addEventListener(
+                    "scroll",
+                    function () {
+
+                        if (
+                            window.innerWidth <= 700 &&
+                            menu.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            positionLoggedInMenu();
+
+                        }
+
+                    },
+                    {
+                        passive: true
                     }
                 );
 
