@@ -1215,6 +1215,25 @@
             }
 
 
+            /* =================================================
+               LOGGED-IN MOBILE MENU
+               Keep this menu aligned to the right, directly
+               under the mobile hamburger button.
+               ================================================= */
+
+            .mobile-menu.logged-in-mobile-menu {
+
+                left: auto;
+
+                right: 12px;
+
+                width: 250px;
+
+                max-width: calc(100vw - 24px);
+
+            }
+
+
             .mobile-menu a {
 
                 display: flex;
@@ -1341,6 +1360,19 @@
                 left: 10px;
 
                 right: 10px;
+
+            }
+
+
+            .mobile-menu.logged-in-mobile-menu {
+
+                left: auto;
+
+                right: 10px;
+
+                width: 230px;
+
+                max-width: calc(100vw - 20px);
 
             }
 
@@ -1506,7 +1538,11 @@
     <!-- ================================================= -->
     <!-- MOBILE NAVIGATION MENU -->
     <!-- ================================================= -->
-    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <div
+        class="mobile-menu{% if session.get("user_id") %} logged-in-mobile-menu{% endif %}"
+        id="mobileMenu"
+        aria-hidden="true"
+    >
 
         {% if session.get("user_id") %}
 
