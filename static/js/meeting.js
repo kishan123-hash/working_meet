@@ -1623,7 +1623,85 @@ async function initializeMeeting() {
 
 }
 
+/* =========================================================
+   SHOW LOCAL USER NAME
+========================================================= */
 
+function showLocalUserName() {
+
+    if (
+        !localVideo
+    ) {
+        return;
+    }
+
+    const container =
+        localVideo.parentElement;
+
+    if (
+        !container
+    ) {
+        return;
+    }
+
+    container.style.position =
+        "relative";
+
+    let nameLabel =
+        container.querySelector(
+            ".local-name-label"
+        );
+
+    if (
+        !nameLabel
+    ) {
+
+        nameLabel =
+            document.createElement(
+                "div"
+            );
+
+        nameLabel.className =
+            "local-name-label";
+
+        nameLabel.style.position =
+            "absolute";
+
+        nameLabel.style.left =
+            "12px";
+
+        nameLabel.style.bottom =
+            "12px";
+
+        nameLabel.style.padding =
+            "6px 10px";
+
+        nameLabel.style.borderRadius =
+            "8px";
+
+        nameLabel.style.background =
+            "rgba(0, 0, 0, 0.65)";
+
+        nameLabel.style.color =
+            "#ffffff";
+
+        nameLabel.style.fontSize =
+            "14px";
+
+        nameLabel.style.fontWeight =
+            "600";
+
+        nameLabel.style.zIndex =
+            "20";
+
+        container.appendChild(
+            nameLabel
+        );
+    }
+
+    nameLabel.textContent =
+        `${userName || "You"} (You)`;
+}
 /* =========================================================
    16. SET LOCAL VIDEO STREAM
 ========================================================= */
@@ -1642,14 +1720,16 @@ function setLocalVideoStream(
     }
 
 
-    if (
-        stream
-    ) {
+    if ( 
+    stream 
+) { 
+ 
+    localVideo.srcObject = 
+        stream; 
+ 
+    showLocalUserName();
 
-        localVideo.srcObject =
-            stream;
-
-    } else {
+} else {
 
         localVideo.srcObject =
             null;
@@ -8035,27 +8115,32 @@ function openParticipantsPanel() {
     ) {
 
         return;
-
     }
 
+    /*
+    Remove hidden state first.
+
+    This makes the sidebar and its
+    close button clickable.
+    */
+
+    meetingSidebar.classList.remove(
+        "hidden"
+    );
 
     meetingSidebar.classList.add(
         "open"
     );
 
-
     meetingSidebar.classList.add(
         "active"
     );
-
 
     meetingSidebar.classList.add(
         "show"
     );
 
-
     updateParticipantsList();
-
 }
 
 
@@ -8080,180 +8165,193 @@ function toggleParticipantsPanel() {
 }
 
 
-/* =========================================================
-   62. INITIALIZE SIDEBAR BUTTONS
-========================================================= */
-
-function initializeSidebarButtons() {
-
-    /*
-    Chat button.
-    */
-
-    const chatButtons = [
-        chatBtn,
-        meetingChatBtn
-    ];
-
-
-    chatButtons.forEach(
-        function (
-            button
-        ) {
-
-            if (
-                !button
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                button.__meetspaceChatHandler
-            ) {
-
-                button.removeEventListener(
-                    "click",
-                    button.__meetspaceChatHandler
-                );
-
-            }
-
-
-            const handler =
-                function (event) {
-
-                    event.preventDefault();
-
-                    event.stopPropagation();
-
-                    openChatPanel();
-
-                };
-
-
-            button.__meetspaceChatHandler =
-                handler;
-
-
-            button.addEventListener(
-                "click",
-                handler
-            );
-
-        }
-    );
-
-
-    /*
-    Participants buttons.
-    */
-
-    const participantButtons = [
-        participantsBtn,
-        meetingParticipantsBtn
-    ];
-
-
-    participantButtons.forEach(
-        function (
-            button
-        ) {
-
-            if (
-                !button
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                button.__meetspaceParticipantsHandler
-            ) {
-
-                button.removeEventListener(
-                    "click",
-                    button.__meetspaceParticipantsHandler
-                );
-
-            }
-
-
-            const handler =
-                function (event) {
-
-                    event.preventDefault();
-
-                    event.stopPropagation();
-
-                    openParticipantsPanel();
-
-                };
-
-
-            button.__meetspaceParticipantsHandler =
-                handler;
-
-
-            button.addEventListener(
-                "click",
-                handler
-            );
-
-        }
-    );
-
-
-    /*
-    Sidebar close button.
-    */
-
-    if (
-        sidebarClose
-    ) {
-
-        if (
-            sidebarClose.__meetspaceCloseHandler
-        ) {
-
-            sidebarClose.removeEventListener(
-                "click",
-                sidebarClose.__meetspaceCloseHandler
-            );
-
-        }
-
-
-        const closeHandler =
-            function (event) {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-                closeMeetingSidebar();
-
-            };
-
-
-        sidebarClose.__meetspaceCloseHandler =
-            closeHandler;
-
-
-        sidebarClose.addEventListener(
-            "click",
-            closeHandler
-        );
-
-    }
-
+/* ========================================================= 
+   62. INITIALIZE SIDEBAR BUTTONS 
+========================================================= */ 
+ 
+function initializeSidebarButtons() { 
+ 
+    /* 
+    Chat button. 
+    */ 
+ 
+    const chatButtons = [ 
+        chatBtn, 
+        meetingChatBtn 
+    ]; 
+ 
+ 
+    chatButtons.forEach( 
+        function ( 
+            button 
+        ) { 
+ 
+            if ( 
+                !button 
+            ) { 
+ 
+                return; 
+ 
+            } 
+ 
+ 
+            if ( 
+                button.__meetspaceChatHandler 
+            ) { 
+ 
+                button.removeEventListener( 
+                    "click", 
+                    button.__meetspaceChatHandler 
+                ); 
+ 
+            } 
+ 
+ 
+            const handler = 
+                function (event) { 
+ 
+                    event.preventDefault(); 
+ 
+                    event.stopPropagation(); 
+ 
+                    openChatPanel(); 
+ 
+                }; 
+ 
+ 
+            button.__meetspaceChatHandler = 
+                handler; 
+ 
+ 
+            button.addEventListener( 
+                "click", 
+                handler 
+            ); 
+ 
+        } 
+    ); 
+ 
+ 
+    /* 
+    Participants buttons. 
+    */ 
+ 
+    const participantButtons = [ 
+        participantsBtn, 
+        meetingParticipantsBtn 
+    ]; 
+ 
+ 
+    participantButtons.forEach( 
+        function ( 
+            button 
+        ) { 
+ 
+            if ( 
+                !button 
+            ) { 
+ 
+                return; 
+ 
+            } 
+ 
+ 
+            if ( 
+                button.__meetspaceParticipantsHandler 
+            ) { 
+ 
+                button.removeEventListener( 
+                    "click", 
+                    button.__meetspaceParticipantsHandler 
+                ); 
+ 
+            } 
+ 
+ 
+            const handler = 
+                function (event) { 
+ 
+                    event.preventDefault(); 
+ 
+                    event.stopPropagation(); 
+ 
+                    if ( 
+                        meetingSidebar && 
+                        ( 
+                            meetingSidebar.classList.contains("open") || 
+                            meetingSidebar.classList.contains("active") || 
+                            meetingSidebar.classList.contains("show") 
+                        ) 
+                    ) { 
+ 
+                        closeMeetingSidebar(); 
+ 
+                    } else { 
+ 
+                        openParticipantsPanel(); 
+ 
+                    } 
+ 
+                }; 
+ 
+ 
+            button.__meetspaceParticipantsHandler = 
+                handler; 
+ 
+ 
+            button.addEventListener( 
+                "click", 
+                handler 
+            ); 
+ 
+        } 
+    ); 
+ 
+ 
+    /* 
+    Sidebar close button. 
+    */ 
+ 
+    if ( 
+        sidebarClose 
+    ) { 
+ 
+        if ( 
+            sidebarClose.__meetspaceCloseHandler 
+        ) { 
+ 
+            sidebarClose.removeEventListener( 
+                "click", 
+                sidebarClose.__meetspaceCloseHandler 
+            ); 
+ 
+        } 
+ 
+ 
+        const closeHandler = 
+            function (event) { 
+ 
+                event.preventDefault(); 
+ 
+                event.stopPropagation(); 
+ 
+                closeMeetingSidebar(); 
+ 
+            }; 
+ 
+ 
+        sidebarClose.__meetspaceCloseHandler = 
+            closeHandler; 
+ 
+ 
+        sidebarClose.addEventListener( 
+            "click", 
+            closeHandler 
+        ); 
+ 
+    } 
+ 
 }
-
-
 /* =========================================================
    63. INITIALIZE MEDIA BUTTONS
 ========================================================= */
