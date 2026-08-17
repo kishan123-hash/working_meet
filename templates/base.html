@@ -1136,9 +1136,8 @@
             }
 
 
-            /* Hamburger is shown ONLY when logged out,
-               because the button itself is rendered only
-               when no user session exists. */
+            /* Hamburger is available on mobile in both
+               logged-out and logged-in states. */
 
             .mobile-menu-toggle {
 
@@ -1426,21 +1425,17 @@
 
             <div class="nav-actions">
 
-                {% if not session.get("user_id") %}
-
-                    <!-- MOBILE MENU TOGGLE - hidden on desktop -->
-                    <button
-                        type="button"
-                        class="mobile-menu-toggle"
-                        id="mobileMenuToggle"
-                        aria-label="Open navigation menu"
-                        aria-expanded="false"
-                    >
-                        <span class="menu-open-icon">☰</span>
-                        <span class="menu-close-icon">✕</span>
-                    </button>
-
-                {% endif %}
+                <!-- MOBILE MENU TOGGLE - hidden on desktop -->
+                <button
+                    type="button"
+                    class="mobile-menu-toggle"
+                    id="mobileMenuToggle"
+                    aria-label="Open navigation menu"
+                    aria-expanded="false"
+                >
+                    <span class="menu-open-icon">☰</span>
+                    <span class="menu-close-icon">✕</span>
+                </button>
 
 
                 {% if session.get("user_id") %}
@@ -1512,13 +1507,33 @@
     <!-- MOBILE NAVIGATION MENU -->
     <!-- ================================================= -->
     <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+
         {% if session.get("user_id") %}
-            <div class="mobile-user">Hello, {{ session.get("user_name", "User") }}</div>
-            <a href="{{ url_for('meeting.logout') }}">Logout</a>
+
+            <a href="{{ url_for('home') }}">
+                Home
+            </a>
+
+            <a href="{{ url_for('meeting.create_meeting') }}">
+                Create Meeting
+            </a>
+
+            <a href="{{ url_for('meeting.join_meeting') }}">
+                Join Meeting
+            </a>
+
         {% else %}
-            <a href="{{ url_for('meeting.login') }}">Login</a>
-            <a href="{{ url_for('meeting.register') }}">Register</a>
+
+            <a href="{{ url_for('meeting.login') }}">
+                Login
+            </a>
+
+            <a href="{{ url_for('meeting.register') }}">
+                Register
+            </a>
+
         {% endif %}
+
     </div>
 
 
