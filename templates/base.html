@@ -1166,12 +1166,6 @@
 
                 padding: 10px;
 
-                min-height: 0;
-
-                max-height: calc(100vh - 90px);
-
-                overflow-y: auto;
-
                 border:
                     1px solid
                     rgba(148, 163, 184, 0.14);
@@ -1224,71 +1218,32 @@
 
             .mobile-menu a {
 
-                display: flex !important;
+                display: flex;
 
-                align-items: center !important;
+                align-items: center;
 
-                justify-content: flex-start !important;
+                width: 100%;
 
-                width: 100% !important;
-
-                min-height: 46px !important;
-
-                height: auto !important;
+                min-height: 46px;
 
                 padding:
-                    10px 13px !important;
+                    10px 13px;
 
-                box-sizing: border-box !important;
+                box-sizing: border-box;
 
                 border-radius: 12px;
 
-                color: #cbd5e1 !important;
+                color: #cbd5e1;
 
-                text-decoration: none !important;
+                text-decoration: none;
 
-                font-size: 14px !important;
+                font-size: 14px;
 
-                font-weight: 600 !important;
-
-                line-height: 1.4 !important;
-
-                white-space: normal !important;
-
-                visibility: visible !important;
-
-                opacity: 1 !important;
-
-                overflow: visible !important;
-
-                flex-shrink: 0 !important;
+                font-weight: 600;
 
                 transition:
                     background 0.18s ease,
                     color 0.18s ease;
-
-            }
-
-
-            /* Explicitly keep every mobile navigation item visible.
-               These selectors prevent desktop/nav rules from affecting
-               Home, Create Meeting and Join Meeting. */
-
-            .mobile-menu > a[href*="home"],
-            .mobile-menu > a[href*="create_meeting"],
-            .mobile-menu > a[href*="join_meeting"],
-            .mobile-menu > a[href*="login"],
-            .mobile-menu > a[href*="register"] {
-
-                display: flex !important;
-
-                visibility: visible !important;
-
-                opacity: 1 !important;
-
-                width: 100% !important;
-
-                min-height: 46px !important;
 
             }
 
@@ -1556,68 +1511,14 @@
     <!-- ================================================= -->
     <!-- MOBILE NAVIGATION MENU -->
     <!-- ================================================= -->
-    <div
-        class="mobile-menu"
-        id="mobileMenu"
-        aria-hidden="true"
-    >
-
-        <!-- MAIN NAVIGATION -->
-
-        <a
-            href="{{ url_for('home') }}"
-        >
-            Home
-        </a>
-
-        <a
-            href="{{ url_for('meeting.create_meeting') }}"
-        >
-            Create Meeting
-        </a>
-
-        <a
-            href="{{ url_for('meeting.join_meeting') }}"
-        >
-            Join Meeting
-        </a>
-
-
-        <div class="mobile-menu-divider"></div>
-
-
-        <!-- ACCOUNT ACTIONS -->
-
+    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
         {% if session.get("user_id") %}
-
-            <div class="mobile-user">
-                Hello,
-                {{ session.get("user_name", "User") }}
-            </div>
-
-            <a
-                href="{{ url_for('meeting.logout') }}"
-            >
-                Logout
-            </a>
-
+            <div class="mobile-user">Hello, {{ session.get("user_name", "User") }}</div>
+            <a href="{{ url_for('meeting.logout') }}">Logout</a>
         {% else %}
-
-            <a
-                href="{{ url_for('meeting.login') }}"
-            >
-                Login
-            </a>
-
-            <a
-                href="{{ url_for('meeting.register') }}"
-                class="mobile-primary"
-            >
-                Get Started
-            </a>
-
+            <a href="{{ url_for('meeting.login') }}">Login</a>
+            <a href="{{ url_for('meeting.register') }}" class="mobile-primary">Get Started</a>
         {% endif %}
-
     </div>
 
 
