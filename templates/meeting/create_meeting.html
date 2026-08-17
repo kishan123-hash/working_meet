@@ -747,10 +747,11 @@ Create Meeting | MeetSpace
 
 
     /* =====================================================
-       RESPONSIVE
+       TABLET / LAPTOP RESPONSIVE
+       ONLY RESPONSIVE CHANGES
     ===================================================== */
 
-    @media(max-width: 850px) {
+    @media (max-width: 850px) {
 
         .create-container {
 
@@ -774,6 +775,7 @@ Create Meeting | MeetSpace
         .create-info p {
 
             margin-left: auto;
+
             margin-right: auto;
 
         }
@@ -781,7 +783,11 @@ Create Meeting | MeetSpace
     }
 
 
-    @media(max-width: 500px) {
+    /* =====================================================
+       MOBILE RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 500px) {
 
         .create-page {
 
@@ -793,7 +799,8 @@ Create Meeting | MeetSpace
 
         .create-info {
 
-            padding: 10px;
+            padding:
+                10px;
 
         }
 
@@ -819,6 +826,652 @@ Create Meeting | MeetSpace
 
             padding:
                 25px 20px;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       ADDITIONAL TABLET COMPATIBILITY
+       DOES NOT CHANGE DESKTOP UI
+    ===================================================== */
+
+    @media (min-width: 501px) and (max-width: 850px) {
+
+        .create-page {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+            padding:
+                45px 24px;
+
+        }
+
+
+        .create-container {
+
+            width: 100%;
+
+            max-width: 650px;
+
+            box-sizing: border-box;
+
+            gap: 32px;
+
+        }
+
+
+        .create-info {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+            padding:
+                10px 20px;
+
+        }
+
+
+        .create-info h1 {
+
+            font-size:
+                clamp(42px, 8vw, 58px);
+
+            line-height: 1.05;
+
+        }
+
+
+        .create-info p {
+
+            max-width: 600px;
+
+            font-size: 14px;
+
+        }
+
+
+        .create-benefits {
+
+            width: 100%;
+
+            max-width: 600px;
+
+            grid-template-columns:
+                1fr 1fr;
+
+        }
+
+
+        .create-card {
+
+            width: 100%;
+
+            max-width: 600px;
+
+            box-sizing: border-box;
+
+            padding:
+                32px;
+
+        }
+
+
+        .input-wrapper input,
+        .input-wrapper select {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       MOBILE - BETTER WIDTH CONTROL
+    ===================================================== */
+
+    @media (max-width: 500px) {
+
+        .create-page {
+
+            width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+            overflow-x: hidden;
+
+            padding:
+                35px 15px 45px;
+
+        }
+
+
+        .create-container {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+            gap: 28px;
+
+        }
+
+
+        .create-info {
+
+            width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+            padding:
+                10px 4px;
+
+        }
+
+
+        .create-info h1 {
+
+            width: 100%;
+
+            font-size:
+                clamp(36px, 11vw, 43px);
+
+            line-height: 1.05;
+
+            letter-spacing:
+                -2px;
+
+        }
+
+
+        .create-info p {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            box-sizing: border-box;
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+        }
+
+
+        .create-benefits {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            grid-template-columns:
+                1fr;
+
+            gap: 10px;
+
+        }
+
+
+        .create-benefit {
+
+            width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+        }
+
+
+        .create-card {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+            padding:
+                25px 20px;
+
+            border-radius: 22px;
+
+        }
+
+
+        .meeting-form {
+
+            width: 100%;
+
+            min-width: 0;
+
+        }
+
+
+        .input-group {
+
+            width: 100%;
+
+            min-width: 0;
+
+        }
+
+
+        .input-wrapper {
+
+            width: 100%;
+
+            min-width: 0;
+
+        }
+
+
+        .input-wrapper input,
+        .input-wrapper select {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+
+        }
+
+
+        .create-submit {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SMALL PHONE
+    ===================================================== */
+
+    @media (max-width: 380px) {
+
+        .create-page {
+
+            padding:
+                28px 11px 38px;
+
+        }
+
+
+        .create-container {
+
+            gap: 22px;
+
+        }
+
+
+        .create-info {
+
+            padding:
+                5px 2px;
+
+        }
+
+
+        .create-badge {
+
+            padding:
+                7px 10px;
+
+            font-size: 9px;
+
+        }
+
+
+        .create-info h1 {
+
+            font-size:
+                35px;
+
+            letter-spacing:
+                -1.5px;
+
+        }
+
+
+        .create-info p {
+
+            font-size:
+                13px;
+
+        }
+
+
+        .create-benefits {
+
+            gap:
+                8px;
+
+        }
+
+
+        .create-benefit {
+
+            padding:
+                9px;
+
+            font-size:
+                11px;
+
+        }
+
+
+        .benefit-icon {
+
+            width:
+                31px;
+
+            height:
+                31px;
+
+            border-radius:
+                9px;
+
+        }
+
+
+        .create-card {
+
+            padding:
+                23px 16px;
+
+            border-radius:
+                19px;
+
+        }
+
+
+        .create-card-icon {
+
+            width:
+                56px;
+
+            height:
+                56px;
+
+            border-radius:
+                16px;
+
+            font-size:
+                24px;
+
+        }
+
+
+        .create-card h2 {
+
+            font-size:
+                21px;
+
+        }
+
+
+        .create-card-description {
+
+            font-size:
+                10px;
+
+        }
+
+
+        .input-wrapper input,
+        .input-wrapper select {
+
+            height:
+                48px;
+
+            padding-left:
+                40px;
+
+            font-size:
+                12px;
+
+        }
+
+
+        .input-icon {
+
+            left:
+                12px;
+
+            font-size:
+                13px;
+
+        }
+
+
+        .create-submit {
+
+            height:
+                49px;
+
+            font-size:
+                12px;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       PHONE LANDSCAPE
+    ===================================================== */
+
+    @media (max-width: 700px) and (orientation: landscape) {
+
+        .create-page {
+
+            min-height:
+                auto;
+
+            padding:
+                30px 20px 40px;
+
+        }
+
+
+        .create-container {
+
+            max-width:
+                650px;
+
+            gap:
+                25px;
+
+        }
+
+
+        .create-info {
+
+            padding:
+                5px 10px;
+
+        }
+
+
+        .create-info h1 {
+
+            font-size:
+                clamp(32px, 7vw, 45px);
+
+        }
+
+
+        .create-info p {
+
+            max-width:
+                600px;
+
+            font-size:
+                13px;
+
+        }
+
+
+        .create-benefits {
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap:
+                8px;
+
+            max-width:
+                600px;
+
+        }
+
+
+        .create-benefit {
+
+            padding:
+                9px;
+
+        }
+
+
+        .create-card {
+
+            max-width:
+                520px;
+
+            margin:
+                0 auto;
+
+            padding:
+                24px 26px;
+
+        }
+
+
+        .create-card-icon {
+
+            width:
+                55px;
+
+            height:
+                55px;
+
+            font-size:
+                24px;
+
+        }
+
+
+        .create-card h2 {
+
+            margin-top:
+                13px;
+
+            font-size:
+                21px;
+
+        }
+
+
+        .meeting-form {
+
+            margin-top:
+                20px;
+
+        }
+
+
+        .input-group {
+
+            margin-bottom:
+                13px;
+
+        }
+
+
+        .input-wrapper input,
+        .input-wrapper select {
+
+            height:
+                46px;
+
+        }
+
+
+        .create-submit {
+
+            height:
+                47px;
+
+        }
+
+
+        .create-note {
+
+            margin-top:
+                12px;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       TOUCH DEVICES
+    ===================================================== */
+
+    @media (hover: none) {
+
+        .create-benefit:hover {
+
+            transform:
+                none;
+
+            border-color:
+                rgba(255,255,255,.07);
+
+            background:
+                rgba(255,255,255,.035);
+
+        }
+
+
+        .create-submit:hover {
+
+            transform:
+                none;
+
+            box-shadow:
+                0 15px 40px
+                rgba(99,102,241,.28);
 
         }
 
@@ -1127,13 +1780,13 @@ document.addEventListener(
             function (event) {
 
                 /*
-                Do NOT use fetch() here.
+                    Do NOT use fetch() here.
 
-                The Flask route returns a normal HTTP redirect
-                to /meeting/room/<meeting_id>.
+                    The Flask route returns a normal HTTP redirect
+                    to /meeting/room/<meeting_id>.
 
-                Therefore we allow the browser to perform a
-                normal POST request.
+                    Therefore we allow the browser to perform a
+                    normal POST request.
                 */
 
 
@@ -1162,7 +1815,7 @@ document.addEventListener(
 
 
                 /*
-                Prevent double-clicking the button.
+                    Prevent double-clicking the button.
                 */
 
                 button.disabled =
@@ -1173,15 +1826,15 @@ document.addEventListener(
 
 
                 /*
-                IMPORTANT:
+                    IMPORTANT:
 
-                We intentionally DO NOT call:
+                    We intentionally DO NOT call:
 
-                    event.preventDefault()
+                        event.preventDefault()
 
-                here.
+                    here.
 
-                The form must continue to Flask.
+                    The form must continue to Flask.
                 */
 
             }

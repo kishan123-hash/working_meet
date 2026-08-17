@@ -1,526 +1,895 @@
-{% extends "base.html" %} 
- 
-{% block title %} 
-    Login | MeetSpace 
-{% endblock %} 
- 
- 
-{% block extra_css %} 
- 
-<style> 
- 
-    /* ================================================= */ 
-    /* LOGIN PAGE */ 
-    /* ================================================= */ 
- 
-    .auth-page { 
- 
-        min-height: calc(100vh - 80px); 
- 
-        display: flex; 
- 
-        align-items: center; 
- 
-        justify-content: center; 
- 
-        padding: 60px 20px; 
- 
-        background: 
-            radial-gradient( 
-                circle at 20% 20%, 
-                rgba(59, 130, 246, 0.15), 
-                transparent 35% 
-            ), 
-            radial-gradient( 
-                circle at 80% 80%, 
-                rgba(124, 58, 237, 0.18), 
-                transparent 35% 
-            ), 
-            #070b18; 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* LOGIN CARD */ 
-    /* ================================================= */ 
- 
-    .auth-card { 
- 
-        width: 100%; 
- 
-        max-width: 460px; 
- 
-        padding: 40px; 
- 
-        border-radius: 24px; 
- 
-        background: 
-            rgba(15, 23, 42, 0.94); 
- 
-        border: 
-            1px solid 
-            rgba(148, 163, 184, 0.15); 
- 
-        box-shadow: 
-            0 25px 80px 
-            rgba(0, 0, 0, 0.45); 
- 
-        backdrop-filter: blur(20px); 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* HEADER */ 
-    /* ================================================= */ 
- 
-    .auth-header { 
- 
-        text-align: center; 
- 
-        margin-bottom: 30px; 
- 
-    } 
- 
- 
-    .auth-icon { 
- 
-        width: 70px; 
- 
-        height: 70px; 
- 
-        margin: 
-            0 auto 18px; 
- 
-        display: flex; 
- 
-        align-items: center; 
- 
-        justify-content: center; 
- 
-        border-radius: 20px; 
- 
-        font-size: 32px; 
- 
-        background: 
-            linear-gradient( 
-                135deg, 
-                #2563eb, 
-                #7c3aed 
-            ); 
- 
-        box-shadow: 
-            0 12px 35px 
-            rgba(59, 130, 246, 0.3); 
- 
-    } 
- 
- 
-    .auth-header h1 { 
- 
-        margin: 0; 
- 
-        color: white; 
- 
-        font-size: 32px; 
- 
-        font-weight: 800; 
- 
-    } 
- 
- 
-    .auth-header p { 
- 
-        margin-top: 10px; 
- 
-        color: #94a3b8; 
- 
-        font-size: 15px; 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* FORM */ 
-    /* ================================================= */ 
- 
-    .form-group { 
- 
-        margin-bottom: 20px; 
- 
-    } 
- 
- 
-    .form-group label { 
- 
-        display: block; 
- 
-        margin-bottom: 8px; 
- 
-        color: #e2e8f0; 
- 
-        font-size: 14px; 
- 
-        font-weight: 600; 
- 
-    } 
- 
- 
-    .form-group input { 
- 
-        width: 100%; 
- 
-        box-sizing: border-box; 
- 
-        padding: 14px 16px; 
- 
-        border-radius: 12px; 
- 
-        border: 
-            1px solid 
-            #334155; 
- 
-        outline: none; 
- 
-        background: #0f172a; 
- 
-        color: white; 
- 
-        font-size: 15px; 
- 
-        transition: 0.2s; 
- 
-    } 
- 
- 
-    .form-group input::placeholder { 
- 
-        color: #64748b; 
- 
-    } 
- 
- 
-    .form-group input:focus { 
- 
-        border-color: #6366f1; 
- 
-        box-shadow: 
-            0 0 0 3px 
-            rgba(99, 102, 241, 0.15); 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* REMEMBER ME */ 
-    /* ================================================= */ 
- 
-    .login-options { 
- 
-        display: flex; 
- 
-        align-items: center; 
- 
-        justify-content: flex-start; 
- 
-        margin-bottom: 22px; 
- 
-        font-size: 13px; 
- 
-    } 
- 
- 
-    .remember-me { 
- 
-        display: flex; 
- 
-        align-items: center; 
- 
-        gap: 7px; 
- 
-        color: #94a3b8; 
- 
-    } 
- 
- 
-    .remember-me input { 
- 
-        accent-color: #6366f1; 
- 
-        cursor: pointer; 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* LOGIN BUTTON */ 
-    /* ================================================= */ 
- 
-    .login-button { 
- 
-        width: 100%; 
- 
-        border: none; 
- 
-        padding: 15px; 
- 
-        border-radius: 12px; 
- 
-        color: white; 
- 
-        font-size: 16px; 
- 
-        font-weight: 700; 
- 
-        cursor: pointer; 
- 
-        background: 
-            linear-gradient( 
-                135deg, 
-                #2563eb, 
-                #7c3aed 
-            ); 
- 
-        transition: 0.2s; 
- 
-    } 
- 
- 
-    .login-button:hover { 
- 
-        transform: translateY(-2px); 
- 
-        box-shadow: 
-            0 12px 30px 
-            rgba(99, 102, 241, 0.3); 
- 
-    } 
- 
- 
-    .login-button:active { 
- 
-        transform: translateY(0); 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* REGISTER LINK */ 
-    /* ================================================= */ 
- 
-    .auth-footer { 
- 
-        margin-top: 25px; 
- 
-        text-align: center; 
- 
-        color: #94a3b8; 
- 
-        font-size: 14px; 
- 
-    } 
- 
- 
-    .auth-footer a { 
- 
-        color: #818cf8; 
- 
-        font-weight: 700; 
- 
-        text-decoration: none; 
- 
-    } 
- 
- 
-    .auth-footer a:hover { 
- 
-        text-decoration: underline; 
- 
-    } 
- 
- 
-    /* ================================================= */ 
-    /* MOBILE */ 
-    /* ================================================= */ 
- 
-    @media (max-width: 600px) { 
- 
-        .auth-card { 
- 
-            padding: 28px 22px; 
- 
-        } 
- 
- 
-        .auth-header h1 { 
- 
-            font-size: 27px; 
- 
-        } 
- 
- 
-        .login-options { 
- 
-            flex-direction: column; 
- 
-            align-items: flex-start; 
- 
-            gap: 12px; 
- 
-        } 
- 
-    } 
- 
-</style> 
- 
-{% endblock %} 
- 
- 
- 
-{% block content %} 
- 
-<section class="auth-page"> 
- 
-    <div class="auth-card"> 
- 
- 
-        <!-- ========================================= --> 
-        <!-- LOGIN HEADER --> 
-        <!-- ========================================= --> 
- 
-        <div class="auth-header"> 
- 
-            <div class="auth-icon"> 
-                ✦ 
-            </div> 
- 
-            <h1> 
-                Welcome Back 
-            </h1> 
- 
-            <p> 
-                Login to continue to MeetSpace. 
-            </p> 
- 
-        </div> 
- 
- 
- 
-        <!-- ========================================= --> 
-        <!-- LOGIN FORM --> 
-        <!-- ========================================= --> 
- 
-        <form 
-            method="POST" 
-            action="{{ url_for('meeting.login') }}" 
-        > 
- 
- 
-            <!-- ===================================== --> 
-            <!-- EMAIL --> 
-            <!-- ===================================== --> 
- 
-            <div class="form-group"> 
- 
-                <label for="email"> 
-                    Email Address 
-                </label> 
- 
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    placeholder="Enter your email" 
-                    required 
-                    autocomplete="email" 
-                > 
- 
-            </div> 
- 
- 
- 
-            <!-- ===================================== --> 
-            <!-- PASSWORD --> 
-            <!-- ===================================== --> 
- 
-            <div class="form-group"> 
- 
-                <label for="password"> 
-                    Password 
-                </label> 
- 
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    placeholder="Enter your password" 
-                    required 
-                    autocomplete="current-password" 
-                > 
- 
-            </div> 
- 
- 
- 
-            <!-- ===================================== --> 
-            <!-- REMEMBER ME --> 
-            <!-- ===================================== --> 
- 
-            <div class="login-options"> 
- 
-                <label class="remember-me"> 
- 
-                    <input 
-                        type="checkbox" 
-                        name="remember" 
-                        value="1" 
-                    > 
- 
-                    Remember me 
- 
-                </label> 
- 
-            </div> 
- 
- 
- 
-            <!-- ===================================== --> 
-            <!-- LOGIN --> 
-            <!-- ===================================== --> 
- 
-            <button 
-                type="submit" 
-                class="login-button" 
-            > 
- 
-                Login to MeetSpace 
- 
-            </button> 
- 
- 
-        </form> 
- 
- 
- 
-        <!-- ========================================= --> 
-        <!-- REGISTER --> 
-        <!-- ========================================= --> 
- 
-        <div class="auth-footer"> 
- 
-            Don't have an account? 
- 
-            <a 
-                href="{{ url_for('meeting.register') }}" 
-            > 
-                Create Account 
-            </a> 
- 
-        </div> 
- 
- 
-    </div> 
- 
-</section> 
- 
+{% extends "base.html" %}
+
+{% block title %}
+    Login | MeetSpace
+{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+
+    /* ================================================= */
+    /* LOGIN PAGE */
+    /* ================================================= */
+
+    .auth-page {
+
+        min-height: calc(100vh - 80px);
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 60px 20px;
+
+        background:
+            radial-gradient(
+                circle at 20% 20%,
+                rgba(59, 130, 246, 0.15),
+                transparent 35%
+            ),
+            radial-gradient(
+                circle at 80% 80%,
+                rgba(124, 58, 237, 0.18),
+                transparent 35%
+            ),
+            #070b18;
+    }
+
+
+    /* ================================================= */
+    /* LOGIN CARD */
+    /* ================================================= */
+
+    .auth-card {
+
+        width: 100%;
+
+        max-width: 460px;
+
+        padding: 40px;
+
+        border-radius: 24px;
+
+        background:
+            rgba(15, 23, 42, 0.94);
+
+        border:
+            1px solid
+            rgba(148, 163, 184, 0.15);
+
+        box-shadow:
+            0 25px 80px
+            rgba(0, 0, 0, 0.45);
+
+        backdrop-filter: blur(20px);
+
+    }
+
+
+    /* ================================================= */
+    /* HEADER */
+    /* ================================================= */
+
+    .auth-header {
+
+        text-align: center;
+
+        margin-bottom: 30px;
+
+    }
+
+
+    .auth-icon {
+
+        width: 70px;
+
+        height: 70px;
+
+        margin:
+            0 auto 18px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 20px;
+
+        font-size: 32px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #7c3aed
+            );
+
+        box-shadow:
+            0 12px 35px
+            rgba(59, 130, 246, 0.3);
+
+    }
+
+
+    .auth-header h1 {
+
+        margin: 0;
+
+        color: white;
+
+        font-size: 32px;
+
+        font-weight: 800;
+
+    }
+
+
+    .auth-header p {
+
+        margin-top: 10px;
+
+        color: #94a3b8;
+
+        font-size: 15px;
+
+    }
+
+
+    /* ================================================= */
+    /* FORM */
+    /* ================================================= */
+
+    .form-group {
+
+        margin-bottom: 20px;
+
+    }
+
+
+    .form-group label {
+
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #e2e8f0;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+    }
+
+
+    .form-group input {
+
+        width: 100%;
+
+        box-sizing: border-box;
+
+        padding: 14px 16px;
+
+        border-radius: 12px;
+
+        border:
+            1px solid
+            #334155;
+
+        outline: none;
+
+        background: #0f172a;
+
+        color: white;
+
+        font-size: 15px;
+
+        transition: 0.2s;
+
+    }
+
+
+    .form-group input::placeholder {
+
+        color: #64748b;
+
+    }
+
+
+    .form-group input:focus {
+
+        border-color: #6366f1;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(99, 102, 241, 0.15);
+
+    }
+
+
+    /* ================================================= */
+    /* REMEMBER ME */
+    /* ================================================= */
+
+    .login-options {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-start;
+
+        margin-bottom: 22px;
+
+        font-size: 13px;
+
+    }
+
+
+    .remember-me {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        color: #94a3b8;
+
+    }
+
+
+    .remember-me input {
+
+        accent-color: #6366f1;
+
+        cursor: pointer;
+
+    }
+
+
+    /* ================================================= */
+    /* LOGIN BUTTON */
+    /* ================================================= */
+
+    .login-button {
+
+        width: 100%;
+
+        border: none;
+
+        padding: 15px;
+
+        border-radius: 12px;
+
+        color: white;
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #7c3aed
+            );
+
+        transition: 0.2s;
+
+    }
+
+
+    .login-button:hover {
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 12px 30px
+            rgba(99, 102, 241, 0.3);
+
+    }
+
+
+    .login-button:active {
+
+        transform: translateY(0);
+
+    }
+
+
+    /* ================================================= */
+    /* REGISTER LINK */
+    /* ================================================= */
+
+    .auth-footer {
+
+        margin-top: 25px;
+
+        text-align: center;
+
+        color: #94a3b8;
+
+        font-size: 14px;
+
+    }
+
+
+    .auth-footer a {
+
+        color: #818cf8;
+
+        font-weight: 700;
+
+        text-decoration: none;
+
+    }
+
+
+    .auth-footer a:hover {
+
+        text-decoration: underline;
+
+    }
+
+
+    /* ================================================= */
+    /* TABLET */
+    /* ================================================= */
+
+    @media (max-width: 900px) {
+
+        .auth-page {
+
+            min-height: calc(100vh - 70px);
+
+            padding:
+                50px 24px;
+
+        }
+
+
+        .auth-card {
+
+            width: 100%;
+
+            max-width: 460px;
+
+            padding: 36px;
+
+        }
+
+    }
+
+
+    /* ================================================= */
+    /* MOBILE */
+    /* ================================================= */
+
+    @media (max-width: 600px) {
+
+        .auth-page {
+
+            width: 100%;
+
+            min-height:
+                calc(100vh - 70px);
+
+            padding:
+                35px 16px;
+
+            box-sizing: border-box;
+
+            align-items: center;
+
+        }
+
+
+        .auth-card {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            padding:
+                28px 22px;
+
+            border-radius: 20px;
+
+            box-sizing: border-box;
+
+        }
+
+
+        .auth-header {
+
+            margin-bottom: 26px;
+
+        }
+
+
+        .auth-icon {
+
+            width: 62px;
+
+            height: 62px;
+
+            margin-bottom: 15px;
+
+            border-radius: 17px;
+
+            font-size: 28px;
+
+        }
+
+
+        .auth-header h1 {
+
+            font-size: 27px;
+
+            line-height: 1.15;
+
+        }
+
+
+        .auth-header p {
+
+            margin-top: 8px;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+
+        }
+
+
+        .form-group {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .form-group label {
+
+            font-size: 13px;
+
+            margin-bottom: 7px;
+
+        }
+
+
+        .form-group input {
+
+            width: 100%;
+
+            min-width: 0;
+
+            padding:
+                13px 14px;
+
+            font-size: 15px;
+
+            border-radius: 11px;
+
+        }
+
+
+        .login-options {
+
+            width: 100%;
+
+            margin-bottom: 20px;
+
+            flex-direction: row;
+
+            align-items: center;
+
+            justify-content: flex-start;
+
+        }
+
+
+        .remember-me {
+
+            font-size: 13px;
+
+        }
+
+
+        .login-button {
+
+            width: 100%;
+
+            min-height: 50px;
+
+            padding:
+                13px 14px;
+
+            font-size: 15px;
+
+            border-radius: 11px;
+
+        }
+
+
+        .auth-footer {
+
+            margin-top: 22px;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+
+        }
+
+    }
+
+
+    /* ================================================= */
+    /* SMALL PHONES */
+    /* ================================================= */
+
+    @media (max-width: 380px) {
+
+        .auth-page {
+
+            padding:
+                25px 12px;
+
+        }
+
+
+        .auth-card {
+
+            padding:
+                24px 17px;
+
+            border-radius: 18px;
+
+        }
+
+
+        .auth-header {
+
+            margin-bottom: 22px;
+
+        }
+
+
+        .auth-icon {
+
+            width: 56px;
+
+            height: 56px;
+
+            margin-bottom: 13px;
+
+            border-radius: 15px;
+
+            font-size: 25px;
+
+        }
+
+
+        .auth-header h1 {
+
+            font-size: 24px;
+
+        }
+
+
+        .auth-header p {
+
+            font-size: 13px;
+
+        }
+
+
+        .form-group input {
+
+            padding:
+                12px 13px;
+
+            font-size: 14px;
+
+        }
+
+
+        .login-button {
+
+            min-height: 48px;
+
+            padding: 12px;
+
+            font-size: 14px;
+
+        }
+
+
+        .auth-footer {
+
+            font-size: 12px;
+
+        }
+
+    }
+
+
+    /* ================================================= */
+    /* PHONE LANDSCAPE */
+    /* ================================================= */
+
+    @media (max-width: 700px) and (orientation: landscape) {
+
+        .auth-page {
+
+            min-height: auto;
+
+            padding:
+                25px 20px;
+
+        }
+
+
+        .auth-card {
+
+            max-width: 500px;
+
+            padding:
+                25px 28px;
+
+        }
+
+
+        .auth-icon {
+
+            width: 52px;
+
+            height: 52px;
+
+            margin-bottom: 10px;
+
+            font-size: 23px;
+
+        }
+
+
+        .auth-header {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .auth-header h1 {
+
+            font-size: 23px;
+
+        }
+
+
+        .auth-header p {
+
+            margin-top: 5px;
+
+            font-size: 12px;
+
+        }
+
+
+        .form-group {
+
+            margin-bottom: 13px;
+
+        }
+
+
+        .form-group input {
+
+            padding:
+                10px 13px;
+
+        }
+
+
+        .login-options {
+
+            margin-bottom: 14px;
+
+        }
+
+
+        .login-button {
+
+            min-height: 44px;
+
+            padding: 10px;
+
+        }
+
+
+        .auth-footer {
+
+            margin-top: 15px;
+
+        }
+
+    }
+
+
+    /* ================================================= */
+    /* TOUCH DEVICES */
+    /* ================================================= */
+
+    @media (hover: none) {
+
+        .login-button:hover {
+
+            transform: none;
+
+            box-shadow: none;
+
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<section class="auth-page">
+
+    <div class="auth-card">
+
+
+        <!-- ========================================= -->
+        <!-- LOGIN HEADER -->
+        <!-- ========================================= -->
+
+        <div class="auth-header">
+
+            <div class="auth-icon">
+                ✦
+            </div>
+
+            <h1>
+                Welcome Back
+            </h1>
+
+            <p>
+                Login to continue to MeetSpace.
+            </p>
+
+        </div>
+
+
+
+        <!-- ========================================= -->
+        <!-- LOGIN FORM -->
+        <!-- ========================================= -->
+
+        <form
+            method="POST"
+            action="{{ url_for('meeting.login') }}"
+        >
+
+
+            <!-- ===================================== -->
+            <!-- EMAIL -->
+            <!-- ===================================== -->
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+
+            <!-- ===================================== -->
+            <!-- PASSWORD -->
+            <!-- ===================================== -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+
+
+            <!-- ===================================== -->
+            <!-- REMEMBER ME -->
+            <!-- ===================================== -->
+
+            <div class="login-options">
+
+                <label class="remember-me">
+
+                    <input
+                        type="checkbox"
+                        name="remember"
+                        value="1"
+                    >
+
+                    Remember me
+
+                </label>
+
+            </div>
+
+
+
+            <!-- ===================================== -->
+            <!-- LOGIN -->
+            <!-- ===================================== -->
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+
+                Login to MeetSpace
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- ========================================= -->
+        <!-- REGISTER -->
+        <!-- ========================================= -->
+
+        <div class="auth-footer">
+
+            Don't have an account?
+
+            <a
+                href="{{ url_for('meeting.register') }}"
+            >
+                Create Account
+            </a>
+
+        </div>
+
+
+    </div>
+
+</section>
+
 {% endblock %}

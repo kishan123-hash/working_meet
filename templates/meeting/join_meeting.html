@@ -798,77 +798,406 @@
 
 
         /* ================================================
-           MOBILE
+           MOBILE / TABLET RESPONSIVE
+           EXISTING DESKTOP UI IS PRESERVED
         ================================================ */
 
-        @media(max-width: 850px) {
+        @media (max-width: 1100px) {
 
             .navbar {
-
-                padding: 0 20px;
-
+                padding: 0 5%;
             }
-
-
-            .nav-links {
-
-                display: none;
-
-            }
-
 
             .container {
-
-                grid-template-columns: 1fr;
-
-                gap: 40px;
-
-                max-width: 550px;
-
+                max-width: 950px;
+                gap: 45px;
             }
-
 
             .hero-title {
-
-                text-align: center;
-
-                letter-spacing: -2px;
-
+                font-size: clamp(45px, 6vw, 68px);
             }
 
-
-            .badge {
-
-                display: flex;
-
-                width: fit-content;
-
-                margin: auto;
-
+            .card {
+                padding: 34px;
             }
-
-
-            .description {
-
-                text-align: center;
-
-                margin-left: auto;
-                margin-right: auto;
-
-            }
-
-
-            .steps {
-
-                max-width: 330px;
-
-                margin-left: auto;
-                margin-right: auto;
-
-            }
-
         }
 
+
+        @media (max-width: 850px) {
+
+            .navbar {
+                height: 70px;
+                padding: 0 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .page {
+                min-height: calc(100vh - 70px);
+                padding: 45px 22px;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 600px;
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .container > section:first-child {
+                width: 100%;
+                text-align: center;
+            }
+
+            .badge {
+                display: flex;
+                width: fit-content;
+                margin: 0 auto;
+            }
+
+            .hero-title {
+                text-align: center;
+                letter-spacing: -2px;
+            }
+
+            .description {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .steps {
+                max-width: 330px;
+                margin-left: auto;
+                margin-right: auto;
+                text-align: left;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+        }
+
+
+        @media (max-width: 600px) {
+
+            .navbar {
+                width: 100%;
+                height: 68px;
+                padding: 0 16px;
+                box-sizing: border-box;
+            }
+
+            .logo {
+                gap: 9px;
+                font-size: 17px;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                border-radius: 10px;
+            }
+
+            .page {
+                width: 100%;
+                min-height: calc(100vh - 68px);
+                padding: 35px 15px 45px;
+                box-sizing: border-box;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                gap: 30px;
+            }
+
+            .container > section:first-child {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .badge {
+                padding: 7px 12px;
+                font-size: 9px;
+                letter-spacing: 1.3px;
+            }
+
+            .hero-title {
+                width: 100%;
+                max-width: 100%;
+                margin-top: 18px;
+                font-size: clamp(36px, 11vw, 52px);
+                line-height: 1.05;
+                letter-spacing: -2px;
+                overflow-wrap: break-word;
+            }
+
+            .description {
+                width: 100%;
+                max-width: 100%;
+                margin-top: 18px;
+                font-size: 13px;
+                line-height: 1.7;
+            }
+
+            .steps {
+                width: 100%;
+                max-width: 330px;
+                margin-top: 28px;
+                gap: 12px;
+            }
+
+            .step {
+                gap: 11px;
+                font-size: 11px;
+            }
+
+            .step-number {
+                width: 32px;
+                height: 32px;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                padding: 26px 20px;
+                border-radius: 22px;
+                box-sizing: border-box;
+            }
+
+            .card-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 17px;
+                font-size: 25px;
+            }
+
+            .card h2 {
+                margin-top: 17px;
+                font-size: 22px;
+            }
+
+            .card-subtitle {
+                font-size: 11px;
+                line-height: 1.5;
+            }
+
+            .form {
+                width: 100%;
+                margin-top: 25px;
+            }
+
+            .input-wrapper {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .input {
+                width: 100%;
+                min-width: 0;
+                padding: 15px 13px 15px 43px;
+                font-size: 15px;
+                letter-spacing: 2px;
+                box-sizing: border-box;
+            }
+
+            .input-icon {
+                left: 14px;
+                font-size: 15px;
+            }
+
+            .join-button {
+                width: 100%;
+                min-height: 50px;
+                margin-top: 14px;
+                padding: 14px;
+                font-size: 12px;
+                box-sizing: border-box;
+            }
+
+            .divider {
+                margin: 22px 0;
+            }
+
+            .create-link {
+                font-size: 11px;
+            }
+
+            .security {
+                margin-top: 20px;
+                padding-top: 16px;
+                font-size: 8px;
+            }
+        }
+
+
+        @media (max-width: 380px) {
+
+            .navbar {
+                padding: 0 12px;
+            }
+
+            .logo {
+                gap: 8px;
+                font-size: 16px;
+            }
+
+            .logo-icon {
+                width: 33px;
+                height: 33px;
+                font-size: 14px;
+            }
+
+            .page {
+                padding: 28px 11px 38px;
+            }
+
+            .container {
+                gap: 24px;
+            }
+
+            .hero-title {
+                font-size: 35px;
+                letter-spacing: -1.5px;
+            }
+
+            .description {
+                font-size: 12px;
+            }
+
+            .steps {
+                max-width: 100%;
+            }
+
+            .step {
+                font-size: 10px;
+            }
+
+            .step-number {
+                width: 30px;
+                height: 30px;
+            }
+
+            .card {
+                padding: 23px 16px;
+                border-radius: 19px;
+            }
+
+            .card-icon {
+                width: 55px;
+                height: 55px;
+                border-radius: 15px;
+                font-size: 23px;
+            }
+
+            .card h2 {
+                font-size: 20px;
+            }
+
+            .card-subtitle {
+                font-size: 10px;
+            }
+
+            .input {
+                padding-left: 40px;
+                font-size: 13px;
+            }
+
+            .input-icon {
+                left: 12px;
+                font-size: 14px;
+            }
+
+            .join-button {
+                min-height: 48px;
+                padding: 13px;
+                font-size: 11px;
+            }
+        }
+
+
+        @media (max-width: 700px) and (orientation: landscape) {
+
+            .navbar {
+                height: 62px;
+            }
+
+            .page {
+                min-height: auto;
+                padding: 30px 20px 40px;
+            }
+
+            .container {
+                max-width: 650px;
+                gap: 25px;
+            }
+
+            .hero-title {
+                font-size: clamp(32px, 7vw, 45px);
+            }
+
+            .description {
+                max-width: 600px;
+                font-size: 12px;
+            }
+
+            .steps {
+                max-width: 500px;
+            }
+
+            .card {
+                max-width: 520px;
+                padding: 24px 26px;
+            }
+
+            .card-icon {
+                width: 55px;
+                height: 55px;
+                font-size: 23px;
+            }
+
+            .card h2 {
+                margin-top: 13px;
+                font-size: 21px;
+            }
+
+            .form {
+                margin-top: 20px;
+            }
+
+            .input {
+                padding-top: 13px;
+                padding-bottom: 13px;
+            }
+
+            .join-button {
+                margin-top: 12px;
+                padding: 13px;
+            }
+        }
+
+
+        @media (hover: none) {
+
+            .join-button:hover {
+                transform: none;
+                box-shadow:
+                    0 15px 40px
+                    rgba(99,102,241,0.25);
+            }
+
+            .nav-links a:hover {
+                color: #94a3b8;
+            }
+        }
 
     </style>
 

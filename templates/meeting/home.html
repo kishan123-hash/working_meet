@@ -1288,6 +1288,717 @@ MeetSpace | Modern Online Meetings
 
 }
 
+/* =========================================================
+   FINAL RESPONSIVE OVERRIDES
+   MeetSpace Home Page
+   Desktop design remains unchanged
+========================================================= */
+
+/* ---------- TABLET ---------- */
+
+@media (max-width: 900px) {
+
+    .home-page {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .home-hero {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+
+        padding:
+            70px 24px 60px;
+
+        gap: 45px;
+    }
+
+    .home-hero-content {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .home-title {
+        font-size:
+            clamp(42px, 8vw, 64px);
+
+        line-height: 1.05;
+    }
+
+    .home-description {
+        max-width: 680px;
+    }
+
+    .home-visual {
+        width: 100%;
+        min-height: auto;
+
+        padding:
+            20px 10px 40px;
+
+        box-sizing: border-box;
+    }
+
+    .meeting-window {
+        width: 100%;
+        max-width: 600px;
+
+        margin: 0 auto;
+
+        transform: none;
+    }
+
+    .floating-card {
+        display: none;
+    }
+
+    .home-stats {
+        width: calc(100% - 40px);
+        max-width: 900px;
+
+        box-sizing: border-box;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .features-section {
+        width: 100%;
+        box-sizing: border-box;
+
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .home-cta {
+        width: calc(100% - 40px);
+        box-sizing: border-box;
+    }
+}
+
+
+/* ---------- LARGE PHONE / SMALL TABLET ---------- */
+
+@media (max-width: 700px) {
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .home-page {
+        width: 100%;
+        min-width: 0;
+
+        overflow-x: hidden;
+    }
+
+
+    /* HERO */
+
+    .home-hero {
+        display: flex;
+        flex-direction: column;
+
+        width: 100%;
+        min-height: auto;
+
+        padding:
+            48px 16px 45px;
+
+        gap: 35px;
+
+        box-sizing: border-box;
+    }
+
+    .home-hero-content {
+        width: 100%;
+        min-width: 0;
+
+        text-align: center;
+    }
+
+
+    /* BADGE */
+
+    .home-badge {
+        max-width: 100%;
+
+        padding:
+            8px 12px;
+
+        font-size: 10px;
+
+        letter-spacing: 1px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* TITLE */
+
+    .home-title {
+        margin:
+            22px 0 18px;
+
+        font-size:
+            clamp(38px, 11vw, 50px);
+
+        line-height: 1.04;
+
+        letter-spacing: -2px;
+
+        word-break: normal;
+    }
+
+
+    /* DESCRIPTION */
+
+    .home-description {
+        width: 100%;
+        max-width: 600px;
+
+        margin:
+            0 auto 28px;
+
+        font-size: 15px;
+
+        line-height: 1.7;
+    }
+
+
+    /* BUTTONS */
+
+    .home-actions {
+        width: 100%;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 10px;
+    }
+
+    .home-btn {
+        width: 100%;
+        min-height: 50px;
+
+        box-sizing: border-box;
+
+        padding:
+            13px 18px;
+
+        font-size: 14px;
+    }
+
+
+    /* TRUST */
+
+    .home-trust {
+        margin-top: 28px;
+
+        justify-content: center;
+
+        flex-wrap: wrap;
+    }
+
+    .home-trust-text {
+        font-size: 12px;
+    }
+
+
+    /* HERO VISUAL */
+
+    .home-visual {
+        width: 100%;
+        min-height: 0;
+
+        padding:
+            0 0 20px;
+
+        box-sizing: border-box;
+    }
+
+    .visual-glow {
+        width: 280px;
+        height: 280px;
+    }
+
+
+    /* MEETING PREVIEW */
+
+    .meeting-window {
+        width: 100%;
+        max-width: 100%;
+
+        border-radius: 18px;
+
+        transform: none;
+
+        box-sizing: border-box;
+    }
+
+    .meeting-header {
+        height: 52px;
+
+        padding:
+            0 12px;
+    }
+
+    .meeting-brand {
+        gap: 7px;
+
+        font-size: 13px;
+    }
+
+    .mini-logo {
+        width: 28px;
+        height: 28px;
+
+        border-radius: 8px;
+
+        font-size: 12px;
+    }
+
+    .live-status {
+        padding:
+            5px 8px;
+
+        font-size: 9px;
+    }
+
+
+    /* VIDEO PREVIEW */
+
+    .video-area {
+        width: 100%;
+
+        padding: 10px;
+
+        grid-template-columns: 1fr;
+
+        gap: 8px;
+
+        box-sizing: border-box;
+    }
+
+    .main-video {
+        width: 100%;
+        min-height: 210px;
+
+        border-radius: 14px;
+    }
+
+    .big-avatar {
+        width: 72px;
+        height: 72px;
+
+        font-size: 28px;
+    }
+
+    .participant-name {
+        margin-top: 10px;
+
+        font-size: 13px;
+    }
+
+    .mic-status {
+        width: 30px;
+        height: 30px;
+
+        right: 10px;
+        bottom: 10px;
+    }
+
+
+    /* SMALL PARTICIPANT VIDEOS */
+
+    .small-videos {
+        width: 100%;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        grid-template-rows: 1fr;
+
+        gap: 6px;
+    }
+
+    .small-video {
+        min-width: 0;
+        min-height: 75px;
+
+        border-radius: 10px;
+    }
+
+    .small-avatar {
+        width: 38px;
+        height: 38px;
+
+        font-size: 14px;
+    }
+
+    .small-name {
+        left: 6px;
+        bottom: 5px;
+
+        max-width: calc(100% - 12px);
+
+        font-size: 8px;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    /* CONTROLS */
+
+    .meeting-controls {
+        height: 60px;
+
+        gap: 7px;
+
+        padding:
+            0 8px;
+
+        overflow-x: auto;
+
+        justify-content: center;
+
+        box-sizing: border-box;
+    }
+
+    .control {
+        flex:
+            0 0 38px;
+
+        width: 38px;
+        height: 38px;
+
+        font-size: 14px;
+    }
+
+
+    /* STATS */
+
+    .home-stats {
+        width: calc(100% - 32px);
+
+        margin:
+            0 auto 55px;
+
+        padding: 12px;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        border-radius: 16px;
+
+        box-sizing: border-box;
+    }
+
+    .stat {
+        min-width: 0;
+
+        padding:
+            14px 8px;
+
+        border-right:
+            1px solid
+            rgba(255,255,255,0.08);
+
+        border-bottom:
+            1px solid
+            rgba(255,255,255,0.08);
+    }
+
+    .stat:nth-child(2),
+    .stat:nth-child(4) {
+        border-right: none;
+    }
+
+    .stat:nth-child(3),
+    .stat:nth-child(4) {
+        border-bottom: none;
+    }
+
+    .stat-number {
+        font-size: 22px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+    }
+
+
+    /* FEATURES */
+
+    .features-section {
+        width: 100%;
+
+        padding:
+            55px 16px;
+
+        box-sizing: border-box;
+    }
+
+    .section-heading {
+        margin-bottom: 35px;
+    }
+
+    .section-heading h2 {
+        font-size:
+            clamp(30px, 9vw, 42px);
+
+        line-height: 1.1;
+    }
+
+    .section-heading p {
+        font-size: 14px;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+
+        gap: 14px;
+    }
+
+    .feature-card {
+        padding: 22px;
+
+        border-radius: 17px;
+    }
+
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+
+        margin-bottom: 15px;
+
+        font-size: 22px;
+    }
+
+    .feature-card h3 {
+        font-size: 18px;
+    }
+
+    .feature-card p {
+        font-size: 13px;
+    }
+
+
+    /* CTA */
+
+    .home-cta {
+        width: calc(100% - 32px);
+
+        margin:
+            45px auto 65px;
+
+        padding:
+            50px 18px;
+
+        border-radius: 22px;
+
+        box-sizing: border-box;
+    }
+
+    .home-cta h2 {
+        font-size:
+            clamp(30px, 9vw, 42px);
+
+        line-height: 1.1;
+    }
+
+    .home-cta p {
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+
+        gap: 10px;
+    }
+
+    .cta-buttons .home-btn {
+        width: 100%;
+    }
+}
+
+
+/* ---------- SMALL PHONE ---------- */
+
+@media (max-width: 380px) {
+
+    .home-hero {
+        padding:
+            40px 12px;
+    }
+
+    .home-title {
+        font-size: 36px;
+
+        letter-spacing: -1.5px;
+    }
+
+    .home-description {
+        font-size: 14px;
+    }
+
+    .home-badge {
+        font-size: 9px;
+
+        padding:
+            7px 9px;
+    }
+
+    .meeting-window {
+        border-radius: 14px;
+    }
+
+    .meeting-header {
+        height: 48px;
+
+        padding:
+            0 9px;
+    }
+
+    .meeting-brand {
+        font-size: 12px;
+    }
+
+    .mini-logo {
+        width: 25px;
+        height: 25px;
+    }
+
+    .live-status {
+        padding:
+            4px 6px;
+
+        font-size: 8px;
+    }
+
+    .main-video {
+        min-height: 180px;
+    }
+
+    .big-avatar {
+        width: 62px;
+        height: 62px;
+
+        font-size: 24px;
+    }
+
+    .small-video {
+        min-height: 65px;
+    }
+
+    .small-avatar {
+        width: 32px;
+        height: 32px;
+
+        font-size: 12px;
+    }
+
+    .meeting-controls {
+        gap: 5px;
+
+        padding:
+            0 6px;
+    }
+
+    .control {
+        flex-basis: 34px;
+
+        width: 34px;
+        height: 34px;
+
+        font-size: 12px;
+    }
+
+    .home-stats {
+        width: calc(100% - 24px);
+    }
+
+    .features-section {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .home-cta {
+        width: calc(100% - 24px);
+
+        padding:
+            40px 15px;
+    }
+}
+
+
+/* ---------- LANDSCAPE PHONE ---------- */
+
+@media (max-width: 700px) and (orientation: landscape) {
+
+    .home-hero {
+        padding:
+            35px 20px;
+    }
+
+    .home-title {
+        font-size:
+            clamp(32px, 7vw, 44px);
+    }
+
+    .home-description {
+        font-size: 14px;
+    }
+
+    .home-visual {
+        padding-bottom: 10px;
+    }
+
+    .meeting-window {
+        max-width: 650px;
+    }
+
+    .video-area {
+        grid-template-columns:
+            1.5fr 1fr;
+    }
+
+    .main-video {
+        min-height: 180px;
+    }
+
+    .small-videos {
+        grid-template-columns: 1fr;
+        grid-template-rows:
+            repeat(3, 1fr);
+    }
+
+    .home-stats {
+        margin-bottom: 35px;
+    }
+}
+
+
+/* ---------- PREVENT MOBILE HOVER JUMP ---------- */
+
+@media (hover: none) {
+
+    .home-btn-primary:hover,
+    .home-btn-secondary:hover,
+    .feature-card:hover,
+    .control:hover {
+        transform: none;
+    }
+}
 </style>
 
 {% endblock %}
