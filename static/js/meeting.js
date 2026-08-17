@@ -3294,13 +3294,14 @@ function createOrUpdateRemoteVideo(
             );
 
 
-        tile.className =
-            "remote-video-container";
+       tile.className =
+    "remote-video-container";
 
+tile.style.position =
+    "relative";
 
-        tile.dataset.remoteId =
-            remoteSocketId;
-
+tile.dataset.remoteId =
+    remoteSocketId;
 
         /*
         -----------------------------------------------------
@@ -3434,19 +3435,52 @@ function createOrUpdateRemoteVideo(
         */
 
         const nameLabel =
-            document.createElement(
-                "div"
-            );
+    document.createElement(
+        "div"
+    );
 
+nameLabel.className =
+    "remote-name-label";
 
-        nameLabel.className =
-            "remote-name-label";
+nameLabel.style.position =
+    "absolute";
 
+nameLabel.style.left =
+    "12px";
 
-        nameLabel.textContent =
-            remoteName ||
-            "Participant";
+nameLabel.style.bottom =
+    "12px";
 
+nameLabel.style.padding =
+    "6px 10px";
+
+nameLabel.style.borderRadius =
+    "8px";
+
+nameLabel.style.background =
+    "rgba(0, 0, 0, 0.70)";
+
+nameLabel.style.color =
+    "#ffffff";
+
+nameLabel.style.fontSize =
+    "14px";
+
+nameLabel.style.fontWeight =
+    "600";
+
+nameLabel.style.zIndex =
+    "20";
+
+nameLabel.style.display =
+    "block";
+
+nameLabel.style.visibility =
+    "visible";
+
+nameLabel.textContent =
+    remoteName ||
+    "Participant";
 
         /*
         -----------------------------------------------------
