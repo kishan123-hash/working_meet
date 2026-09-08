@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- ================================================= -->
+    <!-- BASIC META -->
+    <!-- ================================================= -->
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+        content="Working Meet is a simple and secure online video meeting platform for teachers, students, classmates and teams. Create or join meetings with video, chat and screen sharing.">
+
+    <meta name="robots" content="index, follow">
+
+    <meta name="author" content="kishan Sharma">
+
+    <meta name="theme-color" content="#070b18">
+
+
+    <!-- ================================================= -->
+    <!-- PAGE TITLE -->
+    <!-- ================================================= -->
+
+    <title>
+        {% block title %}
+        Working Meet - Online Video Meetings
+        {% endblock %}
+    </title>
+
+    <!-- ================================================= -->
+    <!-- WEBSITE CREATOR / STRUCTURED DATA -->
+    <!-- ================================================= -->
+
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Working Meet",
+    "url": "https://working-meet.onrender.com/",
+    "description": "Working Meet is an online video meeting platform created and developed by Kishan Sharma.",
+    "creator": {
+        "@type": "Person",
+        "name": "Kishan Sharma"
+    }
+}
+</script>
+
+    <!-- ================================================= -->
+    <!-- GOOGLE FONT -->
+    <!-- ================================================= -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+
+    <!-- ================================================= -->
+    <!-- MAIN WEBSITE CSS -->
+    <!-- ================================================= -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+
+    <!-- ================================================= -->
+    <!-- PAGE SPECIFIC CSS -->
+    <!-- IMPORTANT FOR LOGIN / REGISTER / FORGOT PASSWORD -->
+    <!-- ================================================= -->
+
+    {% block extra_css %}
+    {% endblock %}
+
+
+    <!-- ================================================= -->
+    <!-- BASE UI FIX -->
+    <!-- ONLY UI / LAYOUT -->
+    <!-- ================================================= -->
+
+    <style>
+        /* =================================================
+           GLOBAL RESET
+           ================================================= */
+
+        html,
+        body {
+
+            margin: 0;
+            padding: 0;
+
+            width: 100%;
+            min-height: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        *,
+        *::before,
+        *::after {
+
+            box-sizing: border-box;
+
+        }
+
+
+        body {
+
+            overflow-x: hidden;
+
+        }
+
+
+        /* =================================================
+           NAVBAR
+           ================================================= */
+
+        .navbar {
+
+            width: 100%;
+
+            min-height: 78px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            position: relative;
+
+            z-index: 1000;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           NAV CONTAINER
+           ================================================= */
+
+        .navbar .nav-container {
+
+            width: 100%;
+
+            max-width: 1400px;
+
+            min-height: 78px;
+
+            margin: 0 auto;
+
+            padding: 0 32px;
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: space-between !important;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 20px;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           LOGO
+           ================================================= */
+
+        .navbar .logo {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: flex-start;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 12px;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        .navbar .logo-icon {
+
+            width: 42px;
+
+            height: 42px;
+
+            min-width: 42px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .navbar .logo-text {
+
+            white-space: nowrap;
+
+            display: inline-block;
+
+        }
+
+
+        /* =================================================
+           NAVIGATION LINKS
+           ================================================= */
+
+        .navbar .nav-links {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: center;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 30px;
+
+            margin: 0;
+
+            padding: 0;
+
+            flex: 1;
+
+            white-space: nowrap;
+
+        }
+
+
+        .navbar .nav-links a {
+
+            display: inline-flex !important;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+        }
+
+
+        /* =================================================
+           NAV ACTIONS
+           ================================================= */
+
+        .navbar .nav-actions {
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: flex-end;
+
+            flex-direction: row !important;
+
+            flex-wrap: nowrap !important;
+
+            gap: 12px;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        /* =================================================
+           LOGGED-IN USER
+           ================================================= */
+
+        .navbar .nav-user {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =================================================
+           NAV BUTTONS
+           ================================================= */
+
+        .navbar .nav-button {
+
+            display: inline-flex !important;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            white-space: nowrap;
+
+            text-decoration: none;
+
+            margin: 0;
+
+        }
+
+
+        /* =================================================
+           MAIN CONTENT
+           ================================================= */
+
+        #main-content {
+
+            width: 100%;
+
+            min-height: calc(100vh - 78px);
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           AUTH PAGE
+           ================================================= */
+
+        .auth-page {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        .auth-card {
+
+            box-sizing: border-box;
+
+        }
+
+
+        .auth-card input,
+        .auth-card button {
+
+            box-sizing: border-box;
+
+            max-width: 100%;
+
+        }
+
+
+        /* =================================================
+           FLASH MESSAGES
+           ================================================= */
+
+        .flash-container {
+
+            width: 100%;
+
+            box-sizing: border-box;
+
+        }
+
+
+        /* =================================================
+           FOOTER
+           ================================================= */
+
+        .footer {
+
+            width: 100% !important;
+
+            margin: 0 !important;
+
+            padding: 42px 30px 30px !important;
+
+            box-sizing: border-box !important;
+
+            background:
+                linear-gradient(135deg,
+                    #080c1b 0%,
+                    #0b1020 50%,
+                    #071b24 100%) !important;
+
+            border-top:
+                1px solid rgba(148, 163, 184, 0.12) !important;
+
+            color: #94a3b8;
+
+        }
+
+
+        /* =================================================
+           FOOTER CONTAINER
+           ================================================= */
+
+        .footer .footer-container {
+
+            width: 100% !important;
+
+            max-width: 1200px !important;
+
+            margin: 0 auto !important;
+
+            padding: 0 !important;
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: space-between !important;
+
+            gap: 40px !important;
+
+            box-sizing: border-box !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER BRAND
+           ================================================= */
+
+        .footer .footer-brand {
+
+            flex: 1 1 0 !important;
+
+            min-width: 220px;
+
+            display: flex !important;
+
+            flex-direction: column !important;
+
+            align-items: flex-start !important;
+
+            justify-content: center !important;
+
+            text-align: left !important;
+
+            gap: 8px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER LOGO
+           ================================================= */
+
+        .footer .footer-logo {
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: flex-start !important;
+
+            gap: 10px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+            color: #e2e8f0 !important;
+
+        }
+
+
+        .footer .footer-logo .logo-icon {
+
+            width: 44px !important;
+
+            height: 44px !important;
+
+            min-width: 44px !important;
+
+            display: flex !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            border-radius: 14px !important;
+
+            background:
+                linear-gradient(135deg,
+                    #2563eb,
+                    #7c3aed) !important;
+
+            color: white !important;
+
+            font-size: 20px !important;
+
+            box-shadow:
+                0 8px 25px rgba(99, 102, 241, 0.25) !important;
+
+        }
+
+
+        .footer .footer-logo strong {
+
+            color: #e2e8f0 !important;
+
+            font-size: 16px !important;
+
+            font-weight: 700 !important;
+
+            white-space: nowrap !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER DESCRIPTION
+           ================================================= */
+
+        .footer .footer-brand p {
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+            color: #64748b !important;
+
+            font-size: 14px !important;
+
+            line-height: 1.5 !important;
+
+        }
+
+
+        /* =================================================
+           FOOTER LINKS
+           ================================================= */
+
+        .footer .footer-links {
+
+            flex: 0 0 auto !important;
+
+            display: flex !important;
+
+            flex-direction: row !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            flex-wrap: wrap !important;
+
+            gap: 24px !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        .footer .footer-links a {
+
+            display: inline-flex !important;
+
+            align-items: center !important;
+
+            justify-content: center !important;
+
+            color: #94a3b8 !important;
+
+            text-decoration: none !important;
+
+            font-size: 14px !important;
+
+            font-weight: 500 !important;
+
+            white-space: nowrap !important;
+
+            margin: 0 !important;
+
+            padding: 4px 0 !important;
+
+            transition:
+                color 0.2s ease,
+                transform 0.2s ease !important;
+
+        }
+
+
+        .footer .footer-links a:hover {
+
+            color: #a78bfa !important;
+
+            text-decoration: none !important;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        /* =================================================
+           COPYRIGHT
+           ================================================= */
+
+        .footer .footer-copy {
+
+            flex: 1 1 0 !important;
+
+            min-width: 220px;
+
+            text-align: right !important;
+
+            color: #475569 !important;
+
+            font-size: 13px !important;
+
+            line-height: 1.5 !important;
+
+            margin: 0 !important;
+
+            padding: 0 !important;
+
+        }
+
+
+        /* =================================================
+           TABLET
+           ================================================= */
+
+        @media (max-width: 1100px) {
+
+            .navbar .nav-container {
+
+                padding-left: 24px;
+
+                padding-right: 24px;
+
+                gap: 14px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                gap: 20px;
+
+            }
+
+
+            .navbar .nav-actions {
+
+                gap: 8px;
+
+            }
+
+
+            .footer {
+
+                padding-left: 24px !important;
+
+                padding-right: 24px !important;
+
+            }
+
+
+            .footer .footer-container {
+
+                gap: 25px !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                gap: 16px !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           SMALL TABLET
+           ================================================= */
+
+        @media (max-width: 850px) {
+
+            .navbar .nav-container {
+
+                padding-left: 18px;
+
+                padding-right: 18px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                gap: 14px;
+
+            }
+
+
+            .navbar .nav-links a {
+
+                font-size: 14px;
+
+            }
+
+
+            .navbar .nav-button {
+
+                padding-left: 14px;
+
+                padding-right: 14px;
+
+            }
+
+
+            .footer .footer-container {
+
+                flex-wrap: wrap !important;
+
+                justify-content: center !important;
+
+            }
+
+
+            .footer .footer-brand {
+
+                align-items: center !important;
+
+                text-align: center !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                text-align: center !important;
+
+                flex-basis: 100% !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           MOBILE
+           ================================================= */
+
+        @media (max-width: 700px) {
+
+            .navbar {
+
+                min-height: 70px;
+
+            }
+
+
+            .navbar .nav-container {
+
+                min-height: 70px;
+
+                padding: 0 16px;
+
+                gap: 12px;
+
+            }
+
+
+            .navbar .nav-links {
+
+                display: none !important;
+
+            }
+
+
+            .navbar .nav-actions {
+
+                margin-left: auto;
+
+            }
+
+            /* =================================================
+               LOGGED-OUT ACTIONS
+               Login + Get Started move into the mobile menu.
+               ================================================= */
+
+            .navbar .nav-actions .nav-login,
+            .navbar .nav-actions .nav-register {
+
+                display: none !important;
+
+            }
+
+
+            /* =================================================
+               LOGGED-IN ACTION
+               Logout remains visible on mobile.
+               ================================================= */
+
+            .navbar .nav-actions .nav-logout {
+
+                display: none !important;
+
+            }
+
+
+            .navbar .nav-user {
+
+                display: inline-flex;
+
+                align-items: center;
+
+                justify-content: center;
+
+                max-width: 150px;
+
+                overflow: hidden;
+
+                text-overflow: ellipsis;
+
+                font-size: 13px;
+
+                color: #cbd5e1;
+
+            }
+
+
+            .navbar .logo-icon {
+
+                width: 38px;
+
+                height: 38px;
+
+                min-width: 38px;
+
+            }
+
+
+            .navbar .logo-text {
+
+                font-size: 20px;
+
+            }
+
+
+            #main-content {
+
+                min-height: calc(100vh - 70px);
+
+            }
+
+
+            /* FOOTER MOBILE */
+
+            .footer {
+
+                padding:
+                    35px 20px 25px !important;
+
+            }
+
+
+            .footer .footer-container {
+
+                flex-direction: column !important;
+
+                align-items: center !important;
+
+                justify-content: center !important;
+
+                gap: 22px !important;
+
+            }
+
+
+            .footer .footer-brand {
+
+                width: 100%;
+
+                min-width: 0;
+
+                align-items: center !important;
+
+                text-align: center !important;
+
+            }
+
+
+            .footer .footer-logo {
+
+                justify-content: center !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                width: 100%;
+
+                justify-content: center !important;
+
+                gap: 12px 20px !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                width: 100%;
+
+                min-width: 0;
+
+                text-align: center !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           VERY SMALL MOBILE
+           ================================================= */
+
+
+        /* =================================================
+               MOBILE HAMBURGER - FAR RIGHT
+               ================================================= */
+
+        .navbar .nav-actions {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+
+        .navbar .nav-actions .mobile-menu-toggle {
+            order: 3 !important;
+            margin-left: auto !important;
+            flex-shrink: 0 !important;
+        }
+
+
+        .navbar .nav-actions .nav-user {
+            order: 1 !important;
+        }
+
+
+        .navbar .nav-actions .nav-logout {
+            order: 2 !important;
+        }
+
+
+        @media (max-width: 450px) {
+
+            .navbar .nav-container {
+
+                padding-left: 12px;
+
+                padding-right: 12px;
+
+            }
+
+
+            .navbar .logo {
+
+                gap: 8px;
+
+            }
+
+
+            .navbar .logo-text {
+
+                font-size: 18px;
+
+            }
+
+
+            .navbar .nav-button {
+
+                padding: 9px 12px;
+
+                font-size: 13px;
+
+            }
+
+
+            .footer {
+
+                padding:
+                    30px 15px 22px !important;
+
+            }
+
+
+            .footer .footer-links {
+
+                gap: 10px 16px !important;
+
+            }
+
+
+            .footer .footer-links a {
+
+                font-size: 13px !important;
+
+            }
+
+
+            .footer .footer-brand p {
+
+                font-size: 13px !important;
+
+            }
+
+
+            .footer .footer-copy {
+
+                font-size: 12px !important;
+
+            }
+
+        }
+
+
+        /* =================================================
+           MOBILE MENU - RESPONSIVE ONLY
+           ================================================= */
+
+        .mobile-menu-toggle {
+
+            display: none;
+
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+
+            border:
+                1px solid rgba(148, 163, 184, 0.18);
+
+            border-radius: 12px;
+
+            background:
+                rgba(15, 23, 42, 0.75);
+
+            color: #e2e8f0;
+
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+
+            font-size: 20px;
+            line-height: 1;
+
+            padding: 0;
+
+            position: relative;
+
+            z-index: 1201;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+        }
+
+
+        .mobile-menu-toggle .menu-open-icon {
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
+        .mobile-menu-toggle .menu-close-icon {
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+        }
+
+
+        .mobile-menu {
+
+            display: none;
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .navbar .nav-container {
+
+                position: relative;
+
+            }
+
+
+            /* Hamburger is available on mobile in both
+               logged-out and logged-in states. */
+
+            .mobile-menu-toggle {
+
+                display: inline-flex !important;
+
+                flex-shrink: 0;
+
+            }
+
+
+            /* Slide-down mobile menu */
+
+            .mobile-menu {
+
+                display: block !important;
+
+                position: fixed;
+
+                top: 70px;
+
+                left: 12px;
+                right: 12px;
+
+                z-index: 1200;
+
+                padding: 10px;
+
+                border:
+                    1px solid rgba(148, 163, 184, 0.14);
+
+                border-radius: 18px;
+
+                background:
+                    rgba(8, 12, 27, 0.98);
+
+                box-shadow:
+                    0 20px 50px rgba(0, 0, 0, 0.40);
+
+                backdrop-filter:
+                    blur(18px);
+
+                -webkit-backdrop-filter:
+                    blur(18px);
+
+                opacity: 0;
+
+                visibility: hidden;
+
+                pointer-events: none;
+
+                transform:
+                    translateY(-12px);
+
+                transition:
+                    opacity 0.22s ease,
+                    transform 0.22s ease,
+                    visibility 0.22s ease;
+
+            }
+
+
+            .mobile-menu.is-open {
+
+                opacity: 1;
+
+                visibility: visible;
+
+                pointer-events: auto;
+
+                transform:
+                    translateY(0);
+
+            }
+
+
+            /* =================================================
+               LOGGED-IN MOBILE MENU
+               Keep this menu aligned to the right, directly
+               under the mobile hamburger button.
+               ================================================= */
+
+            .mobile-menu.logged-in-mobile-menu {
+
+                left: auto !important;
+
+                right: 10px !important;
+
+                width: 250px;
+
+                max-width: calc(100vw - 20px);
+
+            }
+
+
+            .mobile-menu a {
+
+                display: flex;
+
+                align-items: center;
+
+                width: 100%;
+
+                min-height: 46px;
+
+                padding:
+                    10px 13px;
+
+                box-sizing: border-box;
+
+                border-radius: 12px;
+
+                color: #cbd5e1;
+
+                text-decoration: none;
+
+                font-size: 14px;
+
+                font-weight: 600;
+
+                transition:
+                    background 0.18s ease,
+                    color 0.18s ease;
+
+            }
+
+
+            .mobile-menu a:hover {
+
+                background:
+                    rgba(99, 102, 241, 0.12);
+
+                color: #fff;
+
+            }
+
+
+            .mobile-menu a:active {
+
+                background:
+                    rgba(99, 102, 241, 0.18);
+
+                color: #fff;
+
+            }
+
+
+            /* Keep Logout consistent with the other mobile
+               menu options. No special/red background. */
+
+            .mobile-menu a[href*="logout"] {
+
+                background:
+                    rgba(239, 68, 68, 0.12) !important;
+
+                color: #fca5a5 !important;
+
+                border:
+                    1px solid rgba(239, 68, 68, 0.35) !important;
+
+                box-shadow:
+                    0 6px 18px rgba(239, 68, 68, 0.12) !important;
+
+            }
+
+
+            .mobile-menu a[href*="logout"]:hover {
+
+                background:
+                    rgba(239, 68, 68, 0.20) !important;
+
+                color: #fecaca !important;
+
+                border-color:
+                    rgba(239, 68, 68, 0.50) !important;
+
+            }
+
+
+            .mobile-menu a[href*="logout"]:active {
+
+                background:
+                    rgba(239, 68, 68, 0.25) !important;
+
+                color: #fee2e2 !important;
+
+                border-color:
+                    rgba(239, 68, 68, 0.60) !important;
+
+            }
+
+
+            .mobile-menu-divider {
+
+                height: 1px;
+
+                margin:
+                    8px 4px;
+
+                background:
+                    rgba(148, 163, 184, 0.10);
+
+            }
+
+
+            .mobile-menu .mobile-user {
+
+                padding:
+                    10px 13px;
+
+                color: #94a3b8;
+
+                font-size: 13px;
+
+                font-weight: 500;
+
+            }
+
+
+            .mobile-menu .mobile-primary {
+
+                margin-top: 4px;
+
+                justify-content: center;
+
+                background:
+                    linear-gradient(135deg,
+                        #2563eb,
+                        #7c3aed);
+
+                color: #fff;
+
+            }
+
+
+            body.mobile-menu-open {
+
+                overflow: hidden;
+
+            }
+
+        }
+
+
+        @media (max-width: 450px) {
+
+            .mobile-menu-toggle {
+
+                width: 40px;
+
+                height: 40px;
+
+                min-width: 40px;
+
+            }
+
+
+            .mobile-menu {
+
+                top: 70px;
+
+                left: 10px;
+
+                right: 10px;
+
+            }
+
+
+            .mobile-menu.logged-in-mobile-menu {
+
+                left: auto !important;
+
+                right: 10px !important;
+
+                width: 230px;
+
+                max-width: calc(100vw - 20px);
+
+            }
+
+
+            .navbar .nav-user {
+
+                max-width: 115px;
+
+                font-size: 12px;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================================================= -->
+    <!-- NAVBAR -->
+    <!-- ================================================= -->
+
+    <header class="navbar">
+
+        <div class="nav-container">
+
+
+            <!-- ============================= -->
+            <!-- LOGO -->
+            <!-- ============================= -->
+
+            <a href="{{ url_for('home') }}" class="logo">
+
+                <span class="logo-icon">
+                    ✦
+                </span>
+
+                <span class="logo-text">
+                    Working Meet
+                </span>
+
+            </a>
+
+
+            <!-- ============================= -->
+            <!-- NAVIGATION LINKS -->
+            <!-- ============================= -->
+
+            <nav class="nav-links">
+
+                <a href="{{ url_for('home') }}">
+                    Home
+                </a>
+
+                <a href="{{ url_for('meeting.create_meeting') }}">
+                    Create Meeting
+                </a>
+
+                <a href="{{ url_for('meeting.join_meeting') }}">
+                    Join Meeting
+                </a>
+
+            </nav>
+
+
+            <!-- ============================= -->
+            <!-- NAVIGATION ACTIONS -->
+            <!-- ============================= -->
+
+            <div class="nav-actions">
+
+                <!-- MOBILE MENU TOGGLE - hidden on desktop -->
+                <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open navigation menu"
+                    aria-expanded="false">
+                    <span class="menu-open-icon">☰</span>
+                    <span class="menu-close-icon">✕</span>
+                </button>
+
+
+                {% if session.get("user_id") %}
+
+
+                <!-- ============================= -->
+                <!-- LOGGED IN USER -->
+                <!-- ============================= -->
+
+                <span class="nav-user" title="{{ session.get('user_name', 'User') }}">
+
+                    Hello,
+                    {{ session.get("user_name", "User") }}
+
+                </span>
+
+
+                <a href="{{ url_for('meeting.logout') }}" class="nav-button nav-logout">
+                    Logout
+                </a>
+
+
+                {% else %}
+
+
+                <!-- ============================= -->
+                <!-- LOGIN -->
+                <!-- ============================= -->
+
+                <a href="{{ url_for('meeting.login') }}" class="nav-button nav-login">
+                    Login
+                </a>
+
+
+                <!-- ============================= -->
+                <!-- REGISTER -->
+                <!-- ============================= -->
+
+                <a href="{{ url_for('meeting.register') }}" class="nav-button nav-register">
+                    Get Started
+                </a>
+
+
+                {% endif %}
+
+
+            </div>
+
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ================================================= -->
+    <!-- MOBILE NAVIGATION MENU -->
+    <!-- ================================================= -->
+    <div class="mobile-menu{% if session.get(" user_id") %} logged-in-mobile-menu{% endif %}" id="mobileMenu"
+        aria-hidden="true">
+
+        {% if session.get("user_id") %}
+
+        <a href="{{ url_for('home') }}">
+            Home
+        </a>
+
+        <a href="{{ url_for('meeting.create_meeting') }}">
+            Create Meeting
+        </a>
+
+        <a href="{{ url_for('meeting.join_meeting') }}">
+            Join Meeting
+        </a>
+
+        <a href="{{ url_for('meeting.logout') }}">
+            Logout
+        </a>
+
+        {% else %}
+
+        <a href="{{ url_for('meeting.login') }}">
+            Login
+        </a>
+
+        <a href="{{ url_for('meeting.register') }}">
+            Register
+        </a>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- FLASH MESSAGES -->
+    <!-- ================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+    <div class="flash-container">
+
+        {% for category, message in messages %}
+
+        <div class="flash-message flash-{{ category }}" role="alert">
+
+            <span class="flash-icon">
+
+                {% if category == "success" %}
+
+                ✓
+
+                {% elif category == "danger" %}
+
+                !
+
+                {% elif category == "warning" %}
+
+                ⚠
+
+                {% else %}
+
+                i
+
+                {% endif %}
+
+            </span>
+
+
+            <span>
+                {{ message }}
+            </span>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- ================================================= -->
+    <!-- MAIN WEBSITE CONTENT -->
+    <!-- ================================================= -->
+
+    <main id="main-content">
+
+        {% block content %}
+
+        {% endblock %}
+
+    </main>
+
+
+
+    <!-- ================================================= -->
+    <!-- FOOTER -->
+    <!-- ================================================= -->
+
+    <footer class="footer">
+
+        <div class="footer-container">
+
+
+            <!-- ============================= -->
+            <!-- FOOTER BRAND -->
+            <!-- ============================= -->
+
+            <div class="footer-brand">
+
+                <div class="footer-logo">
+
+                    <span class="logo-icon">
+                        ✦
+                    </span>
+
+                    <strong>
+                        Working Meet
+                    </strong>
+
+                </div>
+
+
+                <p>
+                    Created & Developed by
+                    <strong>Kishan Sharma</strong>
+                </p>
+
+            </div>
+
+
+            <!-- ============================= -->
+            <!-- FOOTER LINKS -->
+            <!-- ============================= -->
+
+            <div class="footer-links">
+
+                <a href="{{ url_for('home') }}">
+                    Home
+                </a>
+
+                <a href="{{ url_for('meeting.create_meeting') }}">
+                    Create Meeting
+                </a>
+
+                <a href="{{ url_for('meeting.join_meeting') }}">
+                    Join Meeting
+                </a>
+
+            </div>
+
+
+            <!-- ============================= -->
+            <!-- COPYRIGHT -->
+            <!-- ============================= -->
+
+            <div class="footer-copy">
+
+                © 2026 Working Meet.
+                All rights reserved.
+
+            </div>
+
+
+        </div>
+
+    </footer>
+
+
+
+    <!-- ================================================= -->
+    <!-- GLOBAL JAVASCRIPT -->
+    <!-- ================================================= -->
+
+    <script>
+
+        /*
+        ================================================
+        FLASH MESSAGE AUTO HIDE
+        ================================================
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const messages =
+                    document.querySelectorAll(
+                        ".flash-message"
+                    );
+
+
+                messages.forEach(
+                    function (message) {
+
+                        setTimeout(
+                            function () {
+
+                                message.style.opacity = "0";
+
+                                message.style.transform =
+                                    "translateY(-10px)";
+
+
+                                setTimeout(
+                                    function () {
+
+                                        message.remove();
+
+                                    },
+                                    400
+                                );
+
+                            },
+                            4000
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+        /*
+        ================================================
+        NAVBAR SCROLL EFFECT
+        ================================================
+        */
+
+        window.addEventListener(
+            "scroll",
+            function () {
+
+                const navbar =
+                    document.querySelector(
+                        ".navbar"
+                    );
+
+
+                if (!navbar) {
+
+                    return;
+
+                }
+
+
+                if (window.scrollY > 30) {
+
+                    navbar.classList.add(
+                        "navbar-scrolled"
+                    );
+
+                }
+                else {
+
+                    navbar.classList.remove(
+                        "navbar-scrolled"
+                    );
+
+                }
+
+            }
+        );
+
+
+        /*
+        =================================================
+        MOBILE NAVIGATION
+        =================================================
+        */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const toggle =
+                    document.getElementById(
+                        "mobileMenuToggle"
+                    );
+
+                const menu =
+                    document.getElementById(
+                        "mobileMenu"
+                    );
+
+
+                /*
+                    Logged-in users do not render the
+                    hamburger button, so there is nothing
+                    to initialize in that state.
+                */
+
+                if (!toggle || !menu) {
+
+                    return;
+
+                }
+
+
+                function positionLoggedInMenu() {
+
+                    if (
+                        !menu.classList.contains(
+                            "logged-in-mobile-menu"
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const rect =
+                        toggle.getBoundingClientRect();
+
+
+                    const viewportWidth =
+                        window.innerWidth;
+
+
+                    const menuWidth =
+                        Math.min(
+                            250,
+                            viewportWidth - 20
+                        );
+
+
+                    /*
+                        Align the RIGHT edge of the menu
+                        with the RIGHT edge of the
+                        hamburger button.
+
+                        This keeps the menu directly under
+                        the hamburger instead of sticking
+                        to the far-right side of the phone.
+                    */
+
+                    let left =
+                        rect.right -
+                        menuWidth;
+
+
+                    /*
+                        Keep the menu inside the screen.
+                    */
+
+                    if (left < 10) {
+
+                        left = 10;
+
+                    }
+
+
+                    if (
+                        left + menuWidth >
+                        viewportWidth - 10
+                    ) {
+
+                        left =
+                            viewportWidth -
+                            menuWidth -
+                            10;
+
+                    }
+
+
+                    menu.style.width =
+                        menuWidth + "px";
+
+
+                    menu.style.left =
+                        "auto";
+
+
+                    menu.style.right =
+                        "10px";
+
+
+                    menu.style.top =
+                        (rect.bottom + 8) +
+                        "px";
+
+                }
+
+
+                function setMenu(open) {
+
+                    menu.classList.toggle(
+                        "is-open",
+                        open
+                    );
+
+
+                    menu.setAttribute(
+                        "aria-hidden",
+                        open
+                            ? "false"
+                            : "true"
+                    );
+
+
+                    toggle.setAttribute(
+                        "aria-expanded",
+                        open
+                            ? "true"
+                            : "false"
+                    );
+
+
+                    toggle.setAttribute(
+                        "aria-label",
+                        open
+                            ? "Close navigation menu"
+                            : "Open navigation menu"
+                    );
+
+
+                    document.body.classList.toggle(
+                        "mobile-menu-open",
+                        open
+                    );
+
+
+                    const openIcon =
+                        toggle.querySelector(
+                            ".menu-open-icon"
+                        );
+
+
+                    const closeIcon =
+                        toggle.querySelector(
+                            ".menu-close-icon"
+                        );
+
+
+                    if (openIcon) {
+
+                        openIcon.style.display =
+                            open
+                                ? "none"
+                                : "inline-flex";
+
+                    }
+
+
+                    if (closeIcon) {
+
+                        closeIcon.style.display =
+                            open
+                                ? "inline-flex"
+                                : "none";
+
+                    }
+
+
+                    /*
+                        Position ONLY the logged-in menu
+                        after opening so it sits directly
+                        below the hamburger.
+                    */
+
+                    if (open) {
+
+                        requestAnimationFrame(
+                            function () {
+
+                                positionLoggedInMenu();
+
+                            }
+                        );
+
+                    }
+
+                }
+
+
+                /* Start closed */
+
+                setMenu(false);
+
+
+                /*
+                    HAMBURGER CLICK
+
+                    First click:
+                    closed -> open
+
+                    Second click:
+                    open -> closed
+                */
+
+                toggle.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        const isOpen =
+                            menu.classList.contains(
+                                "is-open"
+                            );
+
+
+                        setMenu(!isOpen);
+
+                    }
+                );
+
+
+                /*
+                    MENU LINK CLICK
+
+                    Close menu and allow the normal
+                    Flask link navigation to continue.
+                */
+
+                menu.querySelectorAll(
+                    "a"
+                ).forEach(
+                    function (link) {
+
+                        link.addEventListener(
+                            "click",
+                            function () {
+
+                                setMenu(false);
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                /*
+                    CLICK OUTSIDE
+                */
+
+                document.addEventListener(
+                    "click",
+                    function (event) {
+
+                        if (
+                            menu.classList.contains(
+                                "is-open"
+                            ) &&
+                            !menu.contains(
+                                event.target
+                            ) &&
+                            !toggle.contains(
+                                event.target
+                            )
+                        ) {
+
+                            setMenu(false);
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                    ESCAPE KEY
+                */
+
+                document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key === "Escape"
+                        ) {
+
+                            setMenu(false);
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                    RETURN TO DESKTOP
+                */
+
+                window.addEventListener(
+                    "resize",
+                    function () {
+
+                        if (
+                            window.innerWidth > 700
+                        ) {
+
+                            setMenu(false);
+
+                        } else if (
+                            menu.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            positionLoggedInMenu();
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                    Keep the logged-in menu aligned with
+                    the hamburger while the page is being
+                    scrolled.
+                */
+
+                window.addEventListener(
+                    "scroll",
+                    function () {
+
+                        if (
+                            window.innerWidth <= 700 &&
+                            menu.classList.contains(
+                                "is-open"
+                            )
+                        ) {
+
+                            positionLoggedInMenu();
+
+                        }
+
+                    },
+                    {
+                        passive: true
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
+
+
+    <!-- ================================================= -->
+    <!-- PAGE-SPECIFIC JAVASCRIPT -->
+    <!-- ================================================= -->
+
+    {% block scripts %}
+    {% endblock %}
+
+
+</body>
+
+</html>
