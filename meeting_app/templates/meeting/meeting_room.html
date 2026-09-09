@@ -1217,7 +1217,23 @@
 
             .meeting-info {
 
+                display: flex;
+                flex: 1;
+                min-width: 0;
+                margin: 0 8px;
+            }
+
+            .meeting-title {
                 display: none;
+            }
+
+            .meeting-id {
+                font-size: 11px;
+                white-space: nowrap;
+            }
+
+            .meeting-id strong {
+                letter-spacing: 0.5px;
             }
 
 
@@ -1519,7 +1535,8 @@
                 gap: 7px;
                 padding: 8px;
 
-                overflow: hidden;
+                overflow: visible;
+                z-index: 1001;
             }
 
             .control-btn {
@@ -1928,7 +1945,7 @@
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 14px;
         padding: 15px;
-        width: 260px;
+        width: min(260px, calc(100vw - 20px));
         box-shadow: 0 15px 40px rgba(0,0,0,0.45);
         z-index: 1000;
     ">
