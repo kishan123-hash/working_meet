@@ -324,6 +324,52 @@ remoteStreams["abc123"] = MediaStream;
 const remoteStreams =
     {};
 
+/* =========================================================
+AUDIO PROCESSING / VOLUME CONTROL
+========================================================= */
+
+let microphoneAudioContext = null;
+
+let microphoneSourceNode = null;
+
+let microphoneGainNode = null;
+
+let microphoneDestinationNode = null;
+
+let processedMicrophoneTrack = null;
+
+let microphoneInputVolume = 1.0;
+
+let remoteOutputVolume = 1.0;
+
+/* =========================================================
+   ADAPTIVE VIDEO QUALITY
+========================================================= */
+
+let adaptiveQualityTimer = null;
+
+const VIDEO_QUALITY_PROFILES = {
+    hd: {
+        name: "HD",
+        scaleResolutionDownBy: 1,
+        maxBitrate: 2500000,
+        maxFramerate: 30
+    },
+
+    medium: {
+        name: "Medium",
+        scaleResolutionDownBy: 1.5,
+        maxBitrate: 1200000,
+        maxFramerate: 24
+    },
+
+    low: {
+        name: "Low",
+        scaleResolutionDownBy: 2,
+        maxBitrate: 700000,
+        maxFramerate: 20
+    }
+};
 
 /* =========================================================
    LOCAL MEDIA STATE
@@ -608,7 +654,7 @@ function showToast(
 
     meetingToast.classList.add(
         type ||
-            "info"
+        "info"
     );
 
 
@@ -789,7 +835,7 @@ function forceCloseDuplicateSession() {
 
             duplicateSessionChannel.close();
 
-        } catch (error) {}
+        } catch (error) { }
 
         duplicateSessionChannel =
             null;
@@ -811,7 +857,7 @@ function forceCloseDuplicateSession() {
 
             socket.disconnect();
 
-        } catch (error) {}
+        } catch (error) { }
 
     }
 
@@ -891,13 +937,13 @@ function initializeDuplicateSessionProtection() {
 
                     if (
                         data.type ===
-                            "MEETSPACE_SESSION_CLAIM" &&
+                        "MEETSPACE_SESSION_CLAIM" &&
 
                         data.token !==
-                            duplicateSessionToken &&
+                        duplicateSessionToken &&
 
                         data.userKey ===
-                            lockKey
+                        lockKey
                     ) {
 
                         forceCloseDuplicateSession();
@@ -942,7 +988,7 @@ function initializeDuplicateSessionProtection() {
 
                 if (
                     event.key !==
-                        lockKey ||
+                    lockKey ||
                     !event.newValue
                 ) {
 
@@ -962,14 +1008,14 @@ function initializeDuplicateSessionProtection() {
                     if (
                         data?.token &&
                         data.token !==
-                            duplicateSessionToken
+                        duplicateSessionToken
                     ) {
 
                         forceCloseDuplicateSession();
 
                     }
 
-                } catch (error) {}
+                } catch (error) { }
 
             }
         );
@@ -997,7 +1043,7 @@ function initializeDuplicateSessionProtection() {
                         if (
                             currentLock?.token &&
                             currentLock.token !==
-                                duplicateSessionToken
+                            duplicateSessionToken
                         ) {
 
                             forceCloseDuplicateSession();
@@ -1020,7 +1066,7 @@ function initializeDuplicateSessionProtection() {
                             })
                         );
 
-                    } catch (error) {}
+                    } catch (error) { }
 
                 },
                 2000
@@ -1122,7 +1168,7 @@ function releaseDuplicateSessionLock() {
 
             }
 
-        } catch (error) {}
+        } catch (error) { }
 
     }
 
@@ -1146,14 +1192,14 @@ function releaseDuplicateSessionLock() {
 
             });
 
-        } catch (error) {}
+        } catch (error) { }
 
 
         try {
 
             duplicateSessionChannel.close();
 
-        } catch (error) {}
+        } catch (error) { }
 
 
         duplicateSessionChannel =
@@ -1489,7 +1535,7 @@ async function initializeMeeting() {
                 .getAudioTracks()
                 .length >
             0;
-
+        await setupMicrophoneAudioProcessing(localStream);
 
         cameraEnabled =
             localStream
@@ -1549,6 +1595,10 @@ async function initializeMeeting() {
                         }
 
                     });
+
+            await setupMicrophoneAudioProcessing(
+                localStream
+            );
 
 
             microphoneEnabled =
@@ -1720,16 +1770,16 @@ function setLocalVideoStream(
     }
 
 
-    if ( 
-    stream 
-) { 
- 
-    localVideo.srcObject = 
-        stream; 
- 
-    showLocalUserName();
+    if (
+        stream
+    ) {
 
-} else {
+        localVideo.srcObject =
+            stream;
+
+        showLocalUserName();
+
+    } else {
 
         localVideo.srcObject =
             null;
@@ -1778,7 +1828,7 @@ function setLocalVideoStream(
         if (
             playPromise &&
             typeof playPromise.catch ===
-                "function"
+            "function"
         ) {
 
             playPromise.catch(
@@ -1910,6 +1960,181 @@ function stopLocalMedia() {
 
 }
 
+/* =========================================================
+   MICROPHONE AUDIO PROCESSING
+========================================================= */
+
+async function setupMicrophoneAudioProcessing(stream) {
+
+    if (
+        !stream ||
+        !stream.getAudioTracks().length
+    ) {
+        return;
+    }
+
+    const microphoneTrack =
+        stream.getAudioTracks()[0];
+
+    try {
+
+        microphoneAudioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+        if (
+            microphoneAudioContext.state ===
+            "suspended"
+        ) {
+            await microphoneAudioContext.resume();
+        }
+
+        const microphoneStream =
+            new MediaStream([
+                microphoneTrack
+            ]);
+
+        microphoneSourceNode =
+            microphoneAudioContext
+                .createMediaStreamSource(
+                    microphoneStream
+                );
+
+        microphoneGainNode =
+            microphoneAudioContext
+                .createGain();
+
+        microphoneDestinationNode =
+            microphoneAudioContext
+                .createMediaStreamDestination();
+
+        microphoneGainNode.gain.value =
+            microphoneInputVolume;
+
+        microphoneSourceNode.connect(
+            microphoneGainNode
+        );
+
+        microphoneGainNode.connect(
+            microphoneDestinationNode
+        );
+
+        processedMicrophoneTrack =
+            microphoneDestinationNode
+                .stream
+                .getAudioTracks()[0];
+
+        console.log(
+            "🎙️ Microphone audio processing initialized."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Microphone audio processing failed:",
+            error
+        );
+
+        processedMicrophoneTrack =
+            microphoneTrack;
+    }
+}
+
+/* =========================================================
+   MICROPHONE INPUT VOLUME
+========================================================= */
+
+function setMicrophoneInputVolume(volume) {
+
+    let newVolume =
+        Number(volume);
+
+    if (!Number.isFinite(newVolume)) {
+        return;
+    }
+
+    /*
+     * Keep microphone volume between
+     * 0% and 150%.
+     */
+    newVolume =
+        Math.max(
+            0,
+            Math.min(
+                1.5,
+                newVolume
+            )
+        );
+
+    microphoneInputVolume =
+        newVolume;
+
+    if (microphoneGainNode) {
+
+        microphoneGainNode.gain.value =
+            newVolume;
+    }
+
+    console.log(
+        "🎙️ Microphone input volume:",
+        Math.round(newVolume * 100) + "%"
+    );
+}
+
+/* =========================================================
+   REMOTE OUTPUT VOLUME
+========================================================= */
+
+function setRemoteOutputVolume(volume) {
+
+    let newVolume =
+        Number(volume);
+
+    if (!Number.isFinite(newVolume)) {
+        return;
+    }
+
+    /*
+     * Browser video.volume supports
+     * 0.0 to 1.0.
+     */
+    newVolume =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                newVolume
+            )
+        );
+
+    remoteOutputVolume =
+        newVolume;
+
+    /*
+     * Update every existing participant.
+     */
+    if (remoteVideos) {
+
+        remoteVideos
+            .querySelectorAll(
+                "video.remote-video"
+            )
+            .forEach(
+                function (video) {
+
+                    video.volume =
+                        newVolume;
+                }
+            );
+    }
+
+    console.log(
+        "🔊 Remote output volume:",
+        Math.round(newVolume * 100) + "%"
+    );
+}
 
 /* =========================================================
    19. GET LOCAL AUDIO TRACK
@@ -2216,6 +2441,10 @@ function toggleMicrophone() {
     audioTrack.enabled =
         !audioTrack.enabled;
 
+    if (processedMicrophoneTrack) {
+        processedMicrophoneTrack.enabled =
+            audioTrack.enabled;
+    }
 
     microphoneEnabled =
         audioTrack.enabled;
@@ -2334,7 +2563,7 @@ async function toggleCamera() {
 
                     const peerConnection =
                         peerConnections[
-                            remoteSocketId
+                        remoteSocketId
                         ];
 
 
@@ -2360,7 +2589,7 @@ async function toggleCamera() {
                                         return (
                                             item.track &&
                                             item.track.kind ===
-                                                "video"
+                                            "video"
                                         );
 
                                     }
@@ -2383,7 +2612,14 @@ async function toggleCamera() {
                             );
 
                         }
-
+                        /*
+                         * Re-apply adaptive video quality
+                         * after restoring the camera track.
+                         */
+                        applyVideoQuality(
+                            peerConnection,
+                            peerConnection.__adaptiveQuality || "hd"
+                        );
                     } catch (error) {
 
                         console.warn(
@@ -2473,7 +2709,7 @@ async function toggleCamera() {
 
             const peerConnection =
                 peerConnections[
-                    remoteSocketId
+                remoteSocketId
                 ];
 
 
@@ -2497,7 +2733,7 @@ async function toggleCamera() {
                             return (
                                 item.track &&
                                 item.track.kind ===
-                                    "video"
+                                "video"
                             );
 
                         }
@@ -2646,6 +2882,595 @@ function attachLocalTrackSafety() {
 }
 
 /* =========================================================
+   ADAPTIVE VIDEO QUALITY ENGINE
+========================================================= */
+
+function getVideoSender(peerConnection) {
+
+    if (!peerConnection) {
+        return null;
+    }
+
+    return peerConnection
+        .getSenders()
+        .find(function (sender) {
+
+            return (
+                sender.track &&
+                sender.track.kind === "video"
+            );
+
+        }) || null;
+}
+
+
+/* ---------------------------------------------------------
+   APPLY VIDEO QUALITY
+--------------------------------------------------------- */
+
+async function applyVideoQuality(
+    peerConnection,
+    quality
+) {
+
+    const sender =
+        getVideoSender(peerConnection);
+
+    if (!sender) {
+        return;
+    }
+
+    const profile =
+        VIDEO_QUALITY_PROFILES[quality];
+
+    if (!profile) {
+        return;
+    }
+
+    try {
+
+        const parameters =
+            sender.getParameters();
+
+        if (!parameters.encodings ||
+            !parameters.encodings.length) {
+
+            parameters.encodings = [{}];
+
+        }
+
+        const encoding =
+            parameters.encodings[0];
+
+        /*
+         * Dynamically reduce encoded resolution.
+         *
+         * 1     = original 1280x720
+         * 1.5   = approximately 854x480
+         * 2     = approximately 640x360
+         */
+
+        encoding.scaleResolutionDownBy =
+            profile.scaleResolutionDownBy;
+
+        /*
+         * Limit bitrate so the connection
+         * does not consume more bandwidth
+         * than the network can handle.
+         */
+
+        encoding.maxBitrate =
+            profile.maxBitrate;
+
+        /*
+         * Control frame rate.
+         */
+
+        encoding.maxFramerate =
+            profile.maxFramerate;
+
+        await sender.setParameters(
+            parameters
+        );
+
+        peerConnection.__adaptiveQuality =
+            quality;
+
+        console.log(
+            `🎥 Video quality → ${profile.name}`,
+            `| bitrate: ${profile.maxBitrate}`,
+            `| FPS: ${profile.maxFramerate}`
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Could not apply adaptive video quality:",
+            error
+        );
+
+    }
+}
+
+
+/* ---------------------------------------------------------
+   GET NETWORK QUALITY
+--------------------------------------------------------- */
+
+async function getNetworkQuality(
+    peerConnection
+) {
+
+    if (!peerConnection) {
+        return "poor";
+    }
+
+    try {
+
+        const stats =
+            await peerConnection.getStats();
+
+        let availableBitrate =
+            null;
+
+        let packetLoss =
+            null;
+
+        let roundTripTime =
+            null;
+
+        stats.forEach(function (report) {
+
+            /*
+             * Network bandwidth estimate.
+             */
+
+            if (
+                report.type ===
+                "candidate-pair" &&
+                report.state ===
+                "succeeded"
+            ) {
+
+                if (
+                    typeof report.availableOutgoingBitrate ===
+                    "number"
+                ) {
+
+                    availableBitrate =
+                        report.availableOutgoingBitrate;
+
+                }
+
+            }
+
+
+            /*
+             * Receiver feedback about our
+             * outgoing video.
+             */
+
+            if (
+                report.type ===
+                "remote-inbound-rtp" &&
+                report.kind ===
+                "video"
+            ) {
+
+                if (
+                    typeof report.fractionLost ===
+                    "number"
+                ) {
+
+                    packetLoss =
+                        report.fractionLost;
+
+                }
+
+                if (
+                    typeof report.roundTripTime ===
+                    "number"
+                ) {
+
+                    roundTripTime =
+                        report.roundTripTime;
+
+                }
+
+            }
+
+        });
+
+
+        /*
+         * If bandwidth estimate is unavailable,
+         * use conservative defaults.
+         */
+
+        if (
+            availableBitrate === null
+        ) {
+
+            availableBitrate = 1500000;
+
+        }
+
+
+        if (
+            packetLoss === null
+        ) {
+
+            packetLoss = 0;
+
+        }
+
+
+        if (
+            roundTripTime === null
+        ) {
+
+            roundTripTime = 0;
+
+        }
+
+
+        const lossPercent =
+            packetLoss * 100;
+
+        const rttMs =
+            roundTripTime * 1000;
+
+
+        console.log(
+            "📡 Network:",
+            `${Math.round(
+                availableBitrate / 1000
+            )} kbps`,
+            `| loss: ${lossPercent.toFixed(1)}%`,
+            `| RTT: ${Math.round(rttMs)}ms`
+        );
+
+
+        /*
+         * EXCELLENT
+         *
+         * Enough bandwidth for 720p.
+         */
+
+        if (
+            availableBitrate >= 2500000 &&
+            lossPercent <= 2 &&
+            (rttMs === 0 || rttMs <= 150)
+        ) {
+
+            return "hd";
+
+        }
+
+
+        /*
+         * MEDIUM
+         */
+
+        if (
+            availableBitrate >= 1200000 &&
+            lossPercent <= 5 &&
+            (rttMs === 0 || rttMs <= 250)
+        ) {
+
+            return "medium";
+
+        }
+
+
+        /*
+         * LOW
+         */
+
+        return "low";
+
+    } catch (error) {
+
+        console.warn(
+            "Could not read WebRTC network statistics:",
+            error
+        );
+
+        return "medium";
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   ADAPT ONE PEER CONNECTION
+--------------------------------------------------------- */
+
+async function adaptPeerVideoQuality(
+    remoteSocketId,
+    peerConnection
+) {
+
+    if (!peerConnection) {
+        return;
+    }
+
+    if (
+        peerConnection.connectionState !==
+        "connected"
+    ) {
+        return;
+    }
+
+
+    const quality =
+        await getNetworkQuality(
+            peerConnection
+        );
+
+
+    const currentQuality =
+        peerConnection.__adaptiveQuality ||
+        "hd";
+
+
+    /*
+     * Initialize state.
+     */
+
+    if (
+        typeof peerConnection.__goodSamples !==
+        "number"
+    ) {
+
+        peerConnection.__goodSamples =
+            0;
+
+    }
+
+
+    if (
+        typeof peerConnection.__badSamples !==
+        "number"
+    ) {
+
+        peerConnection.__badSamples =
+            0;
+
+    }
+
+
+    /*
+     * NETWORK GETTING WORSE
+     */
+
+    if (
+        quality === "low"
+    ) {
+
+        peerConnection.__badSamples +=
+            1;
+
+        peerConnection.__goodSamples =
+            0;
+
+
+        /*
+         * Reduce quality quickly.
+         */
+
+        if (
+            currentQuality === "hd" &&
+            peerConnection.__badSamples >= 1
+        ) {
+
+            await applyVideoQuality(
+                peerConnection,
+                "medium"
+            );
+
+            peerConnection.__badSamples =
+                0;
+
+            return;
+
+        }
+
+
+        if (
+            currentQuality === "medium" &&
+            peerConnection.__badSamples >= 2
+        ) {
+
+            await applyVideoQuality(
+                peerConnection,
+                "low"
+            );
+
+            peerConnection.__badSamples =
+                0;
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+     * NETWORK IS GOOD
+     */
+
+    else if (
+        quality === "hd"
+    ) {
+
+        peerConnection.__goodSamples +=
+            1;
+
+        peerConnection.__badSamples =
+            0;
+
+
+        /*
+         * Require several good measurements
+         * before increasing quality.
+         *
+         * This prevents:
+         *
+         * HD → LOW → HD → LOW
+         */
+
+        if (
+            currentQuality === "low" &&
+            peerConnection.__goodSamples >= 3
+        ) {
+
+            await applyVideoQuality(
+                peerConnection,
+                "medium"
+            );
+
+            peerConnection.__goodSamples =
+                0;
+
+            return;
+
+        }
+
+
+        if (
+            currentQuality === "medium" &&
+            peerConnection.__goodSamples >= 3
+        ) {
+
+            await applyVideoQuality(
+                peerConnection,
+                "hd"
+            );
+
+            peerConnection.__goodSamples =
+                0;
+
+            return;
+
+        }
+
+    }
+
+
+    /*
+     * MEDIUM NETWORK
+     */
+
+    else {
+
+        peerConnection.__badSamples +=
+            1;
+
+        peerConnection.__goodSamples =
+            0;
+
+
+        if (
+            currentQuality === "hd" &&
+            peerConnection.__badSamples >= 2
+        ) {
+
+            await applyVideoQuality(
+                peerConnection,
+                "medium"
+            );
+
+            peerConnection.__badSamples =
+                0;
+
+        }
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   START ADAPTIVE QUALITY MONITOR
+--------------------------------------------------------- */
+
+function startAdaptiveVideoQuality() {
+
+    if (
+        adaptiveQualityTimer
+    ) {
+
+        return;
+
+    }
+
+
+    console.log(
+        "🎥 Adaptive HD video quality started."
+    );
+
+
+    adaptiveQualityTimer =
+        setInterval(
+            function () {
+
+                Object.keys(
+                    peerConnections
+                ).forEach(
+                    function (
+                        remoteSocketId
+                    ) {
+
+                        const peerConnection =
+                            peerConnections[
+                            remoteSocketId
+                            ];
+
+                        adaptPeerVideoQuality(
+                            remoteSocketId,
+                            peerConnection
+                        );
+
+                    }
+                );
+
+            },
+            2000
+        );
+
+}
+
+
+/* ---------------------------------------------------------
+   STOP ADAPTIVE QUALITY MONITOR
+--------------------------------------------------------- */
+
+function stopAdaptiveVideoQuality() {
+
+    if (
+        adaptiveQualityTimer
+    ) {
+
+        clearInterval(
+            adaptiveQualityTimer
+        );
+
+        adaptiveQualityTimer =
+            null;
+
+        console.log(
+            "🎥 Adaptive video quality stopped."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
    17. CREATE WEBRTC PEER CONNECTION
 ========================================================= */
 
@@ -2689,7 +3514,7 @@ function createPeerConnection(
 
     if (
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ]
     ) {
 
@@ -2698,7 +3523,7 @@ function createPeerConnection(
         ] =
             remoteName ||
             participants[
-                remoteSocketId
+            remoteSocketId
             ] ||
             "Participant";
 
@@ -2762,7 +3587,7 @@ function createPeerConnection(
 
     if (
         !pendingIceCandidates[
-            remoteSocketId
+        remoteSocketId
         ]
     ) {
 
@@ -2786,8 +3611,18 @@ function createPeerConnection(
     ) {
 
         const localTracks =
-            localStream.getTracks();
+            localStream.getTracks().filter(
+                track => track.kind !== "audio"
+            );
 
+        if (processedMicrophoneTrack) {
+
+            peerConnection.addTrack(
+                processedMicrophoneTrack,
+                localStream
+            );
+
+        }
 
         localTracks.forEach(
             function (track) {
@@ -2813,6 +3648,16 @@ function createPeerConnection(
 
     }
 
+    /*
+ * Start this peer at HD.
+ *
+ * Adaptive quality will reduce it automatically
+ * when the network becomes poor.
+ */
+    applyVideoQuality(
+        peerConnection,
+        "hd"
+    );
 
     /*
     ---------------------------------------------------------
@@ -2966,7 +3811,7 @@ function createPeerConnection(
 
             } else if (
                 state ===
-                    "connecting"
+                "connecting"
             ) {
 
                 updateRemoteVideoStatus(
@@ -2977,7 +3822,7 @@ function createPeerConnection(
 
             } else if (
                 state ===
-                    "disconnected"
+                "disconnected"
             ) {
 
                 updateRemoteVideoStatus(
@@ -2997,14 +3842,14 @@ function createPeerConnection(
 
                         const currentConnection =
                             peerConnections[
-                                remoteSocketId
+                            remoteSocketId
                             ];
 
 
                         if (
                             currentConnection &&
                             currentConnection.connectionState ===
-                                "disconnected"
+                            "disconnected"
                         ) {
 
                             removeRemoteParticipant(
@@ -3020,7 +3865,7 @@ function createPeerConnection(
 
             } else if (
                 state ===
-                    "failed"
+                "failed"
             ) {
 
                 console.warn(
@@ -3040,7 +3885,7 @@ function createPeerConnection(
 
             } else if (
                 state ===
-                    "closed"
+                "closed"
             ) {
 
                 removeRemoteParticipant(
@@ -3074,7 +3919,7 @@ function createPeerConnection(
 
             if (
                 state ===
-                    "failed"
+                "failed"
             ) {
 
                 attemptIceRestart(
@@ -3126,7 +3971,7 @@ async function flushPendingIceCandidates(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ];
 
 
@@ -3155,7 +4000,7 @@ async function flushPendingIceCandidates(
 
     const candidates =
         pendingIceCandidates[
-            remoteSocketId
+        remoteSocketId
         ] ||
         [];
 
@@ -3181,7 +4026,7 @@ async function flushPendingIceCandidates(
 
     for (
         const candidate
-            of candidates
+        of candidates
     ) {
 
         try {
@@ -3294,14 +4139,14 @@ function createOrUpdateRemoteVideo(
             );
 
 
-       tile.className =
-    "remote-video-container";
+        tile.className =
+            "remote-video-container";
 
-tile.style.position =
-    "relative";
+        tile.style.position =
+            "relative";
 
-tile.dataset.remoteId =
-    remoteSocketId;
+        tile.dataset.remoteId =
+            remoteSocketId;
 
         /*
         -----------------------------------------------------
@@ -3435,52 +4280,52 @@ tile.dataset.remoteId =
         */
 
         const nameLabel =
-    document.createElement(
-        "div"
-    );
+            document.createElement(
+                "div"
+            );
 
-nameLabel.className =
-    "remote-name-label";
+        nameLabel.className =
+            "remote-name-label";
 
-nameLabel.style.position =
-    "absolute";
+        nameLabel.style.position =
+            "absolute";
 
-nameLabel.style.left =
-    "12px";
+        nameLabel.style.left =
+            "12px";
 
-nameLabel.style.bottom =
-    "12px";
+        nameLabel.style.bottom =
+            "12px";
 
-nameLabel.style.padding =
-    "6px 10px";
+        nameLabel.style.padding =
+            "6px 10px";
 
-nameLabel.style.borderRadius =
-    "8px";
+        nameLabel.style.borderRadius =
+            "8px";
 
-nameLabel.style.background =
-    "rgba(0, 0, 0, 0.70)";
+        nameLabel.style.background =
+            "rgba(0, 0, 0, 0.70)";
 
-nameLabel.style.color =
-    "#ffffff";
+        nameLabel.style.color =
+            "#ffffff";
 
-nameLabel.style.fontSize =
-    "14px";
+        nameLabel.style.fontSize =
+            "14px";
 
-nameLabel.style.fontWeight =
-    "600";
+        nameLabel.style.fontWeight =
+            "600";
 
-nameLabel.style.zIndex =
-    "20";
+        nameLabel.style.zIndex =
+            "20";
 
-nameLabel.style.display =
-    "block";
+        nameLabel.style.display =
+            "block";
 
-nameLabel.style.visibility =
-    "visible";
+        nameLabel.style.visibility =
+            "visible";
 
-nameLabel.textContent =
-    remoteName ||
-    "Participant";
+        nameLabel.textContent =
+            remoteName ||
+            "Participant";
 
         /*
         -----------------------------------------------------
@@ -3541,82 +4386,83 @@ nameLabel.textContent =
 Save the stream on the video element.
 */
 
-video.srcObject =
-    stream;
+        video.srcObject =
+            stream;
+        video.volume =
+            remoteOutputVolume;
+
+        /*
+        Start remote video as soon as
+        the video element is ready.
+        */
+
+        const startRemotePlayback =
+            function () {
+
+                try {
+
+                    const playPromise =
+                        video.play();
 
 
-/*
-Start remote video as soon as
-the video element is ready.
-*/
+                    if (
+                        playPromise &&
+                        typeof playPromise.catch ===
+                        "function"
+                    ) {
 
-const startRemotePlayback =
-    function () {
+                        playPromise.catch(
+                            function (error) {
 
-        try {
+                                console.warn(
+                                    "Remote video autoplay prevented:",
+                                    error
+                                );
 
-            const playPromise =
-                video.play();
-
-
-            if (
-                playPromise &&
-                typeof playPromise.catch ===
-                    "function"
-            ) {
-
-                playPromise.catch(
-                    function (error) {
-
-                        console.warn(
-                            "Remote video autoplay prevented:",
-                            error
+                            }
                         );
 
                     }
-                );
 
-            }
+                } catch (error) {
 
-        } catch (error) {
+                    console.warn(
+                        "Remote video playback failed:",
+                        error
+                    );
 
-            console.warn(
-                "Remote video playback failed:",
-                error
+                }
+
+            };
+
+
+        /*
+        If the video is already ready,
+        play immediately.
+        */
+
+        if (
+            video.readyState >= 1
+        ) {
+
+            startRemotePlayback();
+
+        } else {
+
+            /*
+            Wait until the remote video's
+            metadata is ready.
+            */
+
+            video.addEventListener(
+                "loadedmetadata",
+                startRemotePlayback,
+                {
+                    once: true
+                }
             );
 
         }
-
-    };
-
-
-/*
-If the video is already ready,
-play immediately.
-*/
-
-if (
-    video.readyState >= 1
-) {
-
-    startRemotePlayback();
-
-} else {
-
-    /*
-    Wait until the remote video's
-    metadata is ready.
-    */
-
-    video.addEventListener(
-        "loadedmetadata",
-        startRemotePlayback,
-        {
-            once: true
-        }
-    );
-
-}
 
         /*
         A remote video may initially have no video track.
@@ -3665,6 +4511,9 @@ if (
                 video.srcObject =
                     stream;
 
+                video.volume =
+                    remoteOutputVolume;
+
             }
 
 
@@ -3689,16 +4538,16 @@ if (
                 if (
                     playPromise &&
                     typeof playPromise.catch ===
-                        "function"
+                    "function"
                 ) {
 
                     playPromise.catch(
-                        function () {}
+                        function () { }
                     );
 
                 }
 
-            } catch (error) {}
+            } catch (error) { }
 
         }
 
@@ -3872,7 +4721,7 @@ function updateRemoteVideoPlaceholder(
 
                         return (
                             track.readyState !==
-                                "ended"
+                            "ended"
                         );
 
                     }
@@ -3990,7 +4839,7 @@ function removeRemoteParticipant(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ];
 
 
@@ -4046,7 +4895,7 @@ function removeRemoteParticipant(
 
     const remoteStream =
         remoteStreams[
-            remoteSocketId
+        remoteSocketId
         ];
 
 
@@ -4173,7 +5022,7 @@ async function attemptIceRestart(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ];
 
 
@@ -4300,7 +5149,7 @@ async function addRemoteIceCandidate(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ];
 
 
@@ -4324,7 +5173,7 @@ async function addRemoteIceCandidate(
 
         if (
             !pendingIceCandidates[
-                remoteSocketId
+            remoteSocketId
             ]
         ) {
 
@@ -4520,7 +5369,7 @@ async function handleExistingParticipants(
 
     for (
         const participant
-            of list
+        of list
     ) {
 
         let remoteSocketId =
@@ -4577,7 +5426,7 @@ async function handleExistingParticipants(
         if (
             socket &&
             remoteSocketId ===
-                socket.id
+            socket.id
         ) {
 
             continue;
@@ -4734,7 +5583,7 @@ function handleUserJoined(
     if (
         socket &&
         remoteSocketId ===
-            socket.id
+        socket.id
     ) {
 
         return;
@@ -4810,7 +5659,7 @@ function handleUserLeft(
 
     const remoteName =
         participants[
-            remoteSocketId
+        remoteSocketId
         ] ||
         data?.name ||
         "Participant";
@@ -4889,7 +5738,7 @@ async function handleOffer(
     if (
         socket &&
         remoteSocketId ===
-            socket.id
+        socket.id
     ) {
 
         return;
@@ -5066,7 +5915,7 @@ async function handleAnswer(
         data.username ||
         data.user_name ||
         participants[
-            remoteSocketId
+        remoteSocketId
         ] ||
         "Participant";
 
@@ -5090,7 +5939,7 @@ async function handleAnswer(
     if (
         socket &&
         remoteSocketId ===
-            socket.id
+        socket.id
     ) {
 
         return;
@@ -5113,7 +5962,7 @@ async function handleAnswer(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ] ||
         createPeerConnection(
             remoteSocketId,
@@ -5141,7 +5990,7 @@ async function handleAnswer(
 
         if (
             peerConnection.signalingState !==
-                "have-local-offer"
+            "have-local-offer"
         ) {
 
             console.warn(
@@ -5235,7 +6084,7 @@ async function handleIceCandidate(
     if (
         socket &&
         remoteSocketId ===
-            socket.id
+        socket.id
     ) {
 
         return;
@@ -5249,7 +6098,7 @@ async function handleIceCandidate(
 
     const remoteName =
         participants[
-            remoteSocketId
+        remoteSocketId
         ] ||
         data.name ||
         data.username ||
@@ -5258,7 +6107,7 @@ async function handleIceCandidate(
 
     const peerConnection =
         peerConnections[
-            remoteSocketId
+        remoteSocketId
         ] ||
         createPeerConnection(
             remoteSocketId,
@@ -5951,7 +6800,7 @@ function handleRemoteMediaState(
     if (
         socket &&
         remoteSocketId ===
-            socket.id
+        socket.id
     ) {
 
         return;
@@ -5978,7 +6827,7 @@ function handleRemoteMediaState(
 
     if (
         !participants[
-            remoteSocketId
+        remoteSocketId
         ]
     ) {
 
@@ -6101,7 +6950,7 @@ function handleRemoteMediaState(
 
         const stream =
             remoteStreams[
-                remoteSocketId
+            remoteSocketId
             ];
 
 
@@ -6133,7 +6982,7 @@ function handleRemoteMediaState(
     if (
         micIndicator &&
         typeof microphone ===
-            "boolean"
+        "boolean"
     ) {
 
         micIndicator.classList.toggle(
@@ -6165,7 +7014,7 @@ function handleRemoteMediaState(
     if (
         cameraIndicator &&
         typeof camera ===
-            "boolean"
+        "boolean"
     ) {
 
         cameraIndicator.classList.toggle(
@@ -6389,7 +7238,7 @@ function initializeChatUI() {
 
                 if (
                     event.key ===
-                        "Enter" &&
+                    "Enter" &&
                     !event.shiftKey
                 ) {
 
@@ -6664,19 +7513,34 @@ function handleIncomingChatMessage(
                 senderId &&
                 socket &&
                 senderId ===
-                    socket.id
+                socket.id
             ) ||
             (
                 !senderId &&
                 String(
                     sender
                 ).trim() ===
-                    String(
-                        userName
-                    ).trim()
+                String(
+                    userName
+                ).trim()
             )
         );
 
+    const localMessageKey =
+        `${sender}::${String(message).trim()}`;
+
+    if (
+        isOwnMessage &&
+        pendingLocalChatMessages.has(
+            localMessageKey
+        )
+    ) {
+        pendingLocalChatMessages.delete(
+            localMessageKey
+        );
+
+        return;
+    }
 
     appendChatMessage(
         sender,
@@ -7166,14 +8030,14 @@ function closeMeetingSidebar() {
     if (
         chatInput &&
         document.activeElement ===
-            chatInput
+        chatInput
     ) {
 
         try {
 
             chatInput.blur();
 
-        } catch (error) {}
+        } catch (error) { }
 
     }
 
@@ -7247,12 +8111,12 @@ async function replaceVideoTrackOnPeers(
 
     for (
         const remoteSocketId
-            of peerIds
+        of peerIds
     ) {
 
         const peerConnection =
             peerConnections[
-                remoteSocketId
+            remoteSocketId
             ];
 
 
@@ -7288,7 +8152,7 @@ async function replaceVideoTrackOnPeers(
                             return (
                                 sender.track &&
                                 sender.track.kind ===
-                                    "video"
+                                "video"
                             );
 
                         }
@@ -7495,16 +8359,16 @@ async function startScreenSharing() {
                 if (
                     playPromise &&
                     typeof playPromise.catch ===
-                        "function"
+                    "function"
                 ) {
 
                     playPromise.catch(
-                        function () {}
+                        function () { }
                     );
 
                 }
 
-            } catch (error) {}
+            } catch (error) { }
 
         }
 
@@ -7519,7 +8383,7 @@ async function startScreenSharing() {
 
         if (
             typeof window.__meetspaceCameraStateBeforeScreenShare ===
-                "undefined"
+            "undefined"
         ) {
 
             window.__meetspaceCameraStateBeforeScreenShare =
@@ -7579,7 +8443,7 @@ async function startScreenSharing() {
 
         if (
             error?.name ===
-                "NotAllowedError"
+            "NotAllowedError"
         ) {
 
             console.log(
@@ -8004,7 +8868,7 @@ function updateParticipantsList() {
 
             const remoteName =
                 participants[
-                    remoteSocketId
+                remoteSocketId
                 ] ||
                 "Participant";
 
@@ -8077,14 +8941,14 @@ function updateParticipantsList() {
 
             const peerConnection =
                 peerConnections[
-                    remoteSocketId
+                remoteSocketId
                 ];
 
 
             if (
                 peerConnection &&
                 peerConnection.connectionState ===
-                    "connected"
+                "connected"
             ) {
 
                 status.textContent =
@@ -8201,190 +9065,190 @@ function toggleParticipantsPanel() {
 
 /* ========================================================= 
    62. INITIALIZE SIDEBAR BUTTONS 
-========================================================= */ 
- 
-function initializeSidebarButtons() { 
- 
+========================================================= */
+
+function initializeSidebarButtons() {
+
     /* 
     Chat button. 
-    */ 
- 
-    const chatButtons = [ 
-        chatBtn, 
-        meetingChatBtn 
-    ]; 
- 
- 
-    chatButtons.forEach( 
-        function ( 
-            button 
-        ) { 
- 
-            if ( 
-                !button 
-            ) { 
- 
-                return; 
- 
-            } 
- 
- 
-            if ( 
-                button.__meetspaceChatHandler 
-            ) { 
- 
-                button.removeEventListener( 
-                    "click", 
-                    button.__meetspaceChatHandler 
-                ); 
- 
-            } 
- 
- 
-            const handler = 
-                function (event) { 
- 
-                    event.preventDefault(); 
- 
-                    event.stopPropagation(); 
- 
-                    openChatPanel(); 
- 
-                }; 
- 
- 
-            button.__meetspaceChatHandler = 
-                handler; 
- 
- 
-            button.addEventListener( 
-                "click", 
-                handler 
-            ); 
- 
-        } 
-    ); 
- 
- 
+    */
+
+    const chatButtons = [
+        chatBtn,
+        meetingChatBtn
+    ];
+
+
+    chatButtons.forEach(
+        function (
+            button
+        ) {
+
+            if (
+                !button
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                button.__meetspaceChatHandler
+            ) {
+
+                button.removeEventListener(
+                    "click",
+                    button.__meetspaceChatHandler
+                );
+
+            }
+
+
+            const handler =
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+                    openChatPanel();
+
+                };
+
+
+            button.__meetspaceChatHandler =
+                handler;
+
+
+            button.addEventListener(
+                "click",
+                handler
+            );
+
+        }
+    );
+
+
     /* 
     Participants buttons. 
-    */ 
- 
-    const participantButtons = [ 
-        participantsBtn, 
-        meetingParticipantsBtn 
-    ]; 
- 
- 
-    participantButtons.forEach( 
-        function ( 
-            button 
-        ) { 
- 
-            if ( 
-                !button 
-            ) { 
- 
-                return; 
- 
-            } 
- 
- 
-            if ( 
-                button.__meetspaceParticipantsHandler 
-            ) { 
- 
-                button.removeEventListener( 
-                    "click", 
-                    button.__meetspaceParticipantsHandler 
-                ); 
- 
-            } 
- 
- 
-            const handler = 
-                function (event) { 
- 
-                    event.preventDefault(); 
- 
-                    event.stopPropagation(); 
- 
-                    if ( 
-                        meetingSidebar && 
-                        ( 
-                            meetingSidebar.classList.contains("open") || 
-                            meetingSidebar.classList.contains("active") || 
-                            meetingSidebar.classList.contains("show") 
-                        ) 
-                    ) { 
- 
-                        closeMeetingSidebar(); 
- 
-                    } else { 
- 
-                        openParticipantsPanel(); 
- 
-                    } 
- 
-                }; 
- 
- 
-            button.__meetspaceParticipantsHandler = 
-                handler; 
- 
- 
-            button.addEventListener( 
-                "click", 
-                handler 
-            ); 
- 
-        } 
-    ); 
- 
- 
+    */
+
+    const participantButtons = [
+        participantsBtn,
+        meetingParticipantsBtn
+    ];
+
+
+    participantButtons.forEach(
+        function (
+            button
+        ) {
+
+            if (
+                !button
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                button.__meetspaceParticipantsHandler
+            ) {
+
+                button.removeEventListener(
+                    "click",
+                    button.__meetspaceParticipantsHandler
+                );
+
+            }
+
+
+            const handler =
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+                    if (
+                        meetingSidebar &&
+                        (
+                            meetingSidebar.classList.contains("open") ||
+                            meetingSidebar.classList.contains("active") ||
+                            meetingSidebar.classList.contains("show")
+                        )
+                    ) {
+
+                        closeMeetingSidebar();
+
+                    } else {
+
+                        openParticipantsPanel();
+
+                    }
+
+                };
+
+
+            button.__meetspaceParticipantsHandler =
+                handler;
+
+
+            button.addEventListener(
+                "click",
+                handler
+            );
+
+        }
+    );
+
+
     /* 
     Sidebar close button. 
-    */ 
- 
-    if ( 
-        sidebarClose 
-    ) { 
- 
-        if ( 
-            sidebarClose.__meetspaceCloseHandler 
-        ) { 
- 
-            sidebarClose.removeEventListener( 
-                "click", 
-                sidebarClose.__meetspaceCloseHandler 
-            ); 
- 
-        } 
- 
- 
-        const closeHandler = 
-            function (event) { 
- 
-                event.preventDefault(); 
- 
-                event.stopPropagation(); 
- 
-                closeMeetingSidebar(); 
- 
-            }; 
- 
- 
-        sidebarClose.__meetspaceCloseHandler = 
-            closeHandler; 
- 
- 
-        sidebarClose.addEventListener( 
-            "click", 
-            closeHandler 
-        ); 
- 
-    } 
- 
+    */
+
+    if (
+        sidebarClose
+    ) {
+
+        if (
+            sidebarClose.__meetspaceCloseHandler
+        ) {
+
+            sidebarClose.removeEventListener(
+                "click",
+                sidebarClose.__meetspaceCloseHandler
+            );
+
+        }
+
+
+        const closeHandler =
+            function (event) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+                closeMeetingSidebar();
+
+            };
+
+
+        sidebarClose.__meetspaceCloseHandler =
+            closeHandler;
+
+
+        sidebarClose.addEventListener(
+            "click",
+            closeHandler
+        );
+
+    }
+
 }
 /* =========================================================
    63. INITIALIZE MEDIA BUTTONS
@@ -8513,6 +9377,8 @@ function initializeUIEvents() {
 
 function closeAllPeerConnections() {
 
+    stopAdaptiveVideoQuality();
+
     Object.keys(
         peerConnections
     ).forEach(
@@ -8522,7 +9388,7 @@ function closeAllPeerConnections() {
 
             const peerConnection =
                 peerConnections[
-                    remoteSocketId
+                remoteSocketId
                 ];
 
 
@@ -8598,7 +9464,7 @@ function closeAllPeerConnections() {
 
             const stream =
                 remoteStreams[
-                    remoteSocketId
+                remoteSocketId
                 ];
 
 
@@ -8746,7 +9612,7 @@ function cleanupLocalVideo() {
 
             localVideo.pause();
 
-        } catch (error) {}
+        } catch (error) { }
 
 
         localVideo.srcObject =
@@ -9163,7 +10029,7 @@ function handleBeforeUnload() {
                 }
             );
 
-        } catch (error) {}
+        } catch (error) { }
 
     }
 
@@ -9187,7 +10053,7 @@ function handleVisibilityChange() {
 
     if (
         document.visibilityState ===
-            "visible"
+        "visible"
     ) {
 
         /*
@@ -9210,16 +10076,16 @@ function handleVisibilityChange() {
                 if (
                     playPromise &&
                     typeof playPromise.catch ===
-                        "function"
+                    "function"
                 ) {
 
                     playPromise.catch(
-                        function () {}
+                        function () { }
                     );
 
                 }
 
-            } catch (error) {}
+            } catch (error) { }
 
         }
 
@@ -9682,6 +10548,14 @@ async function prepareMeeting() {
 
     await initializeSocket();
 
+    /*
+     * Start adaptive video quality monitoring.
+     *
+     * It checks all active WebRTC peer connections
+     * every 2 seconds.
+     */
+    startAdaptiveVideoQuality();
+
 
     /*
     If the socket connected before media was ready,
@@ -9791,7 +10665,7 @@ function startMeetSpaceMeeting() {
 
 if (
     document.readyState ===
-        "loading"
+    "loading"
 ) {
 
     document.addEventListener(
@@ -9865,6 +10739,11 @@ window.MeetSpace =
 window.MeetSpace.toggleMicrophone =
     toggleMicrophone;
 
+window.MeetSpace.setMicrophoneInputVolume =
+    setMicrophoneInputVolume;
+
+window.MeetSpace.setRemoteOutputVolume =
+    setRemoteOutputVolume;
 
 window.MeetSpace.toggleCamera =
     toggleCamera;
