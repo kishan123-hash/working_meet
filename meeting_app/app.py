@@ -5,11 +5,14 @@ from flask import (
     Flask,
     render_template,
     send_from_directory,
-    send_file
+    send_file,
+    redirect,
+    request,
+    session
 )
 
 from dotenv import load_dotenv
-
+from google_auth_oauthlib.flow import Flow
 
 # =========================================================
 # LOAD ENVIRONMENT VARIABLES
@@ -54,6 +57,148 @@ from extensions import db, socketio
 
 app = Flask(__name__)
 
+# =========================================================
+# GOOGLE GMAIL API OAUTH
+# =========================================================
+
+GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.send"
+]
+
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI",
+    "https://working-meet.onrender.com/oauth2callback"
+)
+
+
+def get_google_client_config():
+
+    return {
+        "web": {
+            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [GOOGLE_REDIRECT_URI]
+        }
+    }
+@app.route("/oauth2")
+def gmail_oauth():
+
+    flow = Flow.from_client_config(
+        get_google_client_config(),
+        scopes=GOOGLE_SCOPES,
+        redirect_uri=GOOGLE_REDIRECT_URI
+    )
+
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        prompt="consent",
+        include_granted_scopes="true"
+    )
+
+    session["google_oauth_state"] = state
+
+    return redirect(authorization_url)
+@app.route("/oauth2callback")
+def gmail_oauth_callback():
+
+    state = session.get("google_oauth_state")
+
+    if not state:
+        return """
+        <h2>OAuth Error</h2>
+        <p>OAuth session state was not found.</p>
+        """, 400
+
+    flow = Flow.from_client_config(
+        get_google_client_config(),
+        scopes=GOOGLE_SCOPES,
+        state=state,
+        redirect_uri=GOOGLE_REDIRECT_URI
+    )
+
+    try:
+
+        flow.fetch_token(
+            authorization_response=request.url
+        )
+
+        credentials = flow.credentials
+
+        refresh_token = credentials.refresh_token
+
+        if not refresh_token:
+            return """
+            <h2>OAuth completed</h2>
+            <p>
+            Google did not return a refresh token.
+            Please try authorization again.
+            </p>
+            """, 500
+
+        return f"""
+        <!DOCTYPE html>
+
+        <html>
+
+        <head>
+            <title>Gmail OAuth Success</title>
+        </head>
+
+        <body style="
+            font-family: Arial;
+            padding: 40px;
+            background: #020617;
+            color: white;
+        ">
+
+            <h1>✅ Gmail OAuth Successful</h1>
+
+            <p>
+                Your Google account has been authorized
+                to send Gmail messages.
+            </p>
+
+            <p>
+                Copy the refresh token below and add it
+                to your Render environment variables.
+            </p>
+
+            <textarea
+                readonly
+                style="
+                    width: 90%;
+                    height: 150px;
+                    padding: 15px;
+                    font-size: 14px;
+                "
+            >{refresh_token}</textarea>
+
+            <p>
+                Environment variable:
+            </p>
+
+            <pre>
+GOOGLE_REFRESH_TOKEN=YOUR_TOKEN_HERE
+            </pre>
+
+            <p>
+                ⚠️ Keep this token secret. Do not share it.
+            </p>
+
+        </body>
+
+        </html>
+        """
+
+    except Exception as error:
+
+        return f"""
+        <h2>❌ Gmail OAuth Failed</h2>
+        <pre>{error}</pre>
+        """, 500
+    
 @app.route('/google6f621bdcff4cdb42.html')
 def google_verification():
     verification_file = os.path.join(
